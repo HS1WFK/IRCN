@@ -115,7 +115,7 @@
         <video id="video1" controls muted playsinline></video>
       </div>
       <div class="controls-panel">
-        <span class="channel-title">Channel 1 (BBC News)</span>
+        <span class="channel-title">Channel 1 (Al Jazeera)</span>
         <label class="audio-toggle">
           <input type="checkbox" onchange="toggleAudio('video1', this)">
           <span>Unmute</span>
@@ -129,7 +129,7 @@
         <video id="video2" controls muted playsinline></video>
       </div>
       <div class="controls-panel">
-        <span class="channel-title">Channel 2 (DW News)</span>
+        <span class="channel-title">Channel 2 (BBC News)</span>
         <label class="audio-toggle">
           <input type="checkbox" onchange="toggleAudio('video2', this)">
           <span>Unmute</span>
@@ -143,7 +143,7 @@
         <video id="video3" controls muted playsinline></video>
       </div>
       <div class="controls-panel">
-        <span class="channel-title">Channel 3 (CNA)</span>
+        <span class="channel-title">Channel 3 (CGTN)</span>
         <label class="audio-toggle">
           <input type="checkbox" onchange="toggleAudio('video3', this)">
           <span>Unmute</span>
@@ -157,7 +157,7 @@
         <video id="video4" controls muted playsinline></video>
       </div>
       <div class="controls-panel">
-        <span class="channel-title">Channel 4 (NHK World)</span>
+        <span class="channel-title">Channel 4 (CNA)</span>
         <label class="audio-toggle">
           <input type="checkbox" onchange="toggleAudio('video4', this)">
           <span>Unmute</span>
@@ -168,10 +168,10 @@
 
   <script>
     const streams = [
-      { id: 'video1', url: 'https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8' },
-      { id: 'video2', url: 'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8' },
-      { id: 'video3', url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8' },
-      { id: 'video4', url: 'https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8' }
+      { id: 'video1', url: 'https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8' },
+      { id: 'video2', url: 'https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8' },
+      { id: 'video3', url: 'https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8' },
+      { id: 'video4', url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8' }
     ];
 
     function initVideo(id, url) {
