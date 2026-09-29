@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>International News</title>
+  <!-- HLS.js Library for browsers requiring JS decoding -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #000000;
+      color: #b0b0b0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 20px 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    h1.page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #e0e0e0;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .playlist-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .channel-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+      width: fit-content;
+    }
+
+    /* Custom Radio Button UI */
+    .radio-dot {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #555555;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.2s ease;
+    }
+
+    .radio-dot::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background-color: #ff9800;
+      border-radius: 50%;
+      opacity: 0;
+      transform: scale(0);
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .channel-item.active .radio-dot {
+      border-color: #ff9800;
+    }
+
+    .channel-item.active .radio-dot::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Channel Label Styling */
+    .channel-name {
+      font-size: 16px;
+      font-weight: 500;
+      color: #b0b0b0;
+      transition: color 0.2s ease;
+    }
+
+    .channel-item.active .channel-name {
+      color: #ff9800;
+      font-weight: 600;
+    }
+
+    audio, video {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1 class="page-title">International News</h1>
+
+  <div class="playlist-container" id="playlist">
+    <!-- Channel list items generated dynamically -->
+  </div>
+
+  <!-- Audio Player Elements -->
+  <video id="media-player" playsinline webkit-playsinline></video>
+
+  <script>
+    const channels = [
+      { name: "Al Jazeera", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8" },
+      { name: "ABC Australia", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8" },
+      { name: "Arirang Korea", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8" },
+      { name: "BBC News", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8" },
+      { name: "Bloomberg TV+ 1080p", url: "https://bloomberg.com/media-manifest/streams/phoenix-us.m3u8" },
+      { name: "CGTN English", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8" },
+      { name: "CNA", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8" },
+      { name: "NHK English", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8" },
+      { name: "DW En", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8" },
+      { name: "France 24 En", url: "https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8" },
+      { name: "France 24 Fr", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8" },
+      { name: "GB News", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8" },
+      { name: "Tagesschau24", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8" },
+      { name: "Thai PBS", url: "https://thaipbs-live.cdn.byteark.com/live/playlist.m3u8" },
+      { name: "TPTV", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org" }
+    ];
+
+    const playlistContainer = document.getElementById('playlist');
+    const player = document.getElementById('media-player');
+    let activeIndex = -1;
+    let hls = null;
+
+    // Build Channel List UI
+    channels.forEach((channel, index) => {
+      const item = document.createElement('div');
+      item.className = 'channel-item';
+      item.dataset.index = index;
+
+      item.innerHTML = `
+        <div class="radio-dot"></div>
+        <span class="channel-name">${channel.name}</span>
+      `;
+
+      item.addEventListener('click', () => toggleChannel(index));
+      playlistContainer.appendChild(item);
+    });
+
+    function toggleChannel(index) {
+      const items = document.querySelectorAll('.channel-item');
+
+      // Clicked on the currently active channel -> Deselect & Stop
+      if (activeIndex === index) {
+        stopAudio();
+        items[index].classList.remove('active');
+        activeIndex = -1;
+        return;
+      }
+
+      // Deselect previous channel
+      if (activeIndex !== -1) {
+        items[activeIndex].classList.remove('active');
+      }
+
+      // Select new channel
+      activeIndex = index;
+      items[index].classList.add('active');
+      playAudio(channels[index].url);
+    }
+
+    function playAudio(url) {
+      stopAudio(false);
+
+      // Safari Native HLS Support
+      if (player.canPlayType('application/vnd.apple.mpegurl')) {
+        player.src = url;
+        player.play().catch(e => console.log('Playback error:', e));
+      } 
+      // HLS.js Fallback for Brave/Chrome
+      else if (Hls.isSupported()) {
+        hls = new Hls({ enableWorker: true });
+        hls.loadSource(url);
+        hls.attachMedia(player);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          player.play().catch(e => console.log('Playback error:', e));
+        });
+      }
+    }
+
+    function stopAudio(clearSrc = true) {
+      player.pause();
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+      if (clearSrc) {
+        player.removeAttribute('src');
+        player.load();
+      }
+    }
+  </script>
+</body>
+</html>
