@@ -14,14 +14,16 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Dark Space & NASA Earth at Night Background */
+    /* Embedded Dark Earth at Night Background */
     body {
       background-color: #020408;
       background-image: 
-        linear-gradient(180deg, rgba(0, 0, 0, 0.82) 0%, rgba(2, 4, 8, 0.90) 100%),
-        url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/The_earth_at_night.jpg/1280px-The_earth_at_night.jpg');
+        /* Layer 1: Dark Vignette Overlay */
+        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.45) 0%, rgba(2, 4, 8, 0.92) 85%),
+        /* Layer 2: Embedded Night Earth Curve & City Lights SVG */
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900"><rect width="100%" height="100%" fill="%23020408"/><g opacity="0.3"><circle cx="200" cy="150" r="1" fill="%23ffffff"/><circle cx="500" cy="80" r="1.5" fill="%23ffffff"/><circle cx="900" cy="220" r="1" fill="%23ffffff"/><circle cx="1250" cy="100" r="1.2" fill="%23ffffff"/><circle cx="1100" cy="350" r="1" fill="%23ffffff"/><circle cx="350" cy="400" r="1.2" fill="%23ffffff"/></g><path d="M-200,950 Q720,420 1640,950 Z" fill="%230a1628" opacity="0.95"/><path d="M-200,950 Q720,420 1640,950" fill="none" stroke="%231d4ed8" stroke-width="4" opacity="0.5"/><g opacity="0.65" fill="%23f59e0b"><circle cx="450" cy="650" r="2.5"/><circle cx="480" cy="640" r="1.5"/><circle cx="520" cy="660" r="2"/><circle cx="700" cy="610" r="3"/><circle cx="730" cy="600" r="1.8"/><circle cx="760" cy="620" r="2.2"/><circle cx="820" cy="630" r="2.5"/><circle cx="950" cy="680" r="3"/><circle cx="980" cy="670" r="1.5"/><circle cx="1020" cy="700" r="2.2"/><circle cx="600" cy="640" r="1.2"/><circle cx="640" cy="630" r="1.5"/><circle cx="880" cy="650" r="2"/></g></svg>');
       background-size: cover;
-      background-position: center center;
+      background-position: center bottom;
       background-attachment: fixed;
       background-repeat: no-repeat;
       color: #b0b0b0;
@@ -32,12 +34,12 @@
       min-height: 100vh;
     }
 
-    /* Sticky Header: ล็อก Title และ Scope ไม่ให้เคลื่อนตาม Scroll Bar */
+    /* Sticky Fixed Header Section */
     .sticky-header {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(2, 4, 8, 0.85);
+      background: rgba(2, 4, 8, 0.88);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       padding-top: 16px;
@@ -71,14 +73,13 @@
       position: relative;
       width: 100%;
       height: 50px;
-      background-color: rgba(5, 11, 5, 0.90);
+      background-color: rgba(5, 11, 5, 0.92);
       border: 1px solid rgba(28, 59, 28, 0.8);
       border-radius: 4px;
       overflow: hidden;
       box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.6);
     }
 
-    /* Background Scope Grid Overlay */
     .scope-grid {
       position: absolute;
       top: 0;
@@ -102,7 +103,7 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
-      background: rgba(0, 0, 0, 0.50);
+      background: rgba(0, 0, 0, 0.55);
       padding: 16px;
       border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -278,7 +279,7 @@
 </head>
 <body>
 
-  <!-- Sticky Fixed Section: ล็อกส่วน Header และ Waveform Scope ด้านบน -->
+  <!-- Sticky Fixed Section: ล็อก Header + Waveform Scope ไว้ด้านบนเสมอ -->
   <div class="sticky-header">
     <div class="header-container">
       <div class="callsign">HS1WFK</div>
