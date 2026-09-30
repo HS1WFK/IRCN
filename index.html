@@ -124,7 +124,7 @@
       border-radius: 50%;
       background-color: #222222;
       flex-shrink: 0;
-      transition: background-color 0.05s ease, box-shadow 0.05s ease;
+      transition: background-color 0.03s ease, box-shadow 0.03s ease;
     }
 
     .vu-meter-panel {
@@ -186,8 +186,8 @@
         #22c55e 78%, 
         #ff9800 80%, 
         #ef4444 100%);
-      /* ปรับ transition ให้สั้นกระชับ เพื่อตอบสนองต่อเสียงพูดแบบ real-time */
-      transition: width 0.04s ease-out;
+      /* ปรับ transition เหลือ 0.02s เพื่อให้ตอบสนองเร็วไร้ดีเลย์ */
+      transition: width 0.02s linear;
       z-index: 1;
     }
 
@@ -300,8 +300,8 @@
           analyser = audioCtx.createAnalyser();
           
           analyser.fftSize = 128;
-          // ปรับ smoothingTimeConstant ลงเพื่อแก้ปัญหาดีเลย์ (Fast Real-time Response)
-          analyser.smoothingTimeConstant = 0.55; 
+          // ปรับลดค่า smoothing ลงเหลือ 0.25 เพื่อตัดดีเลย์การประมวลผล
+          analyser.smoothingTimeConstant = 0.25; 
 
           sourceNode = audioCtx.createMediaElementSource(player);
           sourceNode.connect(analyser);
@@ -377,7 +377,6 @@
         let targetLevel = 0;
         let hasRealData = false;
 
-        // 1. ดึงค่า RMS จริง
         if (analyser && dataArray) {
           analyser.getByteFrequencyData(dataArray);
           let sumSquares = 0;
@@ -389,24 +388,23 @@
 
           if (rms > 0.008) {
             hasRealData = true;
-            // เพิ่ม Gain ขึ้น ~3 dB โดยปรับตัวคูณสัญญาณจาก 1.85 เป็น 2.65
             targetLevel = Math.min(100, Math.pow(rms * 2.65, 0.85) * 100);
           }
         }
 
-        // 2. iOS Fallback Dynamics
+        // iOS Fallback Engine (Fast Sync)
         if (!hasRealData && !player.paused && player.currentTime > 0) {
-          simPhase += 0.12;
-          let speechEnvelope = Math.max(0, Math.sin(simPhase) * 35 + Math.sin(simPhase * 2.7) * 25);
-          let randomPeak = Math.random() > 0.5 ? Math.random() * 30 : 0;
-          targetLevel = Math.min(95, Math.max(0, 18 + speechEnvelope + randomPeak));
+          simPhase += 0.22;
+          let speechEnvelope = Math.max(0, Math.sin(simPhase) * 40 + Math.sin(simPhase * 3.1) * 25);
+          let randomPeak = Math.random() > 0.4 ? Math.random() * 35 : 0;
+          targetLevel = Math.min(98, Math.max(0, 15 + speechEnvelope + randomPeak));
         }
 
-        // 3. Fast Response Balancing (ลดการตกค้างของเข็ม ไม่หน่วงดีเลย์)
+        // Fast Tracking Adjustment (เพิ่มความไวการเด้งขึ้นและทิ้งตัว)
         if (targetLevel > currentLevel) {
-          currentLevel += (targetLevel - currentLevel) * 0.65; // เด้งขึ้นเร็วทันเสียงพูด
+          currentLevel += (targetLevel - currentLevel) * 0.88; // เด้งขึ้นทันที
         } else {
-          currentLevel += (targetLevel - currentLevel) * 0.30; // ปล่อยทิ้งตัวลงเร็วขึ้น ไม่ค้าง
+          currentLevel += (targetLevel - currentLevel) * 0.52; // ทิ้งตัวลงทันที ไม่ค้าง
         }
 
         if (activeIndex !== -1) {
