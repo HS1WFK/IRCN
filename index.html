@@ -124,7 +124,7 @@
       border-radius: 50%;
       background-color: #222222;
       flex-shrink: 0;
-      transition: background-color 0.08s ease, box-shadow 0.08s ease;
+      transition: background-color 0.05s ease, box-shadow 0.05s ease;
     }
 
     .vu-meter-panel {
@@ -186,8 +186,8 @@
         #22c55e 78%, 
         #ff9800 80%, 
         #ef4444 100%);
-      /* ใช้ Damping transition ปรับแต่งความนุ่มนวลเหมือนเข็มอนาล็อก */
-      transition: width 0.08s cubic-bezier(0.25, 0.1, 0.25, 1);
+      /* ปรับ transition ให้สั้นกระชับ เพื่อตอบสนองต่อเสียงพูดแบบ real-time */
+      transition: width 0.04s ease-out;
       z-index: 1;
     }
 
@@ -258,7 +258,6 @@
     let sourceNode = null;
     let animFrameId = null;
 
-    // Standard Ballistics State Variables
     let currentLevel = 0;
 
     channels.forEach((channel, index) => {
@@ -300,9 +299,9 @@
           audioCtx = new AudioContext();
           analyser = audioCtx.createAnalyser();
           
-          // ปรับความละเอียด FFT และตั้งค่าแรงเฉื่อยมาตรฐาน (VU Ballistics Standard)
           analyser.fftSize = 128;
-          analyser.smoothingTimeConstant = 0.82; 
+          // ปรับ smoothingTimeConstant ลงเพื่อแก้ปัญหาดีเลย์ (Fast Real-time Response)
+          analyser.smoothingTimeConstant = 0.55; 
 
           sourceNode = audioCtx.createMediaElementSource(player);
           sourceNode.connect(analyser);
@@ -378,7 +377,7 @@
         let targetLevel = 0;
         let hasRealData = false;
 
-        // 1. ดึงค่า RMS จริงจาก AudioContext
+        // 1. ดึงค่า RMS จริง
         if (analyser && dataArray) {
           analyser.getByteFrequencyData(dataArray);
           let sumSquares = 0;
@@ -388,26 +387,26 @@
           }
           let rms = Math.sqrt(sumSquares / dataArray.length);
 
-          if (rms > 0.01) {
+          if (rms > 0.008) {
             hasRealData = true;
-            // คำนวณ Scale Logarithmic Attenuation เพื่อให้ 0 dB ตรงกับระดับสตรีมมาตรฐาน (80% Bar Width)
-            targetLevel = Math.min(100, Math.pow(rms * 1.85, 0.9) * 100);
+            // เพิ่ม Gain ขึ้น ~3 dB โดยปรับตัวคูณสัญญาณจาก 1.85 เป็น 2.65
+            targetLevel = Math.min(100, Math.pow(rms * 2.65, 0.85) * 100);
           }
         }
 
-        // 2. iOS Fallback: จำลองการตอบสนองตามจังหวะคำพูด (Organic Speech Interval Simulation)
+        // 2. iOS Fallback Dynamics
         if (!hasRealData && !player.paused && player.currentTime > 0) {
-          simPhase += 0.08;
-          let speechEnvelope = Math.max(0, Math.sin(simPhase) * 30 + Math.sin(simPhase * 2.7) * 20);
-          let randomPeak = Math.random() > 0.6 ? Math.random() * 25 : 0;
-          targetLevel = Math.min(88, Math.max(0, 15 + speechEnvelope + randomPeak));
+          simPhase += 0.12;
+          let speechEnvelope = Math.max(0, Math.sin(simPhase) * 35 + Math.sin(simPhase * 2.7) * 25);
+          let randomPeak = Math.random() > 0.5 ? Math.random() * 30 : 0;
+          targetLevel = Math.min(95, Math.max(0, 18 + speechEnvelope + randomPeak));
         }
 
-        // 3. mechanical Damping Effect (จำลองน้ำหนักเข็ม VU Meter)
+        // 3. Fast Response Balancing (ลดการตกค้างของเข็ม ไม่หน่วงดีเลย์)
         if (targetLevel > currentLevel) {
-          currentLevel += (targetLevel - currentLevel) * 0.35; // จังหวะตีขึ้นนุ่มนวล
+          currentLevel += (targetLevel - currentLevel) * 0.65; // เด้งขึ้นเร็วทันเสียงพูด
         } else {
-          currentLevel += (targetLevel - currentLevel) * 0.12; // จังหวะทิ้งตัวช้าๆ ตามแรงเฉื่อย
+          currentLevel += (targetLevel - currentLevel) * 0.30; // ปล่อยทิ้งตัวลงเร็วขึ้น ไม่ค้าง
         }
 
         if (activeIndex !== -1) {
@@ -417,8 +416,7 @@
           if (vuFill) vuFill.style.width = currentLevel.toFixed(1) + '%';
 
           if (led) {
-            // ไฟ LED ติดตามระดับสัญญาณจริงเมื่อข้าม threshold
-            if (currentLevel > 12) {
+            if (currentLevel > 10) {
               led.style.backgroundColor = '#22c55e';
               led.style.boxShadow = '0 0 6px #22c55e';
             } else {
