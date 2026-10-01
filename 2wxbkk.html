@@ -28,7 +28,7 @@
             color: #f8fafc;
         }
 
-        /* Radar container wrapper - Strictly hides scrollbars and crops frame */
+        /* Radar container wrapper */
         .radar-box {
             position: relative;
             width: 100%;
@@ -52,23 +52,21 @@
             overflow: hidden;
         }
 
-        /* Left Pane (Animation) Container */
+        /* Left Pane Container */
         .iframe-crop-left {
             position: absolute;
             width: 1100px;
             height: 1000px;
             transform-origin: center center;
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s, height 0.2s;
             pointer-events: auto;
         }
 
-        /* Right Pane (High Resolution - Adjusted canvas width for horizontal fit) Container */
+        /* Right Pane Container (Width and Height managed dynamically in JS) */
         .iframe-crop-right {
             position: absolute;
-            width: 1850px; /* Optimized canvas width to span fully horizontally */
-            height: 1800px;
             transform-origin: center center;
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s, height 0.2s;
             pointer-events: auto;
         }
 
@@ -80,7 +78,29 @@
             overflow: hidden;
         }
 
-        /* Pulse animation for live status */
+        /* Custom Radio Button styling */
+        .radar-radio input[type="radio"] {
+            display: none;
+        }
+        .radar-radio label {
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            background-color: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            color: #94a3b8;
+        }
+        .radar-radio input[type="radio"]:checked + label {
+            background-color: #0284c7;
+            border-color: #38bdf8;
+            color: #ffffff;
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+        }
+
+        /* Pulse animation */
         @keyframes pulse-ring {
             0% { transform: scale(0.95); opacity: 0.8; }
             50% { transform: scale(1.15); opacity: 0.4; }
@@ -107,9 +127,8 @@
 </head>
 <body class="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden">
 
-    <!-- Top Navigation / Status Header Bar -->
+    <!-- Top Navigation Header Bar -->
     <header class="h-12 md:h-14 bg-slate-900/95 border-b border-slate-800 px-3 md:px-5 flex items-center justify-between z-30 shrink-0">
-        <!-- Title & Status -->
         <div class="flex items-center space-x-3">
             <div class="p-1.5 md:p-2 bg-sky-500/10 text-sky-400 rounded-lg border border-sky-500/20">
                 <i class="fa-solid fa-radar text-base md:text-lg"></i>
@@ -122,34 +141,29 @@
                         Auto Fit Mode
                     </span>
                 </h1>
-                <p class="text-[10px] md:text-xs text-slate-400 hidden sm:block">เรดาร์หนองจอก - ปรับสเกลภาพความละเอียดสูง (Hi-Res) ให้ Fit พอดีกรอบ</p>
+                <p class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ปรับสเกลภาพเรดาร์ให้ Fit พอดีกรอบ แยก 2 ช่องซ้าย-ขวา</p>
             </div>
         </div>
 
-        <!-- Controls: Countdown & Refresh -->
         <div class="flex items-center gap-2 md:gap-4">
-            <!-- Countdown Progress -->
             <div class="flex items-center gap-2 bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
                 <i class="fa-regular fa-clock text-sky-400 text-xs"></i>
                 <div class="text-[11px] md:text-xs font-mono flex items-center gap-1.5">
                     <span class="text-slate-400 hidden md:inline">รีเฟรชใน:</span>
                     <span id="countdown-timer" class="text-sky-400 font-bold">03:00</span>
                 </div>
-                <!-- Progress Bar Track -->
                 <div class="w-10 md:w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden ml-1">
                     <div id="progress-bar" class="h-full bg-sky-400 transition-all duration-1000 ease-linear w-full"></div>
                 </div>
             </div>
 
-            <!-- Global Fit / Scale Adjustments -->
             <div class="hidden lg:flex items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 text-xs">
-                <button onclick="adjustScale(-0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300" title="ย่อขนาดภาพขวา"><i class="fa-solid fa-minus"></i></button>
-                <button onclick="resetScale()" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 font-mono text-[11px]" title="รีเซ็ต Fit">Reset Fit</button>
-                <button onclick="adjustScale(0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300" title="ขยายขนาดภาพขวา"><i class="fa-solid fa-plus"></i></button>
+                <button onclick="adjustScale(-0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300"><i class="fa-solid fa-minus"></i></button>
+                <button onclick="resetScale()" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 font-mono text-[11px]">Reset Fit</button>
+                <button onclick="adjustScale(0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300"><i class="fa-solid fa-plus"></i></button>
             </div>
 
-            <!-- Manual Refresh Button -->
-            <button id="refresh-btn" onclick="manualRefresh()" title="รีเฟรชภาพเรดาร์ทั้งสองฝั่งทันที" 
+            <button id="refresh-btn" onclick="manualRefresh()" 
                 class="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm focus:outline-none">
                 <i id="refresh-icon" class="fa-solid fa-arrows-rotate text-xs"></i>
                 <span class="hidden sm:inline">รีเฟรช</span>
@@ -157,20 +171,32 @@
         </div>
     </header>
 
-    <!-- Main Split Screen (50/50 Equal Left/Right Split) -->
+    <!-- Main Split Screen -->
     <main class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 p-2 bg-slate-950 overflow-hidden relative">
         
-        <!-- ================= LEFT COLUMN: Animation Radar ================= -->
+        <!-- ================= LEFT COLUMN ================= -->
         <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
-            <div class="h-8 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
+            <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
                 <div class="flex items-center gap-2 text-sky-400 truncate">
                     <i class="fa-solid fa-circle-play"></i>
-                    <span class="text-slate-200 font-semibold truncate">ภาพเคลื่อนไหว (Radar Animation)</span>
+                    <span class="text-slate-200 font-semibold truncate">ภาพเคลื่อนไหว</span>
+                    
+                    <div class="flex items-center gap-1 ml-2">
+                        <div class="radar-radio">
+                            <input type="radio" id="radio-left-nk" name="radar-left" value="nk" checked onchange="changeLeftRadar('nk')">
+                            <label for="radio-left-nk">NK</label>
+                        </div>
+                        <div class="radar-radio">
+                            <input type="radio" id="radio-left-nj" name="radar-left" value="nj" onchange="changeLeftRadar('nj')">
+                            <label for="radio-left-nj">NJ</label>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="flex items-center gap-2 shrink-0">
-                    <a href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" rel="noopener" 
+                    <a id="link-left" href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" rel="noopener" 
                        class="text-slate-400 hover:text-sky-300 text-[11px] flex items-center gap-1 transition-colors">
-                        <span>เปิดเว็บกทม.</span>
+                        <span>เปิดเว็บต้นทาง</span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                     </a>
                 </div>
@@ -179,7 +205,7 @@
             <div id="box-left" class="radar-box flex-1">
                 <div id="loader-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity duration-300">
                     <div class="spinner"></div>
-                    <p class="text-xs text-slate-400">กำลังโหลดเรดาร์แบบเคลื่อนไหว...</p>
+                    <p class="text-xs text-slate-400">กำลังโหลดภาพเรดาร์...</p>
                 </div>
 
                 <div class="scaler-wrapper">
@@ -188,7 +214,7 @@
                             id="iframe-left"
                             src="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" 
                             class="radar-iframe"
-                            title="BMA Radar Animation"
+                            title="BMA Radar Animation Left"
                             scrolling="no"
                             onload="onIframeLoaded('loader-left')"
                             onerror="onIframeError('error-left', 'loader-left')">
@@ -199,25 +225,37 @@
                 <div id="error-left" class="hidden absolute inset-0 bg-slate-900/95 z-20 p-4 flex flex-col items-center justify-center text-center">
                     <i class="fa-solid fa-circle-exclamation text-amber-400 text-2xl mb-2"></i>
                     <p class="text-xs text-slate-300 mb-3">ไม่สามารถแสดงผลผ่านกรอบได้</p>
-                    <a href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" 
+                    <a id="error-btn-left" href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" 
                        class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs">
-                        เปิดหน้า Animation Nk
+                        เปิดหน้าเว็บตรง
                     </a>
                 </div>
             </div>
         </section>
 
-        <!-- ================= RIGHT COLUMN: High Resolution Radar ================= -->
+        <!-- ================= RIGHT COLUMN ================= -->
         <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
-            <div class="h-8 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
+            <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
                 <div class="flex items-center gap-2 text-indigo-400 truncate">
                     <i class="fa-solid fa-crosshairs"></i>
-                    <span class="text-slate-200 font-semibold truncate">ความละเอียดสูง (High Resolution - Fit)</span>
+                    <span class="text-slate-200 font-semibold truncate">High Resolution - Fit</span>
+                    
+                    <div class="flex items-center gap-1 ml-2">
+                        <div class="radar-radio">
+                            <input type="radio" id="radio-right-bkk" name="radar-right" value="bkk" checked onchange="changeRightRadar('bkk')">
+                            <label for="radio-right-bkk">BKK</label>
+                        </div>
+                        <div class="radar-radio">
+                            <input type="radio" id="radio-right-svp" name="radar-right" value="svp" onchange="changeRightRadar('svp')">
+                            <label for="radio-right-svp">SVP240</label>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="flex items-center gap-2 shrink-0">
-                    <a href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" rel="noopener" 
+                    <a id="link-right" href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" rel="noopener" 
                        class="text-slate-400 hover:text-indigo-300 text-[11px] flex items-center gap-1 transition-colors">
-                        <span>เปิดเว็บกทม.</span>
+                        <span>เปิดเว็บต้นทาง</span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                     </a>
                 </div>
@@ -226,7 +264,7 @@
             <div id="box-right" class="radar-box flex-1">
                 <div id="loader-right" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity duration-300">
                     <div class="spinner"></div>
-                    <p class="text-xs text-slate-400">กำลังย่อและปรับสเกลภาพ High Resolution...</p>
+                    <p class="text-xs text-slate-400">กำลังย่อและปรับสเกลภาพเรดาร์...</p>
                 </div>
 
                 <div class="scaler-wrapper">
@@ -235,7 +273,7 @@
                             id="iframe-right"
                             src="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" 
                             class="radar-iframe"
-                            title="BMA Radar High Resolution"
+                            title="BMA Radar Right"
                             scrolling="no"
                             onload="onIframeLoaded('loader-right')"
                             onerror="onIframeError('error-right', 'loader-right')">
@@ -246,9 +284,9 @@
                 <div id="error-right" class="hidden absolute inset-0 bg-slate-900/95 z-20 p-4 flex flex-col items-center justify-center text-center">
                     <i class="fa-solid fa-circle-exclamation text-amber-400 text-2xl mb-2"></i>
                     <p class="text-xs text-slate-300 mb-3">ไม่สามารถแสดงผลผ่านกรอบได้</p>
-                    <a href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" 
+                    <a id="error-btn-right" href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" 
                        class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs">
-                        เปิดหน้า High Resolution Nk
+                        เปิดหน้าเว็บตรง
                     </a>
                 </div>
             </div>
@@ -266,7 +304,7 @@
         </div>
         <div class="text-slate-400 flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
-            <span>สำนักการระบายน้ำ กรุงเทพมหานคร</span>
+            <span>สำนักการระบายน้ำ กทม. & กรมอุตุนิยมวิทยา</span>
         </div>
     </footer>
 
@@ -275,6 +313,21 @@
         let countdown = REFRESH_SECONDS;
         let timerId = null;
         let rightScaleUserOffset = 0;
+
+        // Current Radar Source URLs
+        const radarSources = {
+            left: {
+                nk: "https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx",
+                nj: "https://weather.bangkok.go.th/Radar/RadarAnimation.aspx"
+            },
+            right: {
+                bkk: "https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx",
+                svp: "https://weather.tmd.go.th/svp240loop.php"
+            }
+        };
+
+        let currentLeftType = 'nk';
+        let currentRightType = 'bkk';
 
         /**
          * Dynamic scaling engine calculating screen dimensions
@@ -287,27 +340,73 @@
 
             if (!boxLeft || !boxRight || !scalerLeft || !scalerRight) return;
 
-            // --- Left Pane Scaling (Animation) ---
+            // --- Left Pane Scaling ---
             const leftW = boxLeft.clientWidth;
             const leftH = boxLeft.clientHeight;
-            // Target animation viewport base: ~1100x1000
             const leftScale = Math.min(leftW / 920, leftH / 880) * 1.15;
             const leftYOffset = -90 * (leftH / 800);
             scalerLeft.style.transform = `scale(${leftScale}) translate(0px, ${leftYOffset}px)`;
 
-            // --- Right Pane Scaling (High Resolution) ---
+            // --- Right Pane Scaling ---
             const rightW = boxRight.clientWidth;
             const rightH = boxRight.clientHeight;
             
-            // Calculate scale based on container width so the image expands fully across left-right boundaries
-            const baseRightScale = rightW / 1850;
-            const finalRightScale = Math.max(0.15, baseRightScale + rightScaleUserOffset);
-            
-            // Shift down vertical offset to center the radar map content nicely within the page
-            const rightYOffset = -120 * (rightH / 800);
-            const rightXOffset = 0;
+            let baseRightScale, rightYOffset, rightXOffset;
 
+            if (currentRightType === 'bkk') {
+                // High Resolution BKK Fitting (Large Webpage)
+                scalerRight.style.width = '1850px';
+                scalerRight.style.height = '1650px';
+                
+                baseRightScale = rightW / 1850;
+                rightYOffset = -120 * (rightH / 800);
+                rightXOffset = 0;
+            } else {
+                // TMD SVP240 Fitting (Smaller Webpage)
+                // Resize the iframe container to match the actual TMD content dimension
+                scalerRight.style.width = '850px';
+                scalerRight.style.height = '850px';
+                
+                baseRightScale = Math.min(rightW / 850, rightH / 850);
+                rightYOffset = 20; // Shift down slightly to clear TMD top header spacing
+                rightXOffset = 0;
+            }
+
+            const finalRightScale = Math.max(0.15, baseRightScale + rightScaleUserOffset);
             scalerRight.style.transform = `scale(${finalRightScale}) translate(${rightXOffset}px, ${rightYOffset}px)`;
+        }
+
+        /**
+         * Switch Left Radar Source
+         */
+        function changeLeftRadar(type) {
+            currentLeftType = type;
+            const url = radarSources.left[type];
+            
+            document.getElementById('link-left').href = url;
+            document.getElementById('error-btn-left').href = url;
+            
+            showLoader('loader-left');
+            document.getElementById('iframe-left').src = `${url}?t=${new Date().getTime()}`;
+            applyDynamicTransforms();
+        }
+
+        /**
+         * Switch Right Radar Source
+         */
+        function changeRightRadar(type) {
+            currentRightType = type;
+            const url = radarSources.right[type];
+            
+            document.getElementById('link-right').href = url;
+            document.getElementById('error-btn-right').href = url;
+            
+            // Re-apply dimension setup instantly before loading map
+            applyDynamicTransforms();
+            
+            showLoader('loader-right');
+            document.getElementById('iframe-right').src = `${url}?t=${new Date().getTime()}`;
+            rightScaleUserOffset = 0; // Reset user scaling upon switching
         }
 
         function adjustScale(delta) {
@@ -361,8 +460,11 @@
             showLoader('loader-left');
             showLoader('loader-right');
 
-            if (iframeLeft) iframeLeft.src = `https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx?t=${timestamp}`;
-            if (iframeRight) iframeRight.src = `https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx?t=${timestamp}`;
+            const leftUrl = radarSources.left[currentLeftType];
+            const rightUrl = radarSources.right[currentRightType];
+
+            if (iframeLeft) iframeLeft.src = `${leftUrl}?t=${timestamp}`;
+            if (iframeRight) iframeRight.src = `${rightUrl}?t=${timestamp}`;
 
             updateTimestamp();
         }
