@@ -175,7 +175,7 @@
       transform: scale(1);
     }
 
-    /* Font Size 16px ดั้งเดิม */
+    /* Font Size 16px มาตรฐานดั้งเดิม */
     .channel-name {
       font-size: 16px;
       font-weight: 500;
@@ -222,7 +222,7 @@
       gap: 3px;
     }
 
-    /* Scale Labels 14px ดั้งเดิม */
+    /* Scale Labels 14px มาตรฐานดั้งเดิม */
     .vu-scale-labels {
       display: flex;
       justify-content: space-between;
@@ -346,10 +346,10 @@
     ];
 
     const radioChannels = [
-      { name: "FM 91", url: "http://122.155.16.48:8955/;stream", isAudioOnly: true },
+      { name: "FM 91", url: "http://122.155.16.48:8955/stream", isAudioOnly: true },
       { name: "บ้านธรรมะ", url: "https://radio10.plathong.net/7238/;stream.mp3", isAudioOnly: true },
-      { name: "วัดปากบ่อ", url: "http://radio1.siamlivehost.com:8001/;", isAudioOnly: true },
-      { name: "วัดนายโรง", url: "http://103.7.56.219:4106/;", isAudioOnly: true }
+      { name: "วัดปากบ่อ", url: "http://radio1.siamlivehost.com:8001/stream", isAudioOnly: true },
+      { name: "วัดนายโรง", url: "http://103.7.56.219:4106/stream", isAudioOnly: true }
     ];
 
     const dbMarks = [
@@ -472,44 +472,44 @@
       playMedia(allChannels[index]);
     }
 
-    // Advanced Multi-Proxy Stream Player with Automatic Failover
-    function playAudioStreamWithProxyFallback(originalUrl) {
-      const proxies = [
-        originalUrl, // Try direct first
-        `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`,
-        `https://thingproxy.freeboard.io/fetch/${originalUrl}`,
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`
-      ];
+    // High Reliability Audio Tunnel Player
+    function playAudioStreamWithTunneling(originalUrl) {
+      let targets = [originalUrl];
 
-      let tryIndex = 0;
+      if (originalUrl.startsWith('http:')) {
+        // High-speed Google/Cloudflare Secure Tunnel for HTTP Audio Streams
+        targets = [
+          `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=3600&url=${encodeURIComponent(originalUrl)}`,
+          `https://wsrv.nl/?url=${encodeURIComponent(originalUrl)}`,
+          originalUrl
+        ];
+      }
 
-      function attemptPlay() {
-        if (tryIndex >= proxies.length) {
-          console.log("All audio proxies failed for:", originalUrl);
-          return;
-        }
+      let idx = 0;
 
-        const currentProxyUrl = proxies[tryIndex];
-        audioPlayer.src = currentProxyUrl;
+      function tryConnect() {
+        if (idx >= targets.length) return;
+
+        audioPlayer.src = targets[idx];
         audioPlayer.load();
 
         audioPlayer.play().then(() => {
           startVUMeter(audioPlayer);
         }).catch(err => {
-          console.log(`Proxy level ${tryIndex} failed, trying next fallback...`, err);
-          tryIndex++;
-          attemptPlay();
+          console.log(`Tunnel ${idx} failed, retrying next route...`, err);
+          idx++;
+          tryConnect();
         });
       }
 
-      attemptPlay();
+      tryConnect();
     }
 
     function playMedia(channel) {
       stopAll(false);
 
       if (channel.isAudioOnly) {
-        playAudioStreamWithProxyFallback(channel.url);
+        playAudioStreamWithTunneling(channel.url);
       } else {
         // HLS Video Stream Engine
         if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
