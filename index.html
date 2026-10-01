@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Scope Enhanced V.1</title>
+  <title>International News - Realtime Scope Sync V.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -14,7 +14,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Fixed Background Layer (ert92.jpg) - 100% Brightness */
     body {
       background-color: #050a12;
       color: #cccccc;
@@ -65,7 +64,6 @@
       padding-left: 6px;
     }
 
-    /* HS1WFK - 26px */
     .callsign {
       font-size: 26px;
       font-weight: 700;
@@ -74,7 +72,6 @@
       margin-bottom: 4px;
     }
 
-    /* Title Row */
     .title-row {
       display: flex;
       justify-content: space-between;
@@ -82,7 +79,6 @@
       margin-bottom: 8px;
     }
 
-    /* International News - 40px */
     h1.page-title {
       font-size: 40px;
       font-weight: 700;
@@ -92,7 +88,6 @@
       line-height: 1.1;
     }
 
-    /* UTC Clock - 26px */
     .utc-time-display {
       font-size: 26px;
       font-weight: 600;
@@ -102,7 +97,6 @@
       white-space: nowrap;
     }
 
-    /* Station Info Row */
     .station-info-row {
       display: flex;
       justify-content: space-between;
@@ -114,7 +108,6 @@
       width: 100%;
     }
 
-    /* Station Info (.station-location-text) - 26px */
     .station-location-text {
       font-size: 26px !important;
       font-weight: 700;
@@ -126,7 +119,6 @@
       line-height: 1.2;
     }
 
-    /* Local Time (.local-time-display) - 26px */
     .local-time-display {
       font-size: 26px !important;
       font-weight: 700;
@@ -138,7 +130,6 @@
       line-height: 1.2;
     }
 
-    /* Oscilloscope Scope Panel */
     .scope-container {
       position: relative;
       width: 100%;
@@ -170,7 +161,6 @@
       height: 100%;
     }
 
-    /* Audio Content Stats */
     .audio-content-stats {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       display: none;
@@ -181,7 +171,6 @@
       color: #a0a0a0;
     }
 
-    /* Channel Stats (.channels-indicator) - 20px */
     .channels-indicator {
       font-size: 20px;
       font-weight: 700;
@@ -200,7 +189,6 @@
       color: #555555;
     }
 
-    /* Playlist Container */
     .playlist-container {
       display: flex;
       flex-direction: column;
@@ -224,7 +212,6 @@
       padding-left: 2px;
     }
 
-    /* Custom Radio Button UI */
     .radio-dot {
       width: 18px;
       height: 18px;
@@ -257,7 +244,6 @@
       transform: scale(1);
     }
 
-    /* ชื่อสถานี (.channel-name) - 20px */
     .channel-name {
       font-size: 20px;
       font-weight: 400;
@@ -272,7 +258,6 @@
       font-weight: 700;
     }
 
-    /* Retro Classic VU Meter Section */
     .vu-container {
       display: flex;
       align-items: center;
@@ -302,7 +287,6 @@
       gap: 4px;
     }
 
-    /* Scale Labels (.vu-scale-labels) - 20px */
     .vu-scale-labels {
       display: flex;
       justify-content: space-between;
@@ -364,7 +348,6 @@
       display: none;
     }
 
-    /* Responsive Mobile Layout (max-width: 480px) */
     @media (max-width: 480px) {
       body {
         padding: 0 12px 16px 12px;
@@ -530,8 +513,9 @@
     updateClocks();
 
     function resizeCanvas() {
-      canvas.width = canvas.clientWidth * window.devicePixelRatio || 300;
-      canvas.height = canvas.clientHeight * window.devicePixelRatio || 50;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
     }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
@@ -568,6 +552,7 @@
       playlistContainer.appendChild(item);
     });
 
+    // ปรับปรุงการริเริ่ม AudioContext สำหรับ iOS ให้ปลดล็อก Audio Engine ทันที
     function initAudioContext() {
       if (!audioCtx) {
         try {
@@ -575,8 +560,8 @@
           audioCtx = new AudioContext();
           analyser = audioCtx.createAnalyser();
           
-          analyser.fftSize = 128;
-          analyser.smoothingTimeConstant = 0.55; 
+          analyser.fftSize = 256; // เพิ่มความละเอียดคลื่นสำหรับ Oscilloscope
+          analyser.smoothingTimeConstant = 0.3; // ปรับความสมูทในการตอบสนองความถี่
 
           sourceNode = audioCtx.createMediaElementSource(player);
           sourceNode.connect(analyser);
@@ -600,6 +585,9 @@
     });
 
     function toggleChannel(index) {
+      // บังคับ Resume AudioContext บน iOS ผ่าน Touch Event สัมผัสปุ่ม
+      initAudioContext();
+
       const items = document.querySelectorAll('.channel-item');
 
       if (activeIndex === index) {
@@ -661,68 +649,69 @@
       statStereo.className = 'stat-term disable-gray';
     }
 
-    /* วาด Waveform Scope - ปรับ Amplitude เป็น 2 เท่า (2x) และลดความเร็วการวิ่งลง */
+    /* Oscilloscope visualizer Engine ใหม่ - แสดงรูปคลื่นสัญญาณเสียงเวลาจริง (Time-Domain Waveform) */
     function drawScope(timeData, isPlaying) {
       const width = canvas.width;
       const height = canvas.height;
       const centerY = height / 2;
 
       canvasCtx.clearRect(0, 0, width, height);
-      canvasCtx.lineWidth = 1.5 * (window.devicePixelRatio || 1);
+      canvasCtx.lineWidth = 2 * (window.devicePixelRatio || 1);
       canvasCtx.strokeStyle = '#22c55e';
       canvasCtx.shadowColor = '#22c55e';
-      canvasCtx.shadowBlur = 4;
+      canvasCtx.shadowBlur = 6;
 
       if (!isPlaying || activeIndex === -1) {
+        // เส้นระนาบศูนย์เมื่อปิดเสียง
         canvasCtx.beginPath();
         canvasCtx.moveTo(0, centerY);
         canvasCtx.lineTo(width, centerY);
         canvasCtx.stroke();
       } else if (timeData && timeData.length > 0) {
-        const numBars = 75;
-        const barWidth = width / numBars;
+        // วาดเส้นคลื่นสัญญาณเสียงเวลาจริงตาม Time Domain Data 2x Amplitude
+        canvasCtx.beginPath();
+        const bufferLength = timeData.length;
+        const sliceWidth = width / bufferLength;
+        let x = 0;
 
-        for (let i = 0; i < numBars; i++) {
-          const sampleIndex = Math.floor((i / numBars) * timeData.length);
-          const v = Math.abs((timeData[sampleIndex] - 128) / 128.0);
-          
-          /* ปรับความสูง Amplitude เพิ่มขึ้นเป็น 2 เท่า (2x: ตัวคูณจาก 0.85 -> 1.7) */
-          const barHeight = v * (height * 1.7);
+        for (let i = 0; i < bufferLength; i++) {
+          const v = timeData[i] / 128.0; // ปกติ = 1.0 (ช่วง 0 ถึง 2)
+          // ขยายความสูงรูปคลื่นขึ้น 2 เท่า (2x) โดยรักษากรอบ Canvas
+          const y = centerY + (v - 1.0) * centerY * 1.85;
 
-          if (barHeight > 1) {
-            canvasCtx.beginPath();
-            canvasCtx.moveTo(i * barWidth, centerY - barHeight / 2);
-            canvasCtx.lineTo(i * barWidth, centerY + barHeight / 2);
-            canvasCtx.stroke();
+          if (i === 0) {
+            canvasCtx.moveTo(x, y);
+          } else {
+            canvasCtx.lineTo(x, y);
           }
+          x += sliceWidth;
         }
+        canvasCtx.stroke();
       } else {
-        /* ปรับความเร็วการขยับของคลื่นให้ช้าลงเพื่อความสมจริง (ตัวคูณจาก 0.006 -> 0.002) */
+        // โหมดสแกนคลื่นจำลองความเร็วต่ำนุ่มนวล
         const time = performance.now() * 0.002;
-        const numBars = 75;
-        const barWidth = width / numBars;
+        canvasCtx.beginPath();
+        const points = 120;
+        const sliceWidth = width / points;
+        let x = 0;
 
-        for (let i = 0; i < numBars; i++) {
-          let wordEnvelope = Math.sin(i * 0.18 + time) * Math.sin(i * 0.08 - time * 0.4);
+        for (let i = 0; i < points; i++) {
+          let wordEnvelope = Math.sin(i * 0.15 + time) * Math.sin(i * 0.05 - time * 0.5);
           wordEnvelope = Math.max(0, wordEnvelope);
 
-          let voiceDetail = Math.sin(i * 1.5 + time * 3) * 0.5 + 0.5;
+          let voiceDetail = Math.sin(i * 0.8 + time * 2) * 0.5;
+          let amp = (currentLevel / 100) * (centerY * 0.90) * Math.pow(wordEnvelope, 2) * voiceDetail;
 
-          /* ปรับความสูง Amplitude สำรองเพิ่มขึ้นเป็น 2 เท่า (2x: ตัวคูณจาก 0.45 -> 0.90) */
-          let amp = (currentLevel / 100) * (height * 0.90) * Math.pow(wordEnvelope, 2) * voiceDetail;
+          const y = centerY + Math.sin(i * 0.4 + time * 3) * amp;
 
-          if (amp > 1) {
-            canvasCtx.beginPath();
-            canvasCtx.moveTo(i * barWidth, centerY - amp);
-            canvasCtx.lineTo(i * barWidth, centerY + amp);
-            canvasCtx.stroke();
+          if (i === 0) {
+            canvasCtx.moveTo(x, y);
           } else {
-            canvasCtx.beginPath();
-            canvasCtx.moveTo(i * barWidth, centerY);
-            canvasCtx.lineTo(i * barWidth + 1, centerY);
-            canvasCtx.stroke();
+            canvasCtx.lineTo(x, y);
           }
+          x += sliceWidth;
         }
+        canvasCtx.stroke();
       }
     }
 
@@ -733,7 +722,6 @@
     function startVUMeter() {
       const freqData = analyser ? new Uint8Array(analyser.frequencyBinCount) : null;
       const timeData = analyser ? new Uint8Array(analyser.fftSize) : null;
-      let simPhase = 0;
 
       function update() {
         let targetLevel = 0;
@@ -748,18 +736,11 @@
           }
           let rms = Math.sqrt(sumSquares / freqData.length);
 
-          if (rms > 0.008) {
+          if (rms > 0.005) {
             hasRealData = true;
             targetLevel = Math.min(100, Math.pow(rms * 2.65, 0.85) * 100);
             if (timeData) analyser.getByteTimeDomainData(timeData);
           }
-        }
-
-        if (!hasRealData && !player.paused && player.currentTime > 0) {
-          simPhase += 0.12;
-          let speechEnvelope = Math.max(0, Math.sin(simPhase) * 35 + Math.sin(simPhase * 2.7) * 25);
-          let randomPeak = Math.random() > 0.5 ? Math.random() * 30 : 0;
-          targetLevel = Math.min(95, Math.max(0, 18 + speechEnvelope + randomPeak));
         }
 
         if (targetLevel > currentLevel) {
