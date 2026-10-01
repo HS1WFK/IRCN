@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Realtime Timezone V.1</title>
+  <title>International News - Typography Updated V.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -65,15 +65,16 @@
       padding-left: 6px;
     }
 
+    /* HS1WFK - 26px */
     .callsign {
-      font-size: 14px;
+      font-size: 26px;
       font-weight: 700;
       color: #a0a0a0;
       letter-spacing: 0.5px;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
 
-    /* บรรทัด Title หลัก (เพิ่ม Flexbox จัดชิดซ้าย-ขวา) */
+    /* Title Row */
     .title-row {
       display: flex;
       justify-content: space-between;
@@ -81,49 +82,50 @@
       margin-bottom: 6px;
     }
 
-    /* ขยาย Font ขึ้นอีกสองระดับ (จาก 22px เป็น 26px) สีขาวเดิม */
+    /* International News - 32px */
     h1.page-title {
-      font-size: 26px;
+      font-size: 32px;
       font-weight: 700;
       color: #ffffff;
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
       margin: 0;
     }
 
-    /* เวลา UTC มุมขวาบน (ระดับเดียวกับ Title) สีขาว */
+    /* UTC Clock - 26px */
     .utc-time-display {
-      font-size: 16px;
+      font-size: 26px;
       font-weight: 600;
       color: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
     }
 
-    /* บรรทัด Active Station & Location (สีส้ม) */
+    /* Station Info Row */
     .station-info-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
-      min-height: 22px; /* สำรองความสูงไว้ไม่ให้กะพริบ */
-      visibility: hidden; /* ซ่อนไว้ก่อน จะโชว์เมื่อเสียงเล่นแล้วเท่านั้น */
+      min-height: 32px;
+      visibility: hidden;
     }
 
+    /* Station Info (.station-location-text) - 26px */
     .station-location-text {
-      font-size: 15px; /* ขนาดเล็กลงมาจาก Title */
-      font-weight: 700; /* ตัวหนา */
-      color: #ff9800; /* สีส้ม */
+      font-size: 26px;
+      font-weight: 700;
+      color: #ff9800;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    /* เวลา Local Time มุมขวา (ระดับเดียวกับ Station Location) สีส้ม */
+    /* Local Time (.local-time-display) - 26px */
     .local-time-display {
-      font-size: 15px; /* เท่ากับ Station Location */
+      font-size: 26px;
       font-weight: 700;
-      color: #ff9800; /* สีส้ม */
+      color: #ff9800;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
     }
@@ -160,7 +162,7 @@
       height: 100%;
     }
 
-    /* ส่วนแสดงผล Mono | Stereo ใต้ Header Scope */
+    /* Audio Content Stats */
     .audio-content-stats {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       display: none;
@@ -171,8 +173,9 @@
       color: #a0a0a0;
     }
 
+    /* Channel Stats (.channels-indicator) - 20px */
     .channels-indicator {
-      font-size: 15px;
+      font-size: 20px;
       font-weight: 700;
       letter-spacing: 0.5px;
     }
@@ -246,9 +249,10 @@
       transform: scale(1);
     }
 
+    /* ชื่อสถานี (.channel-name) - ปกติสีเทา 20px ตัวธรรมดา / เมื่อ Active เป็นสีส้ม 20px ตัวหนา */
     .channel-name {
-      font-size: 16px;
-      font-weight: 500;
+      font-size: 20px;
+      font-weight: 400;
       color: #d0d0d0;
       white-space: nowrap;
       transition: color 0.2s ease;
@@ -257,7 +261,7 @@
 
     .channel-item.active .channel-name {
       color: #ff9800;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     /* Retro Classic VU Meter Section */
@@ -274,7 +278,6 @@
       opacity: 1;
     }
 
-    /* LED Indicator ขยาย 10% (8.8px) */
     .led-indicator {
       width: 8.8px;
       height: 8.8px;
@@ -291,12 +294,13 @@
       gap: 4px;
     }
 
+    /* Scale Labels (.vu-scale-labels) - 20px */
     .vu-scale-labels {
       display: flex;
       justify-content: space-between;
       position: relative;
-      height: 18px;
-      font-size: 14px;
+      height: 24px;
+      font-size: 20px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #e0e0e0;
       font-weight: 500;
@@ -352,6 +356,7 @@
       display: none;
     }
 
+    /* Responsive Mobile Layout (max-width: 480px) */
     @media (max-width: 480px) {
       body {
         padding: 0 12px 16px 12px;
@@ -360,13 +365,19 @@
         padding-left: 8px;
         padding-right: 8px;
       }
+      .callsign {
+        font-size: 16px;
+      }
+      /* Title หลัก: ย่อเหลือ 21px */
       h1.page-title {
         font-size: 21px;
       }
+      /* UTC Clock / Station Info / Local Time / Channels Indicator: ย่อเหลือ 13px - 14px */
       .utc-time-display {
-        font-size: 13px;
+        font-size: 14px;
       }
-      .station-location-text, .local-time-display {
+      .station-location-text, 
+      .local-time-display {
         font-size: 13px;
       }
       .channels-indicator {
@@ -380,6 +391,7 @@
         gap: 8px;
         padding-left: 0;
       }
+      /* ชื่อสถานี: ย่อเหลือ 15px */
       .channel-name {
         font-size: 15px;
       }
@@ -406,10 +418,10 @@
         <div class="utc-time-display" id="utc-clock">UTC --:--:--</div>
       </div>
 
-      <!-- Station Location Row + Realtime Local Time (สีส้ม - แสดงเมื่อเสียงเปิดได้เท่านั้น) -->
+      <!-- Station Location Row + Realtime Local Time (เปลี่ยน label เป็น Local Time) -->
       <div class="station-info-row" id="station-info-row">
         <div class="station-location-text" id="station-location-text"></div>
-        <div class="local-time-display" id="local-clock">Local --:--:--</div>
+        <div class="local-time-display" id="local-clock">Local Time --:--:--</div>
       </div>
 
       <!-- Oscilloscope Scope Under Title -->
@@ -435,7 +447,6 @@
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
   <script>
-    // ฐานข้อมูลสถานี พร้อม Location และ TimeZone IANA สำหรับคำนวณเวลาและปรับ DST อัตโนมัติ
     const channels = [
       { name: "Al Jazeera", location: "Doha Qatar", tz: "Asia/Qatar", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8" },
       { name: "ABC Australia", location: "Sydney Australia", tz: "Australia/Sydney", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8" },
@@ -486,17 +497,17 @@
 
     let currentLevel = 0;
 
-    // --- ระบบนาฬิกาคำนวณ UTC และ Local Time พร้อมรองรับ DST อัตโนมัติ ---
+    // ระบบนาฬิกาคำนวณ UTC และ Local Time (Label: Local Time)
     function updateClocks() {
       const now = new Date();
 
-      // 1. อัปเดตเวลา UTC
+      // 1. UTC Time
       const utcHours = String(now.getUTCHours()).padStart(2, '0');
       const utcMinutes = String(now.getUTCMinutes()).padStart(2, '0');
       const utcSeconds = String(now.getUTCSeconds()).padStart(2, '0');
       utcClockElem.innerText = `UTC ${utcHours}:${utcMinutes}:${utcSeconds}`;
 
-      // 2. อัปเดตเวลา Local ตาม Timezone ของสถานีที่ Active
+      // 2. Local Time ตาม Timezone ของสถานี
       if (activeIndex !== -1 && channels[activeIndex]?.tz) {
         try {
           const options = {
@@ -507,9 +518,9 @@
             hour12: false
           };
           const formatter = new Intl.DateTimeFormat('en-GB', options);
-          localClockElem.innerText = `Local ${formatter.format(now)}`;
+          localClockElem.innerText = `Local Time ${formatter.format(now)}`;
         } catch (e) {
-          localClockElem.innerText = "Local --:--:--";
+          localClockElem.innerText = "Local Time --:--:--";
         }
       }
     }
@@ -577,7 +588,7 @@
       }
     }
 
-    // เมื่อเริ่มมีสัญญาณเสียงเล่นจริงแล้วเท่านั้น จึงจะเปิดการแสดงผลบรรทัดชื่อสถานีและเวลา Local
+    // แสดงผลบรรทัดชื่อสถานีและเวลา Local เมื่อมีสัญญาณเสียงเล่นจริง
     player.addEventListener('playing', () => {
       if (activeIndex !== -1) {
         const currentChannel = channels[activeIndex];
@@ -603,7 +614,6 @@
         resetVU(activeIndex);
       }
 
-      // ซ่อนข้อมูลสถานีไว้ก่อน รอให้ Event 'playing' ทำงานเมื่อเปิดเสียงติดแล้วค่อยโชว์
       stationInfoRow.style.visibility = 'hidden';
 
       activeIndex = index;
@@ -644,7 +654,6 @@
       currentLevel = 0;
       drawScopeFlat();
 
-      // ซ่อนแถบสถานีและสถิติเสียงเมื่อหยุดเล่น
       stationInfoRow.style.visibility = 'hidden';
       if (statsPanel) statsPanel.style.display = 'none';
       statMono.className = 'stat-term disable-gray';
@@ -768,18 +777,17 @@
             }
           }
 
-          // ตรวจสอบช่องสัญญาณจริง
           if (statsPanel && analyser) {
             statsPanel.style.display = 'block';
 
             const channelCount = analyser.channelCount;
 
             if (channelCount >= 2) {
-              statStereo.className = 'stat-term active-red';   // Stereo แดงสด
-              statMono.className = 'stat-term disable-gray';   // Mono เทา
+              statStereo.className = 'stat-term active-red';
+              statMono.className = 'stat-term disable-gray';
             } else {
-              statMono.className = 'stat-term active-red';     // Mono แดงสด (เช่น TPTV)
-              statStereo.className = 'stat-term disable-gray'; // Stereo เทา
+              statMono.className = 'stat-term active-red';
+              statStereo.className = 'stat-term disable-gray';
             }
           }
 
