@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Header Stats V.1</title>
+  <title>International News - Content Stats V.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -48,7 +48,7 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(2, 4, 8, 0.88); /* เพิ่มความทึบเล็กน้อยเพื่อให้ Stat เด่น */
+      background: rgba(2, 4, 8, 0.88);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       padding-top: 16px;
@@ -91,7 +91,7 @@
       border-radius: 4px;
       overflow: hidden;
       box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.7);
-      margin-bottom: 4px; /* เพิ่มช่องว่างเล็กน้อยก่อน Stat */
+      margin-bottom: 6px;
     }
 
     .scope-grid {
@@ -113,20 +113,47 @@
       height: 100%;
     }
 
-    /* --- ส่วนที่ Process ใหม่: CSS สำหรับข้อมูลเสียงใต้ Header Scope --- */
-    .audio-stats-header {
-      font-size: 14px; /* ขยายใหญ่ขึ้น 2 ระดับ (จากเดิม 10px/11px) */
+    /* --- ส่วนที่ Process ใหม่: CSS สำหรับข้อมูลเสียง (จริง) ใต้ Header Scope --- */
+    .audio-content-stats {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-weight: 600;
-      color: #ff9800; /* สีส้มเหมือน Active Station */
-      padding-left: 4px;
-      margin-top: 2px;
       display: none; /* เริ่มต้นซ่อนไว้ */
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+      margin-top: 2px;
+      padding-left: 4px;
       transition: display 0.2s ease;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+      color: #a0a0a0; /* สีเทาพื้นฐานสำหรับสถานะอื่น */
     }
 
-    /* Playlist Container - High Readability */
+    /* บรรทัด MIME type */
+    .network-state {
+      font-size: 14px; /* ขนาด Font ส้มเดิม */
+      font-weight: 600;
+    }
+
+    /* บรรทัด Mono | Stereo Indicator */
+    .channels-indicator {
+      font-size: 16px; /* ขยายใหญ่ขึ้นอีกเล็กน้อยเพื่อให้เด่น */
+      font-weight: 700;
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
+
+    /* สีพื้นฐานสำหรับคำที่ Enable (เทาเข้ม) */
+    .stat-term {
+      transition: color 0.15s ease;
+    }
+
+    /* สีสำหรับ Active Stereo (แดงชัดเจน) */
+    .stat-term.active-red {
+      color: #ef4444 !important; 
+    }
+
+    /* สีสำหรับ Disabled/Gray (เทาจาง) */
+    .stat-term.disable-gray {
+      color: #555555;
+    }
+
+    /* Playlist Container */
     .playlist-container {
       display: flex;
       flex-direction: column;
@@ -211,10 +238,10 @@
       opacity: 1;
     }
 
-    /* --- ส่วนที่ Process ใหม่: ขยายขนาด LED ขึ้น 10% --- */
+    /* ขยายขนาด LED ขึ้น 10% (8.8px) */
     .led-indicator {
-      width: 8.8px; /* ขยายจากเดิม 8px ขึ้น 10% */
-      height: 8.8px; /* ขยายจากเดิม 8px ขึ้น 10% */
+      width: 8.8px;
+      height: 8.8px;
       border-radius: 50%;
       background-color: #222222;
       flex-shrink: 0;
@@ -298,8 +325,11 @@
         padding-right: 8px;
       }
       /* ปรับขนาด Stat บนมือถือเล็กน้อย */
-      .audio-stats-header {
+      .network-state {
         font-size: 13px;
+      }
+      .channels-indicator {
+        font-size: 15px;
       }
       .playlist-container {
         padding: 14px 12px 18px 12px;
@@ -335,9 +365,20 @@
         <div class="scope-grid"></div>
         <canvas id="oscilloscope"></canvas>
       </div>
-      <!-- --- ส่วนที่ Process ใหม่: จองพื้นที่แสดงข้อมูลเสียงใต้ Header Scope --- -->
-      <div class="audio-stats-header" id="audio-stats-header">
-        <!-- ว่างไว้รอข้อมูล -->
+
+      <!-- --- ส่วนที่ Process ใหม่: จองพื้นที่แสดง Content Stats ใต้ Header Scope --- -->
+      <div class="audio-content-stats" id="audio-content-stats">
+        <!-- บรรทัดที่ 1: Network State (MIME) -->
+        <div class="network-state">
+          State: <span id="stat-mime" class="stat-term disable-gray">N/A</span>
+        </div>
+        <!-- บรรทัดที่ 2: Mono | Stereo Indicator -->
+        <div class="channels-indicator">
+          CH: 
+          <span id="stat-mono" class="stat-term disable-gray">Mono</span> 
+          | 
+          <span id="stat-stereo" class="stat-term disable-gray">Stereo</span>
+        </div>
       </div>
     </div>
   </div>
@@ -374,10 +415,15 @@
     ];
 
     const playlistContainer = document.getElementById('playlist');
-    const headerStats = document.getElementById('audio-stats-header'); // ดึง Element สถิติด้านบน
     const player = document.getElementById('media-player');
     const canvas = document.getElementById('oscilloscope');
     const canvasCtx = canvas.getContext('2d');
+
+    // --- ส่วนที่ Process ใหม่: ดึง Element สถิติของจริง ---
+    const statsPanel = document.getElementById('audio-content-stats');
+    const statMime = document.getElementById('stat-mime');
+    const statMono = document.getElementById('stat-mono');
+    const statStereo = document.getElementById('stat-stereo');
 
     let activeIndex = -1;
     let hls = null;
@@ -409,7 +455,6 @@
         `<div class="vu-grid-line ${m.isZero ? 'zero-line' : ''}" style="left: ${m.pos}%;"></div>`
       ).join('');
 
-      // --- ส่วนที่ Process ใหม่: ลบ HTML audio-stats เดิมออก ---
       item.innerHTML = `
         <div class="radio-dot"></div>
         <span class="channel-name">${channel.name}</span>
@@ -480,6 +525,8 @@
         player.play().then(() => {
           initAudioContext();
           startVUMeter();
+          // --- ส่วนที่ Process ใหม่: ดึง MIME-type จริงเมื่อเริ่มเล่น ---
+          updateMimeStat();
         }).catch(e => console.log("Play error:", e));
       } else if (Hls.isSupported()) {
         hls = new Hls({ enableWorker: true });
@@ -489,6 +536,8 @@
           player.play().then(() => {
             initAudioContext();
             startVUMeter();
+            // --- ส่วนที่ Process ใหม่: ดึง MIME-type จริงสำหรับ HLS ---
+            updateMimeStat();
           }).catch(e => console.log("Play error:", e));
         });
       }
@@ -504,8 +553,28 @@
       }
       currentLevel = 0;
       drawScopeFlat();
-      // --- ส่วนที่ Process ใหม่: ซ่อนข้อมูล Stat เมื่อหยุดเล่น ---
-      if (headerStats) headerStats.style.display = 'none';
+      // --- ส่วนที่ Process ใหม่: ซ่อนและรีเซ็ตข้อมูล Stat เมื่อหยุด ---
+      if (statsPanel) statsPanel.style.display = 'none';
+      statMime.innerText = 'N/A';
+      statMime.className = 'stat-term disable-gray';
+      statMono.className = 'stat-term disable-gray';
+      statStereo.className = 'stat-term disable-gray';
+    }
+
+    // --- ส่วนที่ Process ใหม่: ฟังก์ชันดึง MIME-type จริง ---
+    function updateMimeStat() {
+      // สำหรับ HLS เรามักจะได้ manifest.m3u8 แต่อาจดึง MIME-type จาก playlist ระดับล่างได้
+      // หากดึงตรงจาก audio tag สำหรับ mp3/aac
+      let type = player.contentType || "N/A"; // สำหรับบางบราวเซอร์หรือ Proxy
+      
+      if (activeIndex !== -1 && allChannels[activeIndex]?.url?.endsWith('.m3u8')) {
+          type = "application/vnd.apple.mpegurl (HLS)";
+      } else if (type === "N/A") {
+          type = "audio/mpeg (MP3 Stream)"; // สมมติค่าพื้นฐานของวิทยุไทย
+      }
+
+      statMime.innerText = type;
+      statMime.className = 'stat-term disable-gray'; // MIME เป็นข้อมูลรอง ไม่ใช้สีแดง
     }
 
     function drawScope(timeData, isPlaying) {
@@ -615,20 +684,6 @@
 
           if (vuFill) vuFill.style.width = currentLevel.toFixed(1) + '%';
 
-          // --- ส่วนที่ Process ใหม่: อัปเดตข้อมูล Stat บน Header (จำลอง) ---
-          if (headerStats) {
-            headerStats.style.display = 'block'; // แสดงผล
-
-            // 1. จำลองข้อมูล (xxx kbps)
-            let simulatedBitrate = Math.round(56 + Math.random() * 8); // จำลอง Bitrate ขยับเล็กน้อย
-            // 2. จำลอง Channels (Mono=1, Stereo=2)
-            let simulatedChannels = "2"; // สมมติว่าเป็น Stereo
-
-            // เขียนลงหน้าจอ
-            headerStats.innerText = `Current bitrate (${simulatedBitrate} kbps) | Channels (${simulatedChannels})`;
-          }
-          // --- ---
-
           if (led) {
             if (currentLevel > 10) {
               led.style.backgroundColor = '#22c55e';
@@ -638,6 +693,23 @@
               led.style.boxShadow = 'none';
             }
           }
+
+          // --- ส่วนที่ Process ใหม่: อัปเดตข้อมูล Channels จริงบน Header ---
+          if (statsPanel && analyser) {
+            statsPanel.style.display = 'block'; // แสดงผล
+
+            const channels = analyser.channelCount; // ดึงจำนวนช่องสัญญาณจริง (1 หรือ 2)
+
+            // จัดสี Mono | Stereo
+            if (channels === 2) {
+                statStereo.className = 'stat-term active-red'; // Stereo แดง
+                statMono.className = 'stat-term disable-gray'; // Mono เทา
+            } else {
+                statMono.className = 'stat-term active-red';   // Mono แดง
+                statStereo.className = 'stat-term disable-gray'; // Stereo เทา
+            }
+          }
+          // --- ---
 
           drawScope(hasRealData ? timeData : null, !player.paused);
         }
@@ -658,6 +730,26 @@
         led.style.boxShadow = 'none';
       }
     }
+
+    // รวมรายการสถานีสำหรับเช็ค MIME ( HLS vs MP3 )
+    const internationalChannels = [
+      { name: "Al Jazeera", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8" },
+      { name: "ABC Australia", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8" },
+      { name: "Arirang Korea", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8" },
+      { name: "BBC News", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8" },
+      { name: "Bloomberg", url: "https://bloomberg.com/media-manifest/streams/phoenix-us.m3u8" },
+      { name: "CGTN English", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8" },
+      { name: "CNA", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8" },
+      { name: "NHK English", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8" },
+      { name: "DW En", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8" },
+      { name: "France 24 En", url: "https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8" },
+      { name: "France 24 Fr", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8" },
+      { name: "GB News", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8" },
+      { name: "Tagesschau24", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8" },
+      { name: "TPTV", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org" }
+    ];
+    // หาก V.1 มีแค่นี้
+    const allChannels = internationalChannels; 
 
     drawScopeFlat();
   </script>
