@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Channel Stats V.1</title>
+  <title>International News - Realtime Timezone V.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -14,7 +14,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Fixed Isolated Background Layer (ert92.jpg) - 100% Brightness */
+    /* Fixed Background Layer (ert92.jpg) - 100% Brightness */
     body {
       background-color: #050a12;
       color: #cccccc;
@@ -73,12 +73,59 @@
       margin-bottom: 2px;
     }
 
+    /* บรรทัด Title หลัก (เพิ่ม Flexbox จัดชิดซ้าย-ขวา) */
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+
+    /* ขยาย Font ขึ้นอีกสองระดับ (จาก 22px เป็น 26px) สีขาวเดิม */
     h1.page-title {
-      font-size: 22px;
+      font-size: 26px;
       font-weight: 700;
       color: #ffffff;
-      margin-bottom: 12px;
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
+      margin: 0;
+    }
+
+    /* เวลา UTC มุมขวาบน (ระดับเดียวกับ Title) สีขาว */
+    .utc-time-display {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+    }
+
+    /* บรรทัด Active Station & Location (สีส้ม) */
+    .station-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      min-height: 22px; /* สำรองความสูงไว้ไม่ให้กะพริบ */
+      visibility: hidden; /* ซ่อนไว้ก่อน จะโชว์เมื่อเสียงเล่นแล้วเท่านั้น */
+    }
+
+    .station-location-text {
+      font-size: 15px; /* ขนาดเล็กลงมาจาก Title */
+      font-weight: 700; /* ตัวหนา */
+      color: #ff9800; /* สีส้ม */
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* เวลา Local Time มุมขวา (ระดับเดียวกับ Station Location) สีส้ม */
+    .local-time-display {
+      font-size: 15px; /* เท่ากับ Station Location */
+      font-weight: 700;
+      color: #ff9800; /* สีส้ม */
+      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
     }
 
     /* Oscilloscope Scope Panel */
@@ -113,10 +160,10 @@
       height: 100%;
     }
 
-    /* --- ส่วนแสดงผล Mono | Stereo ใต้ Header Scope --- */
+    /* ส่วนแสดงผล Mono | Stereo ใต้ Header Scope */
     .audio-content-stats {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: none; /* เริ่มต้นซ่อนไว้ จะแสดงเมื่อเล่นสถานี */
+      display: none;
       margin-top: 4px;
       padding-left: 4px;
       transition: display 0.2s ease;
@@ -124,24 +171,20 @@
       color: #a0a0a0;
     }
 
-    /* บรรทัด Mono | Stereo Indicator */
     .channels-indicator {
       font-size: 15px;
       font-weight: 700;
       letter-spacing: 0.5px;
     }
 
-    /* Style สำหรับข้อความสถานะ */
     .stat-term {
       transition: color 0.15s ease;
     }
 
-    /* สีแดงเน้นสำหรับช่องสัญญาณที่ Active */
     .stat-term.active-red {
       color: #ef4444 !important;
     }
 
-    /* สีเทาจางสำหรับช่องสัญญาณที่ Disable */
     .stat-term.disable-gray {
       color: #555555;
     }
@@ -317,6 +360,15 @@
         padding-left: 8px;
         padding-right: 8px;
       }
+      h1.page-title {
+        font-size: 21px;
+      }
+      .utc-time-display {
+        font-size: 13px;
+      }
+      .station-location-text, .local-time-display {
+        font-size: 13px;
+      }
       .channels-indicator {
         font-size: 14px;
       }
@@ -347,8 +399,19 @@
   <div class="sticky-header">
     <div class="header-container">
       <div class="callsign">HS1WFK</div>
-      <h1 class="page-title">International News</h1>
       
+      <!-- Title Row + Realtime UTC Time -->
+      <div class="title-row">
+        <h1 class="page-title">International News</h1>
+        <div class="utc-time-display" id="utc-clock">UTC --:--:--</div>
+      </div>
+
+      <!-- Station Location Row + Realtime Local Time (สีส้ม - แสดงเมื่อเสียงเปิดได้เท่านั้น) -->
+      <div class="station-info-row" id="station-info-row">
+        <div class="station-location-text" id="station-location-text"></div>
+        <div class="local-time-display" id="local-clock">Local --:--:--</div>
+      </div>
+
       <!-- Oscilloscope Scope Under Title -->
       <div class="scope-container">
         <div class="scope-grid"></div>
@@ -372,21 +435,22 @@
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
   <script>
+    // ฐานข้อมูลสถานี พร้อม Location และ TimeZone IANA สำหรับคำนวณเวลาและปรับ DST อัตโนมัติ
     const channels = [
-      { name: "Al Jazeera", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8" },
-      { name: "ABC Australia", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8" },
-      { name: "Arirang Korea", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8" },
-      { name: "BBC News", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8" },
-      { name: "Bloomberg", url: "https://bloomberg.com/media-manifest/streams/phoenix-us.m3u8" },
-      { name: "CGTN English", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8" },
-      { name: "CNA", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8" },
-      { name: "NHK English", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8" },
-      { name: "DW En", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8" },
-      { name: "France 24 En", url: "https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8" },
-      { name: "France 24 Fr", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8" },
-      { name: "GB News", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8" },
-      { name: "Tagesschau24", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8" },
-      { name: "TPTV", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org" }
+      { name: "Al Jazeera", location: "Doha Qatar", tz: "Asia/Qatar", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8" },
+      { name: "ABC Australia", location: "Sydney Australia", tz: "Australia/Sydney", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8" },
+      { name: "Arirang Korea", location: "Seoul South Korea", tz: "Asia/Seoul", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8" },
+      { name: "BBC News", location: "London UK", tz: "Europe/London", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8" },
+      { name: "Bloomberg", location: "New York USA", tz: "America/New_York", url: "https://bloomberg.com/media-manifest/streams/phoenix-us.m3u8" },
+      { name: "CGTN", location: "Beijing China", tz: "Asia/Shanghai", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8" },
+      { name: "CNA", location: "Singapore", tz: "Asia/Singapore", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8" },
+      { name: "NHK English", location: "Tokyo Japan", tz: "Asia/Tokyo", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8" },
+      { name: "DW En", location: "Berlin Germany", tz: "Europe/Berlin", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8" },
+      { name: "France 24 En", location: "Paris France", tz: "Europe/Paris", url: "https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8" },
+      { name: "France 24 Fr", location: "Paris France", tz: "Europe/Paris", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8" },
+      { name: "GB News", location: "London UK", tz: "Europe/London", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8" },
+      { name: "Tagesschau24", location: "Hamburg Germany", tz: "Europe/Berlin", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8" },
+      { name: "TPTV", location: "Bangkok Thailand", tz: "Asia/Bangkok", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org" }
     ];
 
     const dbMarks = [
@@ -403,6 +467,11 @@
     const canvas = document.getElementById('oscilloscope');
     const canvasCtx = canvas.getContext('2d');
 
+    const utcClockElem = document.getElementById('utc-clock');
+    const localClockElem = document.getElementById('local-clock');
+    const stationInfoRow = document.getElementById('station-info-row');
+    const stationLocationText = document.getElementById('station-location-text');
+
     const statsPanel = document.getElementById('audio-content-stats');
     const statMono = document.getElementById('stat-mono');
     const statStereo = document.getElementById('stat-stereo');
@@ -416,6 +485,36 @@
     let animFrameId = null;
 
     let currentLevel = 0;
+
+    // --- ระบบนาฬิกาคำนวณ UTC และ Local Time พร้อมรองรับ DST อัตโนมัติ ---
+    function updateClocks() {
+      const now = new Date();
+
+      // 1. อัปเดตเวลา UTC
+      const utcHours = String(now.getUTCHours()).padStart(2, '0');
+      const utcMinutes = String(now.getUTCMinutes()).padStart(2, '0');
+      const utcSeconds = String(now.getUTCSeconds()).padStart(2, '0');
+      utcClockElem.innerText = `UTC ${utcHours}:${utcMinutes}:${utcSeconds}`;
+
+      // 2. อัปเดตเวลา Local ตาม Timezone ของสถานีที่ Active
+      if (activeIndex !== -1 && channels[activeIndex]?.tz) {
+        try {
+          const options = {
+            timeZone: channels[activeIndex].tz,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          };
+          const formatter = new Intl.DateTimeFormat('en-GB', options);
+          localClockElem.innerText = `Local ${formatter.format(now)}`;
+        } catch (e) {
+          localClockElem.innerText = "Local --:--:--";
+        }
+      }
+    }
+    setInterval(updateClocks, 1000);
+    updateClocks();
 
     function resizeCanvas() {
       canvas.width = canvas.clientWidth * window.devicePixelRatio || 300;
@@ -478,6 +577,16 @@
       }
     }
 
+    // เมื่อเริ่มมีสัญญาณเสียงเล่นจริงแล้วเท่านั้น จึงจะเปิดการแสดงผลบรรทัดชื่อสถานีและเวลา Local
+    player.addEventListener('playing', () => {
+      if (activeIndex !== -1) {
+        const currentChannel = channels[activeIndex];
+        stationLocationText.innerText = `${currentChannel.name} - ${currentChannel.location}`;
+        stationInfoRow.style.visibility = 'visible';
+        updateClocks();
+      }
+    });
+
     function toggleChannel(index) {
       const items = document.querySelectorAll('.channel-item');
 
@@ -493,6 +602,9 @@
         items[activeIndex].classList.remove('active');
         resetVU(activeIndex);
       }
+
+      // ซ่อนข้อมูลสถานีไว้ก่อน รอให้ Event 'playing' ทำงานเมื่อเปิดเสียงติดแล้วค่อยโชว์
+      stationInfoRow.style.visibility = 'hidden';
 
       activeIndex = index;
       items[index].classList.add('active');
@@ -532,7 +644,8 @@
       currentLevel = 0;
       drawScopeFlat();
 
-      // ซ่อน Panel แสดงผลเมื่อหยุดเล่น
+      // ซ่อนแถบสถานีและสถิติเสียงเมื่อหยุดเล่น
+      stationInfoRow.style.visibility = 'hidden';
       if (statsPanel) statsPanel.style.display = 'none';
       statMono.className = 'stat-term disable-gray';
       statStereo.className = 'stat-term disable-gray';
@@ -655,18 +768,18 @@
             }
           }
 
-          // ตรวจสอบช่องสัญญาณจริง (1 Channel = Mono, 2 Channels = Stereo)
+          // ตรวจสอบช่องสัญญาณจริง
           if (statsPanel && analyser) {
             statsPanel.style.display = 'block';
 
             const channelCount = analyser.channelCount;
 
             if (channelCount >= 2) {
-              statStereo.className = 'stat-term active-red';   // Stereo สว่างสีแดง
-              statMono.className = 'stat-term disable-gray';   // Mono สีเทา Disable
+              statStereo.className = 'stat-term active-red';   // Stereo แดงสด
+              statMono.className = 'stat-term disable-gray';   // Mono เทา
             } else {
-              statMono.className = 'stat-term active-red';     // Mono สว่างสีแดง (เช่น TPTV)
-              statStereo.className = 'stat-term disable-gray'; // Stereo สีเทา Disable
+              statMono.className = 'stat-term active-red';     // Mono แดงสด (เช่น TPTV)
+              statStereo.className = 'stat-term disable-gray'; // Stereo เทา
             }
           }
 
