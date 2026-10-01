@@ -109,7 +109,7 @@
       height: 100%;
     }
 
-    /* Playlist Container - High Readability & Compact Spacing */
+    /* Playlist Container */
     .playlist-container {
       display: flex;
       flex-direction: column;
@@ -175,7 +175,7 @@
       transform: scale(1);
     }
 
-    /* Font Size 16px ดั้งเดิม */
+    /* Font Size 16px มาตรฐานดั้งเดิม */
     .channel-name {
       font-size: 16px;
       font-weight: 500;
@@ -222,7 +222,7 @@
       gap: 3px;
     }
 
-    /* Scale Labels 14px ดั้งเดิม */
+    /* Scale Labels 14px มาตรฐานดั้งเดิม */
     .vu-scale-labels {
       display: flex;
       justify-content: space-between;
@@ -323,7 +323,7 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <!-- Dual Media Player Elements -->
+  <!-- Dual Media Players -->
   <video id="video-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
   <audio id="audio-player" playsinline></audio>
 
@@ -417,18 +417,15 @@
 
     const allChannels = [...internationalChannels, ...radioChannels];
 
-    // Render International Channels
     internationalChannels.forEach((ch, idx) => {
       playlistContainer.appendChild(renderChannelItem(ch, idx));
     });
 
-    // Render Section Divider
     const divider = document.createElement('div');
     divider.className = 'section-divider';
     divider.innerText = 'Online Channels';
     playlistContainer.appendChild(divider);
 
-    // Render Radio Channels
     radioChannels.forEach((ch, idx) => {
       playlistContainer.appendChild(renderChannelItem(ch, internationalChannels.length + idx));
     });
@@ -479,21 +476,16 @@
       stopAll(false);
 
       if (channel.isAudioOnly) {
-        // Direct Audio Stream Engine with Mixed Content Auto-Proxy Retry
-        audioPlayer.removeAttribute('crossorigin');
-        audioPlayer.src = channel.url;
+        // Secure HTTPS Proxy Route for HTTP Shoutcast Streams (Fixes macOS/iOS Mixed Content)
+        let streamTargetUrl = channel.url;
+        if (location.protocol === 'https:' && streamTargetUrl.startsWith('http:')) {
+          streamTargetUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(channel.url);
+        }
 
+        audioPlayer.src = streamTargetUrl;
         audioPlayer.play().then(() => {
           startVUMeter(audioPlayer);
-        }).catch(e => {
-          console.log("Direct play blocked by Mixed Content / CORS, trying HTTPS Proxy Fallback:", e);
-          // Auto Proxy Relayer for HTTPS Page compatibility
-          const secureProxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(channel.url);
-          audioPlayer.src = secureProxyUrl;
-          audioPlayer.play().then(() => {
-            startVUMeter(audioPlayer);
-          }).catch(err => console.log("Final Proxy play error:", err));
-        });
+        }).catch(e => console.log("Audio play error:", e));
       } else {
         // HLS Video Stream Engine
         if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
@@ -620,7 +612,6 @@
           }
         }
 
-        // Real-Time Speech Dynamics Engine for HTTP Audio Streams / iOS CORS Restrictions
         if (!hasRealData && activeMedia && !activeMedia.paused && activeMedia.currentTime > 0) {
           simPhase += 0.12;
           let speechEnvelope = Math.max(0, Math.sin(simPhase) * 35 + Math.sin(simPhase * 2.7) * 25);
