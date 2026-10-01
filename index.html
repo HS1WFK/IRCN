@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Layout Fixed V.1</title>
+  <title>International News - Amplitude Expanded V.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -82,7 +82,7 @@
       margin-bottom: 8px;
     }
 
-    /* International News - ปรับเป็น 40px */
+    /* International News - 40px */
     h1.page-title {
       font-size: 40px;
       font-weight: 700;
@@ -102,7 +102,7 @@
       white-space: nowrap;
     }
 
-    /* Station Info Row - แก้ไข Layout ให้รองรับ Font 26px บน Mac Chrome */
+    /* Station Info Row */
     .station-info-row {
       display: flex;
       justify-content: space-between;
@@ -114,7 +114,7 @@
       width: 100%;
     }
 
-    /* Station Info (.station-location-text) - 26px แสดงผลเต็มขนาด */
+    /* Station Info (.station-location-text) - 26px */
     .station-location-text {
       font-size: 26px !important;
       font-weight: 700;
@@ -126,7 +126,7 @@
       line-height: 1.2;
     }
 
-    /* Local Time (.local-time-display) - 26px แสดงผลเต็มขนาด */
+    /* Local Time (.local-time-display) - 26px */
     .local-time-display {
       font-size: 26px !important;
       font-weight: 700;
@@ -376,11 +376,9 @@
       .callsign {
         font-size: 16px;
       }
-      /* Title หลัก: ย่อเหลือ 21px */
       h1.page-title {
         font-size: 21px;
       }
-      /* UTC Clock / Station Info / Local Time / Channels Indicator: ย่อเหลือ 13px - 14px */
       .utc-time-display {
         font-size: 14px;
       }
@@ -399,7 +397,6 @@
         gap: 8px;
         padding-left: 0;
       }
-      /* ชื่อสถานี: ย่อเหลือ 15px */
       .channel-name {
         font-size: 15px;
       }
@@ -426,7 +423,7 @@
         <div class="utc-time-display" id="utc-clock">UTC --:--:--</div>
       </div>
 
-      <!-- Station Location Row + Realtime Local Time (Label: Local Time) -->
+      <!-- Station Location Row + Realtime Local Time -->
       <div class="station-info-row" id="station-info-row">
         <div class="station-location-text" id="station-location-text"></div>
         <div class="local-time-display" id="local-clock">Local Time --:--:--</div>
@@ -505,17 +502,14 @@
 
     let currentLevel = 0;
 
-    // ระบบนาฬิกาคำนวณ UTC และ Local Time (Label: Local Time)
     function updateClocks() {
       const now = new Date();
 
-      // 1. UTC Time
       const utcHours = String(now.getUTCHours()).padStart(2, '0');
       const utcMinutes = String(now.getUTCMinutes()).padStart(2, '0');
       const utcSeconds = String(now.getUTCSeconds()).padStart(2, '0');
       utcClockElem.innerText = `UTC ${utcHours}:${utcMinutes}:${utcSeconds}`;
 
-      // 2. Local Time ตาม Timezone ของสถานี
       if (activeIndex !== -1 && channels[activeIndex]?.tz) {
         try {
           const options = {
@@ -596,7 +590,6 @@
       }
     }
 
-    // แสดงผลบรรทัดชื่อสถานีและเวลา Local เมื่อมีสัญญาณเสียงเล่นจริง
     player.addEventListener('playing', () => {
       if (activeIndex !== -1) {
         const currentChannel = channels[activeIndex];
@@ -668,6 +661,7 @@
       statStereo.className = 'stat-term disable-gray';
     }
 
+    /* วาด Waveform Scope - ปรับขยาย Amplitude ขึ้น 1.5 เท่า */
     function drawScope(timeData, isPlaying) {
       const width = canvas.width;
       const height = canvas.height;
@@ -691,7 +685,9 @@
         for (let i = 0; i < numBars; i++) {
           const sampleIndex = Math.floor((i / numBars) * timeData.length);
           const v = Math.abs((timeData[sampleIndex] - 128) / 128.0);
-          const barHeight = v * (height * 0.85);
+          
+          /* ปรับความสูง Amplitude คูณ 1.5 เท่า (จาก 0.85 เป็น 1.275) */
+          const barHeight = v * (height * 1.275);
 
           if (barHeight > 1) {
             canvasCtx.beginPath();
@@ -710,7 +706,9 @@
           wordEnvelope = Math.max(0, wordEnvelope);
 
           let voiceDetail = Math.sin(i * 1.5 + time * 3) * 0.5 + 0.5;
-          let amp = (currentLevel / 100) * (height * 0.45) * Math.pow(wordEnvelope, 2) * voiceDetail;
+
+          /* ปรับความสูง Amplitude คูณ 1.5 เท่า (จาก 0.45 เป็น 0.675) */
+          let amp = (currentLevel / 100) * (height * 0.675) * Math.pow(wordEnvelope, 2) * voiceDetail;
 
           if (amp > 1) {
             canvasCtx.beginPath();
