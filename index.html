@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Amplitude Expanded V.1</title>
+  <title>International News - Scope Enhanced V.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -661,7 +661,7 @@
       statStereo.className = 'stat-term disable-gray';
     }
 
-    /* วาด Waveform Scope - ปรับขยาย Amplitude ขึ้น 1.5 เท่า */
+    /* วาด Waveform Scope - ปรับ Amplitude เป็น 2 เท่า (2x) และลดความเร็วการวิ่งลง */
     function drawScope(timeData, isPlaying) {
       const width = canvas.width;
       const height = canvas.height;
@@ -686,8 +686,8 @@
           const sampleIndex = Math.floor((i / numBars) * timeData.length);
           const v = Math.abs((timeData[sampleIndex] - 128) / 128.0);
           
-          /* ปรับความสูง Amplitude คูณ 1.5 เท่า (จาก 0.85 เป็น 1.275) */
-          const barHeight = v * (height * 1.275);
+          /* ปรับความสูง Amplitude เพิ่มขึ้นเป็น 2 เท่า (2x: ตัวคูณจาก 0.85 -> 1.7) */
+          const barHeight = v * (height * 1.7);
 
           if (barHeight > 1) {
             canvasCtx.beginPath();
@@ -697,7 +697,8 @@
           }
         }
       } else {
-        const time = performance.now() * 0.006;
+        /* ปรับความเร็วการขยับของคลื่นให้ช้าลงเพื่อความสมจริง (ตัวคูณจาก 0.006 -> 0.002) */
+        const time = performance.now() * 0.002;
         const numBars = 75;
         const barWidth = width / numBars;
 
@@ -707,8 +708,8 @@
 
           let voiceDetail = Math.sin(i * 1.5 + time * 3) * 0.5 + 0.5;
 
-          /* ปรับความสูง Amplitude คูณ 1.5 เท่า (จาก 0.45 เป็น 0.675) */
-          let amp = (currentLevel / 100) * (height * 0.675) * Math.pow(wordEnvelope, 2) * voiceDetail;
+          /* ปรับความสูง Amplitude สำรองเพิ่มขึ้นเป็น 2 เท่า (2x: ตัวคูณจาก 0.45 -> 0.90) */
+          let amp = (currentLevel / 100) * (height * 0.90) * Math.pow(wordEnvelope, 2) * voiceDetail;
 
           if (amp > 1) {
             canvasCtx.beginPath();
