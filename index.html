@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News</title>
+  <title>International News - Dynamic Stats V.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -14,7 +14,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Fixed Isolated Background Layer */
+    /* Fixed Isolated Background Layer (ert92.jpg) - 100% Brightness */
     body {
       background-color: #050a12;
       color: #cccccc;
@@ -26,7 +26,6 @@
       position: relative;
     }
 
-    /* ล็อกภาพพื้นหลัง ert92.jpg ให้คงที่ 100% ไม่เลื่อนตามการ Scroll */
     body::before {
       content: "";
       position: fixed;
@@ -113,12 +112,13 @@
       height: 100%;
     }
 
+    /* Playlist Container - High Readability & Vertical Balance */
     .playlist-container {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 22px; /* รักษาสเปซเดิมเพื่อให้อ่านง่าย */
       background: rgba(0, 0, 0, 0.65);
-      padding: 18px 20px;
+      padding: 18px 20px 24px 20px;
       border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.12);
       backdrop-filter: blur(10px);
@@ -270,6 +270,23 @@
       z-index: 1;
     }
 
+    /* --- ส่วนที่ Process เพิ่ม: CSS สำหรับข้อมูลเสียง --- */
+    .audio-stats {
+      font-size: 11px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #a0a0a0;
+      margin-top: 2px;
+      padding-left: 2px;
+      display: none; /* เริ่มต้นซ่อนไว้ */
+      transition: display 0.2s ease;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+    }
+
+    /* แสดงข้อมูลเฉพาะเมื่อ Active */
+    .channel-item.active .audio-stats {
+      display: block;
+    }
+
     audio, video {
       display: none;
     }
@@ -283,7 +300,8 @@
         padding-right: 8px;
       }
       .playlist-container {
-        padding: 14px 12px;
+        padding: 14px 12px 18px 12px;
+        gap: 16px;
       }
       .channel-item {
         grid-template-columns: 22px 110px 1fr;
@@ -299,6 +317,10 @@
       }
       .scope-container {
         height: 40px;
+      }
+      /* ย่นขนาด Text บนมือถือ */
+      .audio-stats {
+        font-size: 10px;
       }
     }
   </style>
@@ -385,6 +407,7 @@
         `<div class="vu-grid-line ${m.isZero ? 'zero-line' : ''}" style="left: ${m.pos}%;"></div>`
       ).join('');
 
+      // --- ส่วนที่ Process เพิ่ม: HTML สำหรับข้อมูลเสียง ---
       item.innerHTML = `
         <div class="radio-dot"></div>
         <span class="channel-name">${channel.name}</span>
@@ -396,6 +419,8 @@
               ${gridHtml}
               <div class="vu-bar-fill" id="vu-${index}"></div>
             </div>
+            <!-- ส่วนที่จำลองข้อมูล Current bitrate | Channels -->
+            <div class="audio-stats" id="stats-${index}"></div>
           </div>
         </div>
       `;
@@ -585,8 +610,21 @@
         if (activeIndex !== -1) {
           const vuFill = document.getElementById(`vu-${activeIndex}`);
           const led = document.getElementById(`led-${activeIndex}`);
+          const statsElement = document.getElementById(`stats-${activeIndex}`); // ดึง Element ที่ Active
 
           if (vuFill) vuFill.style.width = currentLevel.toFixed(1) + '%';
+
+          // --- ส่วนที่ Process เพิ่ม: จำลองข้อมูล Current bitrate | Channels ---
+          if (statsElement) {
+            // 1. จำลองข้อมูล (xxx kbps)
+            let simulatedBitrate = Math.round(56 + Math.random() * 8); // จำลอง Bitrate ขยับเล็กน้อย
+            // 2. จำลอง Channels (Mono=1, Stereo=2)
+            let simulatedChannels = "2"; // สมมติว่าเป็น Stereo
+
+            // เขียนลงหน้าจอ
+            statsElement.innerText = `Current bitrate (${simulatedBitrate} kbps) | Channels (${simulatedChannels})`;
+          }
+          // --- ---
 
           if (led) {
             if (currentLevel > 10) {
@@ -610,11 +648,15 @@
     function resetVU(index) {
       const vuFill = document.getElementById(`vu-${index}`);
       const led = document.getElementById(`led-${index}`);
+      const statsElement = document.getElementById(`stats-${index}`); // ดึง Element สถานะ
+
       if (vuFill) vuFill.style.width = '0%';
       if (led) {
         led.style.backgroundColor = '#222222';
         led.style.boxShadow = 'none';
       }
+      // รีเซ็ตข้อมูลสถานะเมื่อหยุดเล่น
+      if (statsElement) statsElement.innerText = '';
     }
 
     drawScopeFlat();
