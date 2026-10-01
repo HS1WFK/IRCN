@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full w-full overflow-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flight and Weather - Live Flight Tracker & TMD Radar</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Kanit', sans-serif;
+            box-sizing: border-box;
+        }
+
+        /* Prevent all scrolling on main dashboard */
+        html, body {
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            overflow: hidden !important;
+            background-color: #0b0f17;
+            color: #f8fafc;
+        }
+
+        /* Radar / Map container wrapper */
+        .radar-box {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #0f172a;
+            border-radius: 0.75rem;
+        }
+
+        /* Responsive Wrapper Scaling Container */
+        .scaler-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Left Pane Container (ADS-B Globe) */
+        .iframe-crop-left {
+            position: absolute;
+            width: 1200px;
+            height: 1000px;
+            transform-origin: center center;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: auto;
+        }
+
+        /* Right Pane Container (TMD SVP240) */
+        .iframe-crop-right {
+            position: absolute;
+            width: 850px;
+            height: 850px;
+            transform-origin: center center;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: auto;
+        }
+
+        .dashboard-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: #0f172a;
+            overflow: hidden;
+        }
+
+        /* Pulse animation */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .pulse-live {
+            animation: pulse-ring 2s infinite ease-in-out;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #38bdf8;
+            width: 32px;
+            height: 32px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden">
+
+    <!-- Top Navigation Header Bar -->
+    <header class="h-12 md:h-14 bg-slate-900/95 border-b border-slate-800 px-3 md:px-5 flex items-center justify-between z-30 shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="p-1.5 md:p-2 bg-sky-500/10 text-sky-400 rounded-lg border border-sky-500/20">
+                <i class="fa-solid fa-plane-departure text-base md:text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-xs md:text-sm font-semibold text-slate-100 flex items-center gap-2">
+                    <span>Flight and Weather Dashboard</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-live"></span>
+                        Live Monitor
+                    </span>
+                </h1>
+                <p class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ติดตามเส้นทางการบินสด (ADS-B Exchange) และ เรดาร์สภาพอากาศ (TMD SVP240)</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 md:gap-4">
+            <!-- Countdown Progress -->
+            <div class="flex items-center gap-2 bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                <i class="fa-regular fa-clock text-sky-400 text-xs"></i>
+                <div class="text-[11px] md:text-xs font-mono flex items-center gap-1.5">
+                    <span class="text-slate-400 hidden md:inline">รีเฟรชใน:</span>
+                    <span id="countdown-timer" class="text-sky-400 font-bold">03:00</span>
+                </div>
+                <div class="w-10 md:w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden ml-1">
+                    <div id="progress-bar" class="h-full bg-sky-400 transition-all duration-1000 ease-linear w-full"></div>
+                </div>
+            </div>
+
+            <!-- Global Fit / Scale Adjustments -->
+            <div class="hidden lg:flex items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 text-xs">
+                <button onclick="adjustScale(-0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300" title="ย่อขนาด"><i class="fa-solid fa-minus"></i></button>
+                <button onclick="resetScale()" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 font-mono text-[11px]" title="รีเซ็ต Fit">Reset Fit</button>
+                <button onclick="adjustScale(0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300" title="ขยายขนาด"><i class="fa-solid fa-plus"></i></button>
+            </div>
+
+            <!-- Manual Refresh Button -->
+            <button id="refresh-btn" onclick="manualRefresh()" title="รีเฟรชข้อมูลทั้งสองฝั่งทันที" 
+                class="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm focus:outline-none">
+                <i id="refresh-icon" class="fa-solid fa-arrows-rotate text-xs"></i>
+                <span class="hidden sm:inline">รีเฟรช</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Split Screen -->
+    <main class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 p-2 bg-slate-950 overflow-hidden relative">
+        
+        <!-- ================= LEFT COLUMN: Flight Map (ADS-B Exchange) ================= -->
+        <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
+            <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
+                <div class="flex items-center gap-2 text-sky-400 truncate">
+                    <i class="fa-solid fa-plane"></i>
+                    <span class="text-slate-200 font-semibold truncate">Flight Radar (ADS-B Exchange)</span>
+                </div>
+
+                <div class="flex items-center gap-2 shrink-0">
+                    <a href="https://globe.adsbexchange.com/" target="_blank" rel="noopener" 
+                       class="text-slate-400 hover:text-sky-300 text-[11px] flex items-center gap-1 transition-colors">
+                        <span>เปิดเว็บต้นทาง</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div id="box-left" class="radar-box flex-1">
+                <div id="loader-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity duration-300">
+                    <div class="spinner"></div>
+                    <p class="text-xs text-slate-400">กำลังโหลดข้อมูลเที่ยวบินสด (Flight Tracker)...</p>
+                </div>
+
+                <div class="scaler-wrapper">
+                    <div id="scaler-left" class="iframe-crop-left">
+                        <iframe 
+                            id="iframe-left"
+                            src="https://globe.adsbexchange.com/" 
+                            class="dashboard-iframe"
+                            title="ADS-B Exchange Live Flight Tracker"
+                            scrolling="no"
+                            onload="onIframeLoaded('loader-left')"
+                            onerror="onIframeError('error-left', 'loader-left')">
+                        </iframe>
+                    </div>
+                </div>
+
+                <div id="error-left" class="hidden absolute inset-0 bg-slate-900/95 z-20 p-4 flex flex-col items-center justify-center text-center">
+                    <i class="fa-solid fa-circle-exclamation text-amber-400 text-2xl mb-2"></i>
+                    <p class="text-xs text-slate-300 mb-3">ไม่สามารถแสดงผลผ่านกรอบได้ (X-Frame Restriction)</p>
+                    <a href="https://globe.adsbexchange.com/" target="_blank" 
+                       class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs">
+                        เปิดหน้า ADS-B Exchange ตรง
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= RIGHT COLUMN: Weather Radar (TMD SVP240) ================= -->
+        <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
+            <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
+                <div class="flex items-center gap-2 text-indigo-400 truncate">
+                    <i class="fa-solid fa-cloud-bolt"></i>
+                    <span class="text-slate-200 font-semibold truncate">Weather Radar (TMD SVP240 Loop)</span>
+                </div>
+
+                <div class="flex items-center gap-2 shrink-0">
+                    <a href="https://weather.tmd.go.th/svp240loop.php" target="_blank" rel="noopener" 
+                       class="text-slate-400 hover:text-indigo-300 text-[11px] flex items-center gap-1 transition-colors">
+                        <span>เปิดเว็บต้นทาง</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div id="box-right" class="radar-box flex-1">
+                <div id="loader-right" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity duration-300">
+                    <div class="spinner"></div>
+                    <p class="text-xs text-slate-400">กำลังโหลดภาพเรดาร์กรมอุตุนิยมวิทยา...</p>
+                </div>
+
+                <div class="scaler-wrapper">
+                    <div id="scaler-right" class="iframe-crop-right">
+                        <iframe 
+                            id="iframe-right"
+                            src="https://weather.tmd.go.th/svp240loop.php" 
+                            class="dashboard-iframe"
+                            title="TMD Weather Radar SVP240 Loop"
+                            scrolling="no"
+                            onload="onIframeLoaded('loader-right')"
+                            onerror="onIframeError('error-right', 'loader-right')">
+                        </iframe>
+                    </div>
+                </div>
+
+                <div id="error-right" class="hidden absolute inset-0 bg-slate-900/95 z-20 p-4 flex flex-col items-center justify-center text-center">
+                    <i class="fa-solid fa-circle-exclamation text-amber-400 text-2xl mb-2"></i>
+                    <p class="text-xs text-slate-300 mb-3">ไม่สามารถแสดงผลผ่านกรอบได้</p>
+                    <a href="https://weather.tmd.go.th/svp240loop.php" target="_blank" 
+                       class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs">
+                        เปิดหน้าเว็บตรง
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Status Bar -->
+    <footer class="h-7 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-arrows-rotate text-sky-400 text-[10px]"></i>
+            <span>รีเฟรชข้อมูลอัตโนมัติทุก 3 นาที</span>
+            <span class="text-slate-600 hidden sm:inline">|</span>
+            <span class="hidden sm:inline">อัปเดตล่าสุด: <span id="last-updated-time" class="text-slate-300 font-mono">-</span></span>
+        </div>
+        <div class="text-slate-400 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+            <span>ADS-B Exchange & กรมอุตุนิยมวิทยา</span>
+        </div>
+    </footer>
+
+    <script>
+        const REFRESH_SECONDS = 180; // 3 minutes
+        let countdown = REFRESH_SECONDS;
+        let timerId = null;
+        let scaleUserOffset = 0;
+
+        /**
+         * Dynamic scaling engine calculating screen dimensions
+         */
+        function applyDynamicTransforms() {
+            const boxLeft = document.getElementById('box-left');
+            const boxRight = document.getElementById('box-right');
+            const scalerLeft = document.getElementById('scaler-left');
+            const scalerRight = document.getElementById('scaler-right');
+
+            if (!boxLeft || !boxRight || !scalerLeft || !scalerRight) return;
+
+            // --- Left Pane Scaling (ADS-B Exchange) ---
+            const leftW = boxLeft.clientWidth;
+            const leftH = boxLeft.clientHeight;
+            const baseLeftScale = Math.min(leftW / 1200, leftH / 1000);
+            const finalLeftScale = Math.max(0.2, baseLeftScale + scaleUserOffset);
+            scalerLeft.style.transform = `scale(${finalLeftScale}) translate(0px, 0px)`;
+
+            // --- Right Pane Scaling (TMD SVP240) ---
+            const rightW = boxRight.clientWidth;
+            const rightH = boxRight.clientHeight;
+            const baseRightScale = Math.min(rightW / 850, rightH / 850);
+            const finalRightScale = Math.max(0.2, baseRightScale + scaleUserOffset);
+            const rightYOffset = 15; // Shift down slightly for optimal view
+            
+            scalerRight.style.transform = `scale(${finalRightScale}) translate(0px, ${rightYOffset}px)`;
+        }
+
+        function adjustScale(delta) {
+            scaleUserOffset += delta;
+            applyDynamicTransforms();
+        }
+
+        function resetScale() {
+            scaleUserOffset = 0;
+            applyDynamicTransforms();
+        }
+
+        /**
+         * Countdown & Refresh logic
+         */
+        function updateTimerUI() {
+            const minutes = Math.floor(countdown / 60);
+            const seconds = countdown % 60;
+            const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            const timerEl = document.getElementById('countdown-timer');
+            if (timerEl) timerEl.textContent = timeStr;
+            
+            const progressPercent = (countdown / REFRESH_SECONDS) * 100;
+            const progressBar = document.getElementById('progress-bar');
+            if (progressBar) {
+                progressBar.style.width = `${progressPercent}%`;
+            }
+        }
+
+        function startCountdown() {
+            clearInterval(timerId);
+            timerId = setInterval(() => {
+                countdown--;
+                updateTimerUI();
+
+                if (countdown <= 0) {
+                    executeRefresh();
+                }
+            }, 1000);
+        }
+
+        function executeRefresh() {
+            countdown = REFRESH_SECONDS;
+            updateTimerUI();
+
+            const timestamp = new Date().getTime();
+            const iframeLeft = document.getElementById('iframe-left');
+            const iframeRight = document.getElementById('iframe-right');
+
+            showLoader('loader-left');
+            showLoader('loader-right');
+
+            if (iframeLeft) iframeLeft.src = `https://globe.adsbexchange.com/?t=${timestamp}`;
+            if (iframeRight) iframeRight.src = `https://weather.tmd.go.th/svp240loop.php?t=${timestamp}`;
+
+            updateTimestamp();
+        }
+
+        function manualRefresh() {
+            const icon = document.getElementById('refresh-icon');
+            if (icon) icon.classList.add('fa-spin');
+            
+            executeRefresh();
+
+            setTimeout(() => {
+                if (icon) icon.classList.remove('fa-spin');
+            }, 800);
+        }
+
+        function updateTimestamp() {
+            const now = new Date();
+            const timeElement = document.getElementById('last-updated-time');
+            if (timeElement) {
+                timeElement.textContent = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
+        }
+
+        function onIframeLoaded(loaderId) {
+            hideLoader(loaderId);
+            applyDynamicTransforms();
+        }
+
+        function onIframeError(errorId, loaderId) {
+            hideLoader(loaderId);
+            const errBox = document.getElementById(errorId);
+            if (errBox) errBox.classList.remove('hidden');
+        }
+
+        function hideLoader(loaderId) {
+            const loader = document.getElementById(loaderId);
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 300);
+            }
+        }
+
+        function showLoader(loaderId) {
+            const loader = document.getElementById(loaderId);
+            if (loader) {
+                loader.style.display = 'flex';
+                loader.style.opacity = '1';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            updateTimestamp();
+            updateTimerUI();
+            startCountdown();
+            applyDynamicTransforms();
+
+            setTimeout(() => {
+                hideLoader('loader-left');
+                hideLoader('loader-right');
+            }, 3500);
+        });
+
+        window.addEventListener('resize', () => {
+            applyDynamicTransforms();
+        });
+    </script>
+</body>
+</html>
