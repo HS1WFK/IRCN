@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Hybrid Scope Sync V.1</title>
+  <title>International News - Realtime Scope Sync V.1.1.34</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -442,7 +442,7 @@
   <div class="playlist-container" id="playlist"></div>
 
   <!-- Footer Version Text -->
-  <div class="page-version-footer">ver.11.33</div>
+  <div class="page-version-footer">ver.1.1.34</div>
 
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
@@ -571,8 +571,7 @@
           audioCtx = new AudioContext();
           analyser = audioCtx.createAnalyser();
           
-          /* ปรับ fftSize เป็น 1024 เพื่อเพิ่มรายละเอียด Sample ป้องกันอาการ Zoom In บน Mac Chrome */
-          analyser.fftSize = 1024; 
+          analyser.fftSize = 512;
           analyser.smoothingTimeConstant = 0.4;
 
           sourceNode = audioCtx.createMediaElementSource(player);
@@ -660,7 +659,7 @@
       statStereo.className = 'stat-term disable-gray';
     }
 
-    /* Hybrid Oscilloscope Visualizer: แก้ไขปัญหา iOS ไม่ขยับ และแก้ Mac Chrome ไม่ซูม */
+    /* Oscilloscope Visualizer Engine - ver.1.1.34 ปรับแต่งให้คลื่นเคลื่อนที่สม่ำเสมอบนทั้ง iOS และ macOS */
     function drawScope(timeData, isPlaying) {
       const width = canvas.width;
       const height = canvas.height;
@@ -680,19 +679,19 @@
         return;
       }
 
-      // ตรวจสอบว่าสัญญาณ Time Data จากระบบมีคลื่นจริง หรือโดน iOS บล็อกเป็น Silent Drop (128 คงที่)
-      let isSilentBuffer = true;
+      // ตรวจสอบว่าสัญญาณ Time Data มีข้อมูลดิบจริงหรือไม่
+      let hasDirectPCM = false;
       if (timeData && timeData.length > 0) {
-        for (let i = 0; i < timeData.length; i += 16) {
-          if (Math.abs(timeData[i] - 128) > 3) {
-            isSilentBuffer = false;
+        for (let i = 0; i < timeData.length; i += 8) {
+          if (Math.abs(timeData[i] - 128) > 2) {
+            hasDirectPCM = true;
             break;
           }
         }
       }
 
-      if (timeData && !isSilentBuffer) {
-        /* โหมด Mac Browser / Desktop: วาดคลื่นจริง ละเอียด 1024 จุด สวยงามคมชัด */
+      if (hasDirectPCM) {
+        /* กรณีเบราว์เซอร์ส่ง PCM จริง (Mac Chrome/Desktop) */
         canvasCtx.beginPath();
         const bufferLength = timeData.length;
         const sliceWidth = width / bufferLength;
@@ -700,7 +699,7 @@
 
         for (let i = 0; i < bufferLength; i++) {
           const v = timeData[i] / 128.0;
-          const y = centerY + (v - 1.0) * centerY * 0.85; // ปรับสเกลให้อยู่ในกรอบอย่างสวยงาม
+          const y = centerY + (v - 1.0) * centerY * 1.2;
 
           if (i === 0) {
             canvasCtx.moveTo(x, y);
@@ -711,21 +710,22 @@
         }
         canvasCtx.stroke();
       } else {
-        /* โหมด iOS Safari / WebKit: สแกนคลื่น RMS-Driven Visualizer ช้าลง Sync ตรงกับความดังเสียงจริง 100% */
-        const time = performance.now() * 0.0012; // ปรับความเร็ว Scan ช้าลงเพื่อความนุ่มนวล
+        /* กรณี WebKit บล็อก PCM (iOS Safari) - บังคับวาด Dynamic Audio Waveform ตามสเกลสัญญาณจริง */
+        const time = performance.now() * 0.005; // ความเร็วสแกนแบบปรับปรุงใหม่
         canvasCtx.beginPath();
-        const points = 120;
+        const points = 100;
         const sliceWidth = width / points;
         let x = 0;
 
-        const currentAmp = (currentLevel / 100) * (centerY * 0.85);
+        const currentAmp = (currentLevel / 100) * (centerY * 0.88);
 
         for (let i = 0; i < points; i++) {
-          let wave1 = Math.sin(i * 0.15 + time * 2);
-          let wave2 = Math.sin(i * 0.35 - time * 1.5) * 0.5;
-          let voiceDetail = (wave1 + wave2);
+          let wave1 = Math.sin(i * 0.22 + time * 3.5);
+          let wave2 = Math.sin(i * 0.45 - time * 2.2) * 0.5;
+          let wave3 = Math.cos(i * 0.12 + time * 1.8) * 0.3;
+          let combinedWave = (wave1 + wave2 + wave3) / 1.8;
 
-          const y = centerY + voiceDetail * currentAmp;
+          const y = centerY + combinedWave * currentAmp;
 
           if (i === 0) {
             canvasCtx.moveTo(x, y);
