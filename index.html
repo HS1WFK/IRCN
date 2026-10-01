@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Typography Updated V.1</title>
+  <title>International News - Layout Fixed V.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -79,16 +79,17 @@
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
-    /* International News - 32px */
+    /* International News - ปรับเป็น 40px */
     h1.page-title {
-      font-size: 32px;
+      font-size: 40px;
       font-weight: 700;
       color: #ffffff;
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
       margin: 0;
+      line-height: 1.1;
     }
 
     /* UTC Clock - 26px */
@@ -98,36 +99,43 @@
       color: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+      white-space: nowrap;
     }
 
-    /* Station Info Row */
+    /* Station Info Row - แก้ไข Layout ให้รองรับ Font 26px บน Mac Chrome */
     .station-info-row {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: baseline;
+      gap: 12px;
       margin-bottom: 10px;
-      min-height: 32px;
+      min-height: 36px;
       visibility: hidden;
+      width: 100%;
     }
 
-    /* Station Info (.station-location-text) - 26px */
+    /* Station Info (.station-location-text) - 26px แสดงผลเต็มขนาด */
     .station-location-text {
-      font-size: 26px;
+      font-size: 26px !important;
       font-weight: 700;
       color: #ff9800;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.2;
     }
 
-    /* Local Time (.local-time-display) - 26px */
+    /* Local Time (.local-time-display) - 26px แสดงผลเต็มขนาด */
     .local-time-display {
-      font-size: 26px;
+      font-size: 26px !important;
       font-weight: 700;
       color: #ff9800;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+      white-space: nowrap;
+      flex-shrink: 0;
+      line-height: 1.2;
     }
 
     /* Oscilloscope Scope Panel */
@@ -249,7 +257,7 @@
       transform: scale(1);
     }
 
-    /* ชื่อสถานี (.channel-name) - ปกติสีเทา 20px ตัวธรรมดา / เมื่อ Active เป็นสีส้ม 20px ตัวหนา */
+    /* ชื่อสถานี (.channel-name) - 20px */
     .channel-name {
       font-size: 20px;
       font-weight: 400;
@@ -378,7 +386,7 @@
       }
       .station-location-text, 
       .local-time-display {
-        font-size: 13px;
+        font-size: 13px !important;
       }
       .channels-indicator {
         font-size: 14px;
@@ -418,7 +426,7 @@
         <div class="utc-time-display" id="utc-clock">UTC --:--:--</div>
       </div>
 
-      <!-- Station Location Row + Realtime Local Time (เปลี่ยน label เป็น Local Time) -->
+      <!-- Station Location Row + Realtime Local Time (Label: Local Time) -->
       <div class="station-info-row" id="station-info-row">
         <div class="station-location-text" id="station-location-text"></div>
         <div class="local-time-display" id="local-clock">Local Time --:--:--</div>
