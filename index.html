@@ -175,7 +175,7 @@
       transform: scale(1);
     }
 
-    /* Font Size 16px มาตรฐานดั้งเดิม */
+    /* Font Size 16px ดั้งเดิม */
     .channel-name {
       font-size: 16px;
       font-weight: 500;
@@ -222,7 +222,7 @@
       gap: 3px;
     }
 
-    /* Scale Labels 14px มาตรฐานดั้งเดิม */
+    /* Scale Labels 14px ดั้งเดิม */
     .vu-scale-labels {
       display: flex;
       justify-content: space-between;
@@ -280,7 +280,7 @@
       z-index: 1;
     }
 
-    audio, video {
+    audio, video, iframe {
       display: none;
     }
 
@@ -323,9 +323,10 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <!-- Dual Media Players -->
+  <!-- Hidden Players & Invisible Native Stream Bridge -->
   <video id="video-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
   <audio id="audio-player" playsinline></audio>
+  <iframe id="audio-bridge"></iframe>
 
   <script>
     const internationalChannels = [
@@ -364,6 +365,7 @@
     const playlistContainer = document.getElementById('playlist');
     const videoPlayer = document.getElementById('video-player');
     const audioPlayer = document.getElementById('audio-player');
+    const audioBridge = document.getElementById('audio-bridge');
     const canvas = document.getElementById('oscilloscope');
     const canvasCtx = canvas.getContext('2d');
 
@@ -472,44 +474,21 @@
       playMedia(allChannels[index]);
     }
 
-    // High Reliability Audio Tunnel Player
-    function playAudioStreamWithTunneling(originalUrl) {
-      let targets = [originalUrl];
-
-      if (originalUrl.startsWith('http:')) {
-        // High-speed Google/Cloudflare Secure Tunnel for HTTP Audio Streams
-        targets = [
-          `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=3600&url=${encodeURIComponent(originalUrl)}`,
-          `https://wsrv.nl/?url=${encodeURIComponent(originalUrl)}`,
-          originalUrl
-        ];
-      }
-
-      let idx = 0;
-
-      function tryConnect() {
-        if (idx >= targets.length) return;
-
-        audioPlayer.src = targets[idx];
-        audioPlayer.load();
-
-        audioPlayer.play().then(() => {
-          startVUMeter(audioPlayer);
-        }).catch(err => {
-          console.log(`Tunnel ${idx} failed, retrying next route...`, err);
-          idx++;
-          tryConnect();
-        });
-      }
-
-      tryConnect();
-    }
-
     function playMedia(channel) {
       stopAll(false);
 
       if (channel.isAudioOnly) {
-        playAudioStreamWithTunneling(channel.url);
+        if (channel.url.startsWith('https:')) {
+          // HTTPS Stream (บ้านธรรมะ)
+          audioPlayer.src = channel.url;
+          audioPlayer.play().then(() => {
+            startVUMeter(audioPlayer);
+          }).catch(e => console.log("Audio play error:", e));
+        } else {
+          // Direct Native Stream Integration for Unsecure HTTP Live Audio
+          audioBridge.src = channel.url;
+          startVUMeter(null, true);
+        }
       } else {
         // HLS Video Stream Engine
         if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
@@ -535,6 +514,8 @@
     function stopAll(clearSrc = true) {
       videoPlayer.pause();
       audioPlayer.pause();
+      audioBridge.src = "about:blank";
+
       if (animFrameId) cancelAnimationFrame(animFrameId);
       if (hls) { hls.destroy(); hls = null; }
 
@@ -611,7 +592,7 @@
       drawScope(null, false);
     }
 
-    function startVUMeter(activeMedia) {
+    function startVUMeter(activeMedia, forcePlaying = false) {
       const freqData = analyser ? new Uint8Array(analyser.frequencyBinCount) : null;
       const timeData = analyser ? new Uint8Array(analyser.fftSize) : null;
       let simPhase = 0;
@@ -636,7 +617,9 @@
           }
         }
 
-        if (!hasRealData && activeMedia && !activeMedia.paused && activeMedia.currentTime > 0) {
+        let isCurrentlyPlaying = forcePlaying || (activeMedia && !activeMedia.paused && activeMedia.currentTime > 0);
+
+        if (!hasRealData && isCurrentlyPlaying) {
           simPhase += 0.12;
           let speechEnvelope = Math.max(0, Math.sin(simPhase) * 35 + Math.sin(simPhase * 2.7) * 25);
           let randomPeak = Math.random() > 0.5 ? Math.random() * 30 : 0;
@@ -665,7 +648,7 @@
             }
           }
 
-          drawScope(hasRealData ? timeData : null, activeMedia && !activeMedia.paused);
+          drawScope(hasRealData ? timeData : null, isCurrentlyPlaying);
         }
 
         animFrameId = requestAnimationFrame(update);
