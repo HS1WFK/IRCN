@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Dynamic Stats V.1</title>
+  <title>International News - Header Stats V.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -48,7 +48,7 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(2, 4, 8, 0.82);
+      background: rgba(2, 4, 8, 0.88); /* เพิ่มความทึบเล็กน้อยเพื่อให้ Stat เด่น */
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       padding-top: 16px;
@@ -91,6 +91,7 @@
       border-radius: 4px;
       overflow: hidden;
       box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.7);
+      margin-bottom: 4px; /* เพิ่มช่องว่างเล็กน้อยก่อน Stat */
     }
 
     .scope-grid {
@@ -112,11 +113,24 @@
       height: 100%;
     }
 
-    /* Playlist Container - High Readability & Vertical Balance */
+    /* --- ส่วนที่ Process ใหม่: CSS สำหรับข้อมูลเสียงใต้ Header Scope --- */
+    .audio-stats-header {
+      font-size: 14px; /* ขยายใหญ่ขึ้น 2 ระดับ (จากเดิม 10px/11px) */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-weight: 600;
+      color: #ff9800; /* สีส้มเหมือน Active Station */
+      padding-left: 4px;
+      margin-top: 2px;
+      display: none; /* เริ่มต้นซ่อนไว้ */
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+      transition: display 0.2s ease;
+    }
+
+    /* Playlist Container - High Readability */
     .playlist-container {
       display: flex;
       flex-direction: column;
-      gap: 22px; /* รักษาสเปซเดิมเพื่อให้อ่านง่าย */
+      gap: 20px; 
       background: rgba(0, 0, 0, 0.65);
       padding: 18px 20px 24px 20px;
       border-radius: 8px;
@@ -197,9 +211,10 @@
       opacity: 1;
     }
 
+    /* --- ส่วนที่ Process ใหม่: ขยายขนาด LED ขึ้น 10% --- */
     .led-indicator {
-      width: 8px;
-      height: 8px;
+      width: 8.8px; /* ขยายจากเดิม 8px ขึ้น 10% */
+      height: 8.8px; /* ขยายจากเดิม 8px ขึ้น 10% */
       border-radius: 50%;
       background-color: #222222;
       flex-shrink: 0;
@@ -270,23 +285,6 @@
       z-index: 1;
     }
 
-    /* --- ส่วนที่ Process เพิ่ม: CSS สำหรับข้อมูลเสียง --- */
-    .audio-stats {
-      font-size: 11px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      color: #a0a0a0;
-      margin-top: 2px;
-      padding-left: 2px;
-      display: none; /* เริ่มต้นซ่อนไว้ */
-      transition: display 0.2s ease;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
-    }
-
-    /* แสดงข้อมูลเฉพาะเมื่อ Active */
-    .channel-item.active .audio-stats {
-      display: block;
-    }
-
     audio, video {
       display: none;
     }
@@ -299,9 +297,12 @@
         padding-left: 8px;
         padding-right: 8px;
       }
+      /* ปรับขนาด Stat บนมือถือเล็กน้อย */
+      .audio-stats-header {
+        font-size: 13px;
+      }
       .playlist-container {
         padding: 14px 12px 18px 12px;
-        gap: 16px;
       }
       .channel-item {
         grid-template-columns: 22px 110px 1fr;
@@ -318,10 +319,6 @@
       .scope-container {
         height: 40px;
       }
-      /* ย่นขนาด Text บนมือถือ */
-      .audio-stats {
-        font-size: 10px;
-      }
     }
   </style>
 </head>
@@ -337,6 +334,10 @@
       <div class="scope-container">
         <div class="scope-grid"></div>
         <canvas id="oscilloscope"></canvas>
+      </div>
+      <!-- --- ส่วนที่ Process ใหม่: จองพื้นที่แสดงข้อมูลเสียงใต้ Header Scope --- -->
+      <div class="audio-stats-header" id="audio-stats-header">
+        <!-- ว่างไว้รอข้อมูล -->
       </div>
     </div>
   </div>
@@ -373,6 +374,7 @@
     ];
 
     const playlistContainer = document.getElementById('playlist');
+    const headerStats = document.getElementById('audio-stats-header'); // ดึง Element สถิติด้านบน
     const player = document.getElementById('media-player');
     const canvas = document.getElementById('oscilloscope');
     const canvasCtx = canvas.getContext('2d');
@@ -407,7 +409,7 @@
         `<div class="vu-grid-line ${m.isZero ? 'zero-line' : ''}" style="left: ${m.pos}%;"></div>`
       ).join('');
 
-      // --- ส่วนที่ Process เพิ่ม: HTML สำหรับข้อมูลเสียง ---
+      // --- ส่วนที่ Process ใหม่: ลบ HTML audio-stats เดิมออก ---
       item.innerHTML = `
         <div class="radio-dot"></div>
         <span class="channel-name">${channel.name}</span>
@@ -419,8 +421,6 @@
               ${gridHtml}
               <div class="vu-bar-fill" id="vu-${index}"></div>
             </div>
-            <!-- ส่วนที่จำลองข้อมูล Current bitrate | Channels -->
-            <div class="audio-stats" id="stats-${index}"></div>
           </div>
         </div>
       `;
@@ -504,6 +504,8 @@
       }
       currentLevel = 0;
       drawScopeFlat();
+      // --- ส่วนที่ Process ใหม่: ซ่อนข้อมูล Stat เมื่อหยุดเล่น ---
+      if (headerStats) headerStats.style.display = 'none';
     }
 
     function drawScope(timeData, isPlaying) {
@@ -610,19 +612,20 @@
         if (activeIndex !== -1) {
           const vuFill = document.getElementById(`vu-${activeIndex}`);
           const led = document.getElementById(`led-${activeIndex}`);
-          const statsElement = document.getElementById(`stats-${activeIndex}`); // ดึง Element ที่ Active
 
           if (vuFill) vuFill.style.width = currentLevel.toFixed(1) + '%';
 
-          // --- ส่วนที่ Process เพิ่ม: จำลองข้อมูล Current bitrate | Channels ---
-          if (statsElement) {
+          // --- ส่วนที่ Process ใหม่: อัปเดตข้อมูล Stat บน Header (จำลอง) ---
+          if (headerStats) {
+            headerStats.style.display = 'block'; // แสดงผล
+
             // 1. จำลองข้อมูล (xxx kbps)
             let simulatedBitrate = Math.round(56 + Math.random() * 8); // จำลอง Bitrate ขยับเล็กน้อย
             // 2. จำลอง Channels (Mono=1, Stereo=2)
             let simulatedChannels = "2"; // สมมติว่าเป็น Stereo
 
             // เขียนลงหน้าจอ
-            statsElement.innerText = `Current bitrate (${simulatedBitrate} kbps) | Channels (${simulatedChannels})`;
+            headerStats.innerText = `Current bitrate (${simulatedBitrate} kbps) | Channels (${simulatedChannels})`;
           }
           // --- ---
 
@@ -648,15 +651,12 @@
     function resetVU(index) {
       const vuFill = document.getElementById(`vu-${index}`);
       const led = document.getElementById(`led-${index}`);
-      const statsElement = document.getElementById(`stats-${index}`); // ดึง Element สถานะ
 
       if (vuFill) vuFill.style.width = '0%';
       if (led) {
         led.style.backgroundColor = '#222222';
         led.style.boxShadow = 'none';
       }
-      // รีเซ็ตข้อมูลสถานะเมื่อหยุดเล่น
-      if (statsElement) statsElement.innerText = '';
     }
 
     drawScopeFlat();
