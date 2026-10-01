@@ -175,7 +175,7 @@
       transform: scale(1);
     }
 
-    /* Font Size 16px มาตรฐานดั้งเดิม */
+    /* Font Size 16px ดั้งเดิม */
     .channel-name {
       font-size: 16px;
       font-weight: 500;
@@ -222,7 +222,7 @@
       gap: 3px;
     }
 
-    /* Scale Labels 14px มาตรฐานดั้งเดิม */
+    /* Scale Labels 14px ดั้งเดิม */
     .vu-scale-labels {
       display: flex;
       justify-content: space-between;
@@ -346,10 +346,10 @@
     ];
 
     const radioChannels = [
-      { name: "FM 91", url: "http://122.155.16.48:8955/;stream.mp3", isAudioOnly: true },
+      { name: "FM 91", url: "http://122.155.16.48:8955/;stream", isAudioOnly: true },
       { name: "บ้านธรรมะ", url: "https://radio10.plathong.net/7238/;stream.mp3", isAudioOnly: true },
-      { name: "วัดปากบ่อ", url: "http://radio1.siamlivehost.com:8001/;stream.mp3", isAudioOnly: true },
-      { name: "วัดนายโรง", url: "http://103.7.56.219:4106/;stream.mp3", isAudioOnly: true }
+      { name: "วัดปากบ่อ", url: "http://radio1.siamlivehost.com:8001/;", isAudioOnly: true },
+      { name: "วัดนายโรง", url: "http://103.7.56.219:4106/;", isAudioOnly: true }
     ];
 
     const dbMarks = [
@@ -472,20 +472,44 @@
       playMedia(allChannels[index]);
     }
 
+    // Advanced Multi-Proxy Stream Player with Automatic Failover
+    function playAudioStreamWithProxyFallback(originalUrl) {
+      const proxies = [
+        originalUrl, // Try direct first
+        `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`,
+        `https://thingproxy.freeboard.io/fetch/${originalUrl}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`
+      ];
+
+      let tryIndex = 0;
+
+      function attemptPlay() {
+        if (tryIndex >= proxies.length) {
+          console.log("All audio proxies failed for:", originalUrl);
+          return;
+        }
+
+        const currentProxyUrl = proxies[tryIndex];
+        audioPlayer.src = currentProxyUrl;
+        audioPlayer.load();
+
+        audioPlayer.play().then(() => {
+          startVUMeter(audioPlayer);
+        }).catch(err => {
+          console.log(`Proxy level ${tryIndex} failed, trying next fallback...`, err);
+          tryIndex++;
+          attemptPlay();
+        });
+      }
+
+      attemptPlay();
+    }
+
     function playMedia(channel) {
       stopAll(false);
 
       if (channel.isAudioOnly) {
-        // Secure HTTPS Proxy Route for HTTP Shoutcast Streams (Fixes macOS/iOS Mixed Content)
-        let streamTargetUrl = channel.url;
-        if (location.protocol === 'https:' && streamTargetUrl.startsWith('http:')) {
-          streamTargetUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(channel.url);
-        }
-
-        audioPlayer.src = streamTargetUrl;
-        audioPlayer.play().then(() => {
-          startVUMeter(audioPlayer);
-        }).catch(e => console.log("Audio play error:", e));
+        playAudioStreamWithProxyFallback(channel.url);
       } else {
         // HLS Video Stream Engine
         if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
