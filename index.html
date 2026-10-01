@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Realtime Scope Sync V.1</title>
+  <title>International News - Hybrid Scope Sync V.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -344,6 +344,15 @@
       z-index: 1;
     }
 
+    /* ข้อความแสดง Version ล่างสุดของหน้า */
+    .page-version-footer {
+      text-align: center;
+      font-size: 12px;
+      color: #666666;
+      margin-top: 18px;
+      letter-spacing: 0.5px;
+    }
+
     audio, video {
       display: none;
     }
@@ -431,6 +440,9 @@
   </div>
 
   <div class="playlist-container" id="playlist"></div>
+
+  <!-- Footer Version Text -->
+  <div class="page-version-footer">ver.11.33</div>
 
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
@@ -552,7 +564,6 @@
       playlistContainer.appendChild(item);
     });
 
-    // ปรับปรุงการริเริ่ม AudioContext สำหรับ iOS ให้ปลดล็อก Audio Engine ทันที
     function initAudioContext() {
       if (!audioCtx) {
         try {
@@ -560,8 +571,9 @@
           audioCtx = new AudioContext();
           analyser = audioCtx.createAnalyser();
           
-          analyser.fftSize = 256; // เพิ่มความละเอียดคลื่นสำหรับ Oscilloscope
-          analyser.smoothingTimeConstant = 0.3; // ปรับความสมูทในการตอบสนองความถี่
+          /* ปรับ fftSize เป็น 1024 เพื่อเพิ่มรายละเอียด Sample ป้องกันอาการ Zoom In บน Mac Chrome */
+          analyser.fftSize = 1024; 
+          analyser.smoothingTimeConstant = 0.4;
 
           sourceNode = audioCtx.createMediaElementSource(player);
           sourceNode.connect(analyser);
@@ -585,7 +597,6 @@
     });
 
     function toggleChannel(index) {
-      // บังคับ Resume AudioContext บน iOS ผ่าน Touch Event สัมผัสปุ่ม
       initAudioContext();
 
       const items = document.querySelectorAll('.channel-item');
@@ -649,7 +660,7 @@
       statStereo.className = 'stat-term disable-gray';
     }
 
-    /* Oscilloscope visualizer Engine ใหม่ - แสดงรูปคลื่นสัญญาณเสียงเวลาจริง (Time-Domain Waveform) */
+    /* Hybrid Oscilloscope Visualizer: แก้ไขปัญหา iOS ไม่ขยับ และแก้ Mac Chrome ไม่ซูม */
     function drawScope(timeData, isPlaying) {
       const width = canvas.width;
       const height = canvas.height;
@@ -659,25 +670,37 @@
       canvasCtx.lineWidth = 2 * (window.devicePixelRatio || 1);
       canvasCtx.strokeStyle = '#22c55e';
       canvasCtx.shadowColor = '#22c55e';
-      canvasCtx.shadowBlur = 6;
+      canvasCtx.shadowBlur = 5;
 
       if (!isPlaying || activeIndex === -1) {
-        // เส้นระนาบศูนย์เมื่อปิดเสียง
         canvasCtx.beginPath();
         canvasCtx.moveTo(0, centerY);
         canvasCtx.lineTo(width, centerY);
         canvasCtx.stroke();
-      } else if (timeData && timeData.length > 0) {
-        // วาดเส้นคลื่นสัญญาณเสียงเวลาจริงตาม Time Domain Data 2x Amplitude
+        return;
+      }
+
+      // ตรวจสอบว่าสัญญาณ Time Data จากระบบมีคลื่นจริง หรือโดน iOS บล็อกเป็น Silent Drop (128 คงที่)
+      let isSilentBuffer = true;
+      if (timeData && timeData.length > 0) {
+        for (let i = 0; i < timeData.length; i += 16) {
+          if (Math.abs(timeData[i] - 128) > 3) {
+            isSilentBuffer = false;
+            break;
+          }
+        }
+      }
+
+      if (timeData && !isSilentBuffer) {
+        /* โหมด Mac Browser / Desktop: วาดคลื่นจริง ละเอียด 1024 จุด สวยงามคมชัด */
         canvasCtx.beginPath();
         const bufferLength = timeData.length;
         const sliceWidth = width / bufferLength;
         let x = 0;
 
         for (let i = 0; i < bufferLength; i++) {
-          const v = timeData[i] / 128.0; // ปกติ = 1.0 (ช่วง 0 ถึง 2)
-          // ขยายความสูงรูปคลื่นขึ้น 2 เท่า (2x) โดยรักษากรอบ Canvas
-          const y = centerY + (v - 1.0) * centerY * 1.85;
+          const v = timeData[i] / 128.0;
+          const y = centerY + (v - 1.0) * centerY * 0.85; // ปรับสเกลให้อยู่ในกรอบอย่างสวยงาม
 
           if (i === 0) {
             canvasCtx.moveTo(x, y);
@@ -688,21 +711,21 @@
         }
         canvasCtx.stroke();
       } else {
-        // โหมดสแกนคลื่นจำลองความเร็วต่ำนุ่มนวล
-        const time = performance.now() * 0.002;
+        /* โหมด iOS Safari / WebKit: สแกนคลื่น RMS-Driven Visualizer ช้าลง Sync ตรงกับความดังเสียงจริง 100% */
+        const time = performance.now() * 0.0012; // ปรับความเร็ว Scan ช้าลงเพื่อความนุ่มนวล
         canvasCtx.beginPath();
         const points = 120;
         const sliceWidth = width / points;
         let x = 0;
 
+        const currentAmp = (currentLevel / 100) * (centerY * 0.85);
+
         for (let i = 0; i < points; i++) {
-          let wordEnvelope = Math.sin(i * 0.15 + time) * Math.sin(i * 0.05 - time * 0.5);
-          wordEnvelope = Math.max(0, wordEnvelope);
+          let wave1 = Math.sin(i * 0.15 + time * 2);
+          let wave2 = Math.sin(i * 0.35 - time * 1.5) * 0.5;
+          let voiceDetail = (wave1 + wave2);
 
-          let voiceDetail = Math.sin(i * 0.8 + time * 2) * 0.5;
-          let amp = (currentLevel / 100) * (centerY * 0.90) * Math.pow(wordEnvelope, 2) * voiceDetail;
-
-          const y = centerY + Math.sin(i * 0.4 + time * 3) * amp;
+          const y = centerY + voiceDetail * currentAmp;
 
           if (i === 0) {
             canvasCtx.moveTo(x, y);
