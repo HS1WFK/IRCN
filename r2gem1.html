@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Compact Header Meter V.1.4.6</title>
+  <title>International News - Compact Header Meter V.1.4.7</title>
   <!-- HLS.js Library (pinned to major version 1) -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -241,7 +241,6 @@
       background-color: #ef4444 !important;
     }
 
-    /* Connection Status Line: Justify ยาวไปขอบขวา */
     .connection-status-line {
       margin-top: 3px;
       font-size: 16px;
@@ -260,7 +259,6 @@
       font-weight: 700;
     }
 
-    /* บรรทัดล่างสุด: รวม Time (ซ้าย) และ VU Meter (ขวา) */
     .time-vu-row {
       margin-top: 4px;
       display: flex;
@@ -269,7 +267,6 @@
       width: 100%;
     }
 
-    /* ขยายขนาดตัวหนังสือ Time: xx:xx:xx ให้เท่ากับ UTC (26px) */
     .local-time-display {
       font-size: 26px !important;
       font-weight: 700;
@@ -555,7 +552,7 @@
             <span id="stat-stereo" class="stat-term disable-gray">Stereo</span>
           </div>
 
-          <!-- Buffer: XX.Xs (ตัวเลข XX.Xs ใช้สีแดง) & Bar Meter -->
+          <!-- Buffer: XX.Xs & Bar Meter -->
           <div class="buf-meter-container">
             <span>Buffer: <span id="buf-val" class="status-highlight-red">0.0</span>s</span>
             <div class="buf-bar-bg">
@@ -573,7 +570,7 @@
           <span>Data Received <span class="status-highlight-red" id="conn-rx">0.00 MB</span></span>
         </div>
 
-        <!-- Row เดียวกันสำหรับ Time Display (ซ้าย - Font Size 26px) และ Global VU Meter (ขวา) -->
+        <!-- Row เดียวกันสำหรับ Time Display (ซ้าย) และ Global VU Meter (ขวา) -->
         <div class="time-vu-row">
           <div class="local-time-display" id="local-clock">Time: --:--:--</div>
 
@@ -595,12 +592,11 @@
   <div class="playlist-container" id="playlist"></div>
 
   <!-- Footer Version Text -->
-  <div class="page-version-footer">ver.1.4.6</div>
+  <div class="page-version-footer">ver.1.4.7</div>
 
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
   <script>
-    // ตัด Bloomberg ออกเรียบร้อยแล้ว
     const channels = [
       { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network providing global news coverage, in-depth reporting, and current affairs analysis.", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8" },
       { name: "ABC Australia", location: "Sydney, Australia", utc: "UTC+10", tz: "Australia/Sydney", about: "Australia’s public broadcasting service providing news, current affairs, and cultural programs across the Asia-Pacific region.", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8" },
@@ -614,7 +610,9 @@
       { name: "France 24 Fr", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The French-language domestic and international channel of France 24, providing global news and in-depth reporting in French.", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8" },
       { name: "GB News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "A British free-to-air news and opinion channel focusing on debate, analysis, regional voices, and national news commentary.", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8" },
       { name: "Tagesschau24", location: "Hamburg, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "A German specialized news channel operated by the public broadcasting alliance ARD, providing continuous rolling news updates, live reporting, and documentaries.", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8" },
-      { name: "TPTV", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Parliament Television, the public broadcasting channel operated by the Secretariat of the House of Representatives, coverage includes live parliamentary debates, legislative proceedings, and public policies.", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org" }
+      { name: "TPTV", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Parliament Television, the public broadcasting channel operated by the Secretariat of the House of Representatives, coverage includes live parliamentary debates, legislative proceedings, and public policies.", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org" },
+      { name: "Classic FM", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "UK classic music radio stream based in Leicester Square, London, owned by Global Media & Entertainment.", url: "http://media-ice.musicradio.com/ClassicFMMP3" },
+      { name: "Klassik-1", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "German classical music online radio station based in Berlin, providing legendary and contemporary classical masterpieces.", url: "http://icepool.silvacast.com/KLASSIK1.mp3" }
     ];
 
     const dbMarks = [
@@ -973,7 +971,7 @@
 
       const sid = sessionId;
 
-      if (window.Hls && Hls.isSupported()) {
+      if (url.includes('.m3u8') && window.Hls && Hls.isSupported()) {
         usingNative = false;
         meterMode = IS_IOS ? 'segments' : 'analyser';
 
@@ -994,7 +992,8 @@
         });
 
         hls.on(Hls.Events.BUFFER_APPENDING, (event, data) => handleBufferAppending(sid, data));
-      } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
+      } else {
+        // Direct Audio Stream (MP3/AAC/Native HLS)
         usingNative = true;
         meterMode = IS_IOS ? 'none' : 'analyser';
         player.src = url;
