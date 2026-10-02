@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Compact Header Meter V.1.4.3</title>
+  <title>International News - Compact Header Meter V.1.4.4</title>
   <!-- HLS.js Library (pinned to major version 1) -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -99,20 +99,18 @@
 
     .station-info-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 12px;
       margin-bottom: 10px;
       min-height: 36px;
       visibility: hidden;
       width: 100%;
     }
 
-    /* Ticker Main Wrapper: ครอบคลุมฝั่งซ้ายของแถบสถานี */
+    /* Ticker Main Wrapper: ขยายเต็ม 100% จนชิดขอบขวา */
     .station-ticker-wrapper {
       display: flex;
       align-items: center;
-      width: 65%;
+      width: 100%;
       overflow: hidden;
     }
 
@@ -155,13 +153,13 @@
     }
 
     .local-time-display {
-      font-size: 26px !important;
+      font-size: 16px;
       font-weight: 700;
       color: #ff9800;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
       white-space: nowrap;
-      flex-shrink: 0;
+      margin-top: 4px;
       line-height: 1.2;
     }
 
@@ -480,12 +478,11 @@
         font-size: 16px;
       }
       .station-fixed-title,
-      .station-ticker-text,
-      .local-time-display {
+      .station-ticker-text {
         font-size: 16px !important;
       }
-      .station-ticker-wrapper {
-        width: 60%;
+      .local-time-display {
+        font-size: 14px !important;
       }
       .channels-indicator {
         font-size: 14px;
@@ -530,7 +527,7 @@
         <div class="utc-time-display" id="utc-clock">UTC --:--:--</div>
       </div>
 
-      <!-- Station Location Ticker Row + Realtime Local Time -->
+      <!-- Station Location Ticker Row (ขยายยาวเต็มความกว้าง) -->
       <div class="station-info-row" id="station-info-row">
         <div class="station-ticker-wrapper">
           <div class="station-fixed-title" id="station-fixed-title"></div>
@@ -538,7 +535,6 @@
             <div class="station-ticker-text" id="station-ticker-text"></div>
           </div>
         </div>
-        <div class="local-time-display" id="local-clock">Local --:--:--</div>
       </div>
 
       <!-- Oscilloscope Scope Under Title -->
@@ -575,6 +571,9 @@
           <span>Data Received <span class="status-highlight-red" id="conn-rx">0.00 MB</span></span>
         </div>
 
+        <!-- Time Display (ย้ายมาอยู่ใต้ CONNECTED) -->
+        <div class="local-time-display" id="local-clock">Time: --:--:--</div>
+
         <!-- Global VU Meter Panel -->
         <div class="global-vu-wrapper">
           <div class="vu-container-global">
@@ -595,7 +594,7 @@
   <div class="playlist-container" id="playlist"></div>
 
   <!-- Footer Version Text -->
-  <div class="page-version-footer">ver.1.4.3</div>
+  <div class="page-version-footer">ver.1.4.4</div>
 
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
@@ -722,9 +721,9 @@
             hour12: false
           };
           const formatter = new Intl.DateTimeFormat('en-GB', options);
-          localClockElem.innerText = `Local ${formatter.format(now)}`;
+          localClockElem.innerText = `Time: ${formatter.format(now)}`;
         } catch (e) {
-          localClockElem.innerText = "Local --:--:--";
+          localClockElem.innerText = "Time: --:--:--";
         }
       }
     }
@@ -1189,7 +1188,6 @@
             bufBarElem.classList.remove('green-status');
           }
 
-          // อัปเดต Bitrate & Data Received
           const rxMB = (totalRxBytes / (1024 * 1024)).toFixed(2);
           const brKbps = currentBitrate || 128;
           
