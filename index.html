@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Segment Meter V.1.3.2</title>
+  <title>International News - Segment Meter V.1.3.3</title>
   <!-- HLS.js Library (pinned to major version 1) -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -281,7 +281,10 @@
     }
 
     .vu-container {
-      --bar-h: 20px;            /* ความสูงแถบ VU = ขนาดฟอนต์ชื่อสถานี (เดสก์ท็อป 20px) */
+      --bar-h: 19px;            /* ความสูงแถบ VU (เดสก์ท็อป: ลดจาก 20px ลง 5%) */
+      --label-h: 24px;          /* ความสูงแถวตัวเลขสเกล dB */
+      /* ยกทั้งชุด (สเกล + แถบ + จุด LED) ขึ้น เพื่อให้แถบอยู่ระดับเดียวกับชื่อสถานี */
+      transform: translateY(calc(-1 * (var(--label-h) + 4px) / 2));
       display: flex;
       align-items: center;
       gap: 12px;
@@ -316,7 +319,7 @@
       display: flex;
       justify-content: space-between;
       position: relative;
-      height: 24px;
+      height: var(--label-h);
       font-size: 20px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #e0e0e0;
@@ -420,11 +423,11 @@
         font-size: 15px;
       }
       .vu-container {
-        --bar-h: 15px;          /* เท่าขนาดฟอนต์ชื่อสถานีบนมือถือ (15px) */
+        --bar-h: 14.25px;       /* มือถือ: ลดจาก 15px ลง 5% */
+        --label-h: 16px;
       }
       .vu-scale-labels {
         font-size: 12px;
-        height: 16px;
       }
       .scope-container {
         height: 40px;
@@ -476,7 +479,7 @@
   <div class="playlist-container" id="playlist"></div>
 
   <!-- Footer Version Text -->
-  <div class="page-version-footer">ver.1.3.2</div>
+  <div class="page-version-footer">ver.1.3.3</div>
 
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
