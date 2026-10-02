@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Compact Header Meter V.1.4.5</title>
+  <title>International News - Compact Header Meter V.1.4.6</title>
   <!-- HLS.js Library (pinned to major version 1) -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -106,7 +106,7 @@
       width: 100%;
     }
 
-    /* Ticker Main Wrapper: ขยายยาวเต็ม 100% ชิดขอบขวา */
+    /* Ticker Main Wrapper */
     .station-ticker-wrapper {
       display: flex;
       align-items: center;
@@ -260,23 +260,24 @@
       font-weight: 700;
     }
 
-    /* บรรทัดล่างสุด: รวม Time (ซ้าย) และ VU Meter (ขวา) ให้อยู่ระดับเดียวกัน */
+    /* บรรทัดล่างสุด: รวม Time (ซ้าย) และ VU Meter (ขวา) */
     .time-vu-row {
-      margin-top: 2px;
+      margin-top: 4px;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
       width: 100%;
     }
 
+    /* ขยายขนาดตัวหนังสือ Time: xx:xx:xx ให้เท่ากับ UTC (26px) */
     .local-time-display {
-      font-size: 16px;
+      font-size: 26px !important;
       font-weight: 700;
       color: #ff9800;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
       white-space: nowrap;
-      line-height: 1.2;
+      line-height: 1.1;
     }
 
     .vu-container-global {
@@ -483,7 +484,7 @@
         font-size: 16px !important;
       }
       .local-time-display {
-        font-size: 13px !important;
+        font-size: 16px !important;
       }
       .channels-indicator {
         font-size: 14px;
@@ -498,7 +499,7 @@
       .vu-container-global {
         --bar-h: 9px;
         --label-h: 14px;
-        width: 55%;
+        width: 50%;
       }
       .vu-scale-labels {
         font-size: 11px;
@@ -528,7 +529,7 @@
         <div class="utc-time-display" id="utc-clock">UTC --:--:--</div>
       </div>
 
-      <!-- Station Location Ticker Row (ขยายยาวเต็มความกว้าง) -->
+      <!-- Station Location Ticker Row -->
       <div class="station-info-row" id="station-info-row">
         <div class="station-ticker-wrapper">
           <div class="station-fixed-title" id="station-fixed-title"></div>
@@ -554,16 +555,16 @@
             <span id="stat-stereo" class="stat-term disable-gray">Stereo</span>
           </div>
 
-          <!-- BUF XX.Xs & Bar Meter -->
+          <!-- Buffer: XX.Xs (ตัวเลข XX.Xs ใช้สีแดง) & Bar Meter -->
           <div class="buf-meter-container">
-            <span>BUF <span id="buf-val">0.0</span>s</span>
+            <span>Buffer: <span id="buf-val" class="status-highlight-red">0.0</span>s</span>
             <div class="buf-bar-bg">
               <div class="buf-bar-fill" id="buf-bar"></div>
             </div>
           </div>
         </div>
 
-        <!-- CONNECTED | Bitrate: xxx kbps | Data Received xx.xx MB (Justified Full Width) -->
+        <!-- CONNECTED | Bitrate: xxx kbps | Data Received xx.xx MB -->
         <div class="connection-status-line" id="conn-status">
           <span>CONNECTED</span>
           <span>|</span>
@@ -572,7 +573,7 @@
           <span>Data Received <span class="status-highlight-red" id="conn-rx">0.00 MB</span></span>
         </div>
 
-        <!-- Row เดียวกันสำหรับ Time Display (ซ้าย) และ Global VU Meter (ขวา) -->
+        <!-- Row เดียวกันสำหรับ Time Display (ซ้าย - Font Size 26px) และ Global VU Meter (ขวา) -->
         <div class="time-vu-row">
           <div class="local-time-display" id="local-clock">Time: --:--:--</div>
 
@@ -594,17 +595,17 @@
   <div class="playlist-container" id="playlist"></div>
 
   <!-- Footer Version Text -->
-  <div class="page-version-footer">ver.1.4.5</div>
+  <div class="page-version-footer">ver.1.4.6</div>
 
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
   <script>
+    // ตัด Bloomberg ออกเรียบร้อยแล้ว
     const channels = [
       { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network providing global news coverage, in-depth reporting, and current affairs analysis.", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8" },
       { name: "ABC Australia", location: "Sydney, Australia", utc: "UTC+10", tz: "Australia/Sydney", about: "Australia’s public broadcasting service providing news, current affairs, and cultural programs across the Asia-Pacific region.", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8" },
       { name: "Arirang Korea", location: "Seoul, South Korea", utc: "UTC+9", tz: "Asia/Seoul", about: "South Korean English-language international broadcasting network operated by the Korea International Broadcasting Foundation, showcasing news, culture, and life in Korea.", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8" },
       { name: "BBC News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "The operational business division of the British Broadcasting Corporation (BBC) responsible for gathering and broadcasting news and current affairs worldwide.", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8" },
-      { name: "Bloomberg", location: "New York, USA", utc: "UTC-4", tz: "America/New_York", about: "American multinational cable news television channel providing global financial news, market analysis, economic data, and business reporting.", url: "" },
       { name: "CGTN", location: "Beijing, China", utc: "UTC+8", tz: "Asia/Shanghai", about: "China Global Television Network, the international division of Chinese state media CCTV, broadcasting news and current affairs from a Chinese perspective.", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8" },
       { name: "CNA", location: "Singapore", utc: "UTC+8", tz: "Asia/Singapore", about: "Channel NewsAsia, a Singaporean multinational news channel broadcasting news, business insights, and documentaries across Asia and beyond.", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8" },
       { name: "NHK English", location: "Tokyo, Japan", utc: "UTC+9", tz: "Asia/Tokyo", about: "NHK World-Japan, the international broadcasting service of Japan's public broadcaster NHK, offering news and cultural programming in English.", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8" },
