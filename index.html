@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Real Meter V.1.2.0</title>
+  <title>International News - Segment Meter V.1.3.0</title>
   <!-- HLS.js Library (pinned to major version 1) -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -188,6 +188,15 @@
       letter-spacing: 0.5px;
       color: #ff9800;
       white-space: nowrap;
+    }
+
+    .debug-line {
+      display: none;
+      margin-top: 4px;
+      font-size: 11px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
+      color: #8ab4ff;
+      word-break: break-all;
     }
 
     .stat-term {
@@ -453,6 +462,7 @@
           </div>
           <div class="meter-note" id="meter-note"></div>
         </div>
+        <div class="debug-line" id="debug-line"></div>
       </div>
     </div>
   </div>
@@ -460,7 +470,7 @@
   <div class="playlist-container" id="playlist"></div>
 
   <!-- Footer Version Text -->
-  <div class="page-version-footer">ver.1.2.0</div>
+  <div class="page-version-footer">ver.1.3.0</div>
 
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
@@ -492,11 +502,20 @@
       { db: "+4", pos: 100 }
     ];
 
-    // ปรับได้: ระดับ dBFS ที่ถือเป็น 0 VU (ค่ายิ่งต่ำ แถบยิ่งขึ้นง่าย)
-    const VU_REF_DBFS = -18;
+    /* ===== ค่าที่ปรับได้ ===== */
+    const VU_REF_DBFS = -18;        // ระดับ dBFS ที่ถือเป็น 0 VU (ยิ่งต่ำ แถบยิ่งขึ้นง่าย)
+    const SIGNAL_PEAK_MIN = 0.0005; // peak ต่ำกว่านี้ = ไม่มีสัญญาณเข้า analyser
+    const SCOPE_GAIN = 2.5;         // ขยายความสูงคลื่นบน scope (เฉพาะการแสดงผล)
+    const VU_WINDOW_SEC = 0.3;      // ช่วงเวลาเฉลี่ย RMS แบบ VU มาตรฐาน 300 ms
+    const METER_OFFSET_SEC = 0;     // เลื่อนจังหวะมิเตอร์ (วินาที) ถ้าเห็นว่าเร็ว/ช้ากว่าเสียง
+    const LOWEST_QUALITY = true;    // จำกัดให้ดึงสตรีมคุณภาพต่ำสุด ประหยัดข้อมูล เหมาะกับการฟังเป็นวิทยุ
+    const SEG_KEEP_SEC = 20;        // เก็บข้อมูลมิเตอร์ย้อนหลังกี่วินาที
+    const AUTO_SWITCH_MS = 4000;    // ถ้า analyser เงียบนานเท่านี้ ให้สลับไปโหมด segment
+    const NOTE_DELAY_MS = 6000;     // รอกี่ ms ก่อนขึ้น NO METER DATA
+    const DEBUG = /[?&]debug/.test(location.search);  // เปิดหน้าด้วย ?debug เพื่อดูสถานะมิเตอร์
 
-    // ปรับได้: ถ้า peak ต่ำกว่านี้ถือว่าไม่มีสัญญาณเข้า analyser
-    const SIGNAL_PEAK_MIN = 0.0005;
+    const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
     const playlistContainer = document.getElementById('playlist');
     const player = document.getElementById('media-player');
@@ -512,13 +531,15 @@
     const statMono = document.getElementById('stat-mono');
     const statStereo = document.getElementById('stat-stereo');
     const meterNote = document.getElementById('meter-note');
+    const debugLine = document.getElementById('debug-line');
+    if (DEBUG) debugLine.style.display = 'block';
 
     let activeIndex = -1;
     let hls = null;
     let usingNative = false;
 
     let audioCtx = null;
-    let analyser = null;     // สัญญาณรวม ใช้ทำ VU และ scope
+    let analyser = null;     // สัญญาณรวม (โหมด analyser)
     let analyserL = null;    // ช่องซ้าย สำหรับตรวจ Mono/Stereo
     let analyserR = null;    // ช่องขวา
     let splitter = null;
@@ -526,7 +547,25 @@
     let animFrameId = null;
 
     let currentLevel = 0;
-    let stereoRatio = 0;     // ค่าเฉลี่ยความต่างซ้าย-ขวา
+    let stereoRatio = 0;
+
+    // โหมดมิเตอร์: 'analyser' = Web Audio อ่านจาก element (Chrome/Firefox)
+    //              'segments' = ถอดรหัสเสียงจากชิ้นสตรีมที่ hls.js ดึงมา (iOS / Safari)
+    //              'none'     = วัดไม่ได้
+    let meterMode = 'none';
+    let sessionId = 0;
+    let playStartedAt = 0;
+    let silentSince = 0;
+
+    // ข้อมูลโหมด segment
+    let segEntries = [];
+    let initSegs = {};
+    let offlineCtx = null;
+    let decodeQueue = 0;
+    let decodeOk = 0;
+    let decodeFail = 0;
+    let lastError = '';
+    const segTimeB = new Uint8Array(2048);
 
     function updateClocks() {
       const now = new Date();
@@ -594,7 +633,11 @@
       playlistContainer.appendChild(item);
     });
 
+    /* บน iOS ไม่ต่อ element เข้า Web Audio เลย เพราะ WebKit ส่งค่าศูนย์ให้ analyser เมื่อเล่น HLS
+       (ทั้งแบบ native และแบบ hls.js + ManagedMediaSource) เสียงจึงเล่นตรงตามปกติ ไม่ผ่าน Web Audio */
     function initAudioContext() {
+      if (IS_IOS) return;
+
       if (!audioCtx) {
         try {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -615,7 +658,6 @@
           sourceNode.connect(analyser);
           analyser.connect(audioCtx.destination);
 
-          // สาขาแยกซ้าย-ขวา เพื่อตรวจ Mono/Stereo (ไม่ต่อออกลำโพง)
           sourceNode.connect(splitter);
           splitter.connect(analyserL, 0);
           splitter.connect(analyserR, 1);
@@ -664,23 +706,157 @@
 
     function onPlayStarted() {
       initAudioContext();
+      playStartedAt = performance.now();
+      silentSince = 0;
       startVUMeter();
     }
 
-    /* ให้ hls.js (MSE) ทำงานก่อน เพื่อให้ Web Audio อ่านสัญญาณจริงได้ ถ้าใช้ไม่ได้จึง fallback เป็น native */
+    /* ===== โหมด segment: ถอดรหัสเสียงจากชิ้นสตรีมที่ hls.js ส่งเข้า buffer ===== */
+
+    function getOfflineCtx() {
+      if (!offlineCtx) {
+        const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        offlineCtx = new OAC(2, 1, 44100);
+      }
+      return offlineCtx;
+    }
+
+    function decodeBuffer(arrayBuffer) {
+      return new Promise((resolve, reject) => {
+        const p = getOfflineCtx().decodeAudioData(arrayBuffer, resolve, reject);
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      });
+    }
+
+    async function ingestSegment(sid, init, media, start) {
+      if (decodeQueue >= 4) return;
+      decodeQueue++;
+      try {
+        const joined = new Uint8Array(init.length + media.length);
+        joined.set(init, 0);
+        joined.set(media, init.length);
+
+        const audio = await decodeBuffer(joined.buffer);
+        if (sid !== sessionId) return;
+
+        const n = audio.length;
+        const rate = audio.sampleRate;
+        const L = audio.getChannelData(0);
+        const R = audio.numberOfChannels > 1 ? audio.getChannelData(1) : null;
+        const mono = new Float32Array(n);
+        let sumDiff = 0, sumTotal = 0;
+        for (let i = 0; i < n; i++) {
+          const l = L[i];
+          const r = R ? R[i] : l;
+          mono[i] = (l + r) * 0.5;
+          const d = l - r;
+          sumDiff += d * d;
+          sumTotal += l * l + r * r;
+        }
+        const stereo = R ? (sumDiff / (sumTotal + 1e-12) > 0.02) : false;
+
+        segEntries.push({ start: start, end: start + n / rate, rate: rate, mono: mono, stereo: stereo });
+        const cutoff = player.currentTime - SEG_KEEP_SEC;
+        segEntries = segEntries.filter(e => e.end > cutoff).slice(-12);
+        decodeOk++;
+      } catch (e) {
+        decodeFail++;
+        lastError = ((e && e.name) ? e.name + ': ' : '') + ((e && e.message) ? e.message : String(e));
+      } finally {
+        decodeQueue--;
+      }
+    }
+
+    function handleBufferAppending(sid, d) {
+      if (sid !== sessionId) return;
+      if (!d || !d.data || d.type === 'video') return;
+
+      const u8 = (d.data instanceof Uint8Array) ? d.data : new Uint8Array(d.data);
+      if (u8.length < 12) return;
+
+      const tag = String.fromCharCode(u8[4], u8[5], u8[6], u8[7]);
+
+      // init segment: เก็บไว้เสมอ เผื่อสลับเข้าโหมด segment ภายหลัง
+      if (tag === 'ftyp' || tag === 'moov') {
+        initSegs[d.type] = u8.slice();
+        return;
+      }
+
+      if (meterMode !== 'segments') return;
+      const init = initSegs[d.type];
+      if (!init || !d.frag) return;
+
+      const start = Number.isFinite(d.frag.startPTS) ? d.frag.startPTS : d.frag.start;
+      if (!Number.isFinite(start)) return;
+
+      ingestSegment(sid, init, u8.slice(), start);
+    }
+
+    function findSegEntry(t) {
+      for (let i = segEntries.length - 1; i >= 0; i--) {
+        const e = segEntries[i];
+        if (t >= e.start && t < e.end) return e;
+      }
+      return null;
+    }
+
+    // คืนค่า { rms, stereo } ของเวลาที่กำลังเล่น พร้อมเติม segTimeB สำหรับ scope
+    function segmentFrame() {
+      const t = player.currentTime + METER_OFFSET_SEC;
+      const e = findSegEntry(t);
+      if (!e) return null;
+
+      const idx = Math.min(e.mono.length - 1, Math.max(0, Math.floor((t - e.start) * e.rate)));
+      const nVU = Math.max(1, Math.floor(VU_WINDOW_SEC * e.rate));
+      const a = Math.max(0, idx - nVU);
+
+      let sum = 0;
+      for (let i = a; i <= idx; i++) {
+        const v = e.mono[i];
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / (idx - a + 1));
+
+      const N = segTimeB.length;
+      for (let k = 0; k < N; k++) {
+        const src = idx - N + 1 + k;
+        const v = src >= 0 ? e.mono[src] : 0;
+        segTimeB[k] = Math.max(0, Math.min(255, Math.round(128 + v * 127)));
+      }
+      return { rms: rms, stereo: e.stereo };
+    }
+
+    function resetSegmentMeter() {
+      segEntries = [];
+      initSegs = {};
+      decodeQueue = 0;
+      decodeOk = 0;
+      decodeFail = 0;
+      lastError = '';
+    }
+
+    /* ===== การเล่น ===== */
+
     function playAudio(url) {
       stopAudio(false);
       player.disableRemotePlayback = true;   // จำเป็นสำหรับ ManagedMediaSource บน iOS
 
+      const sid = sessionId;
+
       if (window.Hls && Hls.isSupported()) {
         usingNative = false;
-        hls = new Hls({ enableWorker: true });
+        meterMode = IS_IOS ? 'segments' : 'analyser';
+
+        hls = new Hls({ enableWorker: true, startLevel: 0 });
         hls.loadSource(url);
         hls.attachMedia(player);
+
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (LOWEST_QUALITY) hls.autoLevelCapping = 0;
           player.play().then(onPlayStarted)
             .catch(e => console.log("Play error:", e));
         });
+        hls.on(Hls.Events.BUFFER_APPENDING, (event, data) => handleBufferAppending(sid, data));
         hls.on(Hls.Events.ERROR, (event, data) => {
           if (!data.fatal) return;
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
@@ -692,7 +868,8 @@
           }
         });
       } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
-        usingNative = true;   // เสียงออกได้ แต่มิเตอร์อาจอ่านค่าจริงไม่ได้
+        usingNative = true;   // เสียงออกได้ แต่มิเตอร์วัดไม่ได้บน iOS
+        meterMode = IS_IOS ? 'none' : 'analyser';
         player.src = url;
         player.play().then(onPlayStarted)
           .catch(e => console.log("Play error:", e));
@@ -700,6 +877,7 @@
     }
 
     function stopAudio(clearSrc = true) {
+      sessionId++;
       player.pause();
       if (animFrameId) cancelAnimationFrame(animFrameId);
       if (hls) { hls.destroy(); hls = null; }
@@ -707,6 +885,9 @@
         player.removeAttribute('src');
         player.load();
       }
+      resetSegmentMeter();
+      meterMode = 'none';
+      silentSince = 0;
       currentLevel = 0;
       stereoRatio = 0;
       drawScopeFlat();
@@ -714,11 +895,12 @@
       stationInfoRow.style.visibility = 'hidden';
       if (statsPanel) statsPanel.style.display = 'none';
       if (meterNote) meterNote.innerText = '';
+      if (debugLine) debugLine.innerText = '';
       statMono.className = 'stat-term disable-gray';
       statStereo.className = 'stat-term disable-gray';
     }
 
-    /* แปลงค่า VU (dB) เป็นเปอร์เซ็นต์ตามสเกลที่วาดบนจอ โดยสอดแทรกเชิงเส้นระหว่างจุดสเกล */
+    /* แปลงค่า VU (dB) เป็นเปอร์เซ็นต์ตามสเกลที่วาดบนจอ */
     function vuToPercent(vu) {
       const first = parseFloat(dbMarks[0].db);
       const last = parseFloat(dbMarks[dbMarks.length - 1].db);
@@ -736,7 +918,7 @@
       return 100;
     }
 
-    /* Oscilloscope: ใช้ค่าสูงสุดของแต่ละช่วงต่อแท่ง ไม่มีคลื่นจำลอง ถ้าไม่มีข้อมูลจริงวาดเส้นแบน */
+    /* Oscilloscope: ใช้ค่าสูงสุดต่อแท่ง ไม่มีคลื่นจำลอง ถ้าไม่มีข้อมูลจริงวาดเส้นแบน */
     function drawScope(timeData, isPlaying) {
       const width = canvas.width;
       const height = canvas.height;
@@ -766,7 +948,7 @@
           const v = Math.abs((timeData[i * step + j] - 128) / 128.0);
           if (v > peak) peak = v;
         }
-        const barHeight = Math.min(peak, 1) * (height * 0.85);
+        const barHeight = Math.min(peak * SCOPE_GAIN, 1) * (height * 0.85);
 
         if (barHeight > 1) {
           canvasCtx.beginPath();
@@ -786,7 +968,7 @@
       drawScope(null, false);
     }
 
-    /* VU Meter: RMS จากสัญญาณจริง (time-domain) แปลงเป็น dB ไม่มีค่าจำลอง */
+    /* ===== VU Meter + Scope ===== */
     function startVUMeter() {
       if (animFrameId) cancelAnimationFrame(animFrameId);
 
@@ -796,11 +978,15 @@
       const bufR = analyserR ? new Float32Array(analyserR.fftSize) : null;
 
       function update() {
+        const nowMs = performance.now();
+        const playing = !player.paused;
         let targetLevel = 0;
         let hasRealData = false;
+        let scopeData = null;
+        let stereoState = null;   // true / false / null (ไม่ทราบ)
         let peak = 0;
 
-        if (analyser && timeF) {
+        if (meterMode === 'analyser' && analyser && timeF) {
           analyser.getFloatTimeDomainData(timeF);
           let sum = 0;
           for (let i = 0; i < timeF.length; i++) {
@@ -816,6 +1002,42 @@
             const vu = 20 * Math.log10(rms + 1e-9) - VU_REF_DBFS;
             targetLevel = vuToPercent(vu);
             analyser.getByteTimeDomainData(timeB);
+            scopeData = timeB;
+
+            if (bufL && bufR) {
+              analyserL.getFloatTimeDomainData(bufL);
+              analyserR.getFloatTimeDomainData(bufR);
+              let sumDiff = 0, sumTotal = 0;
+              for (let i = 0; i < bufL.length; i++) {
+                const d = bufL[i] - bufR[i];
+                sumDiff += d * d;
+                sumTotal += bufL[i] * bufL[i] + bufR[i] * bufR[i];
+              }
+              stereoRatio = stereoRatio * 0.97 + (sumDiff / (sumTotal + 1e-12)) * 0.03;
+              stereoState = stereoRatio > 0.02;
+            }
+          }
+
+          // ถ้า analyser เงียบต่อเนื่อง (เช่น Safari บน Mac) ให้สลับไปโหมด segment เมื่อมี hls.js
+          if (playing && hls && nowMs - playStartedAt > 2000) {
+            if (hasRealData) {
+              silentSince = 0;
+            } else if (!silentSince) {
+              silentSince = nowMs;
+            } else if (nowMs - silentSince > AUTO_SWITCH_MS) {
+              meterMode = 'segments';
+              silentSince = 0;
+            }
+          }
+        } else if (meterMode === 'segments') {
+          const f = segmentFrame();
+          if (f) {
+            peak = 1;
+            hasRealData = true;
+            const vu = 20 * Math.log10(f.rms + 1e-9) - VU_REF_DBFS;
+            targetLevel = vuToPercent(vu);
+            scopeData = segTimeB;
+            stereoState = f.stereo;
           }
         }
 
@@ -823,15 +1045,14 @@
         currentLevel += (targetLevel - currentLevel) * (targetLevel > currentLevel ? 0.5 : 0.08);
 
         if (activeIndex !== -1) {
-          const playing = !player.paused;
           const vuFill = document.getElementById(`vu-${activeIndex}`);
           const led = document.getElementById(`led-${activeIndex}`);
+          const noData = playing && !hasRealData && (nowMs - playStartedAt > NOTE_DELAY_MS);
 
           if (vuFill) vuFill.style.width = currentLevel.toFixed(1) + '%';
 
           if (led) {
-            if (playing && !hasRealData) {
-              // กำลังเล่นแต่มิเตอร์ไม่ได้รับสัญญาณ: LED สีส้ม
+            if (noData) {
               led.style.backgroundColor = '#ff9800';
               led.style.boxShadow = '0 0 6px #ff9800';
             } else if (currentLevel > 10) {
@@ -846,40 +1067,32 @@
           if (statsPanel) {
             statsPanel.style.display = 'block';
 
-            // ข้อความสถานะมิเตอร์
-            if (playing && !hasRealData && player.currentTime > 1) {
+            if (noData) {
               meterNote.innerText = usingNative ? 'NO METER DATA (native HLS)' : 'NO METER DATA';
             } else {
               meterNote.innerText = '';
             }
 
-            // ตรวจ Mono/Stereo จากความต่างของช่องซ้าย-ขวา
-            if (hasRealData && bufL && bufR) {
-              analyserL.getFloatTimeDomainData(bufL);
-              analyserR.getFloatTimeDomainData(bufR);
-              let sumDiff = 0, sumTotal = 0;
-              for (let i = 0; i < bufL.length; i++) {
-                const d = bufL[i] - bufR[i];
-                sumDiff += d * d;
-                sumTotal += bufL[i] * bufL[i] + bufR[i] * bufR[i];
-              }
-              const ratio = sumDiff / (sumTotal + 1e-12);
-              stereoRatio = stereoRatio * 0.97 + ratio * 0.03;
-
-              if (stereoRatio > 0.02) {
-                statStereo.className = 'stat-term active-red';
-                statMono.className = 'stat-term disable-gray';
-              } else {
-                statMono.className = 'stat-term active-red';
-                statStereo.className = 'stat-term disable-gray';
-              }
+            if (stereoState === true) {
+              statStereo.className = 'stat-term active-red';
+              statMono.className = 'stat-term disable-gray';
+            } else if (stereoState === false) {
+              statMono.className = 'stat-term active-red';
+              statStereo.className = 'stat-term disable-gray';
             } else if (!hasRealData) {
               statMono.className = 'stat-term disable-gray';
               statStereo.className = 'stat-term disable-gray';
             }
+
+            if (DEBUG) {
+              debugLine.innerText =
+                `mode=${meterMode} ios=${IS_IOS} native=${usingNative} t=${player.currentTime.toFixed(1)} ` +
+                `entries=${segEntries.length} ok=${decodeOk} fail=${decodeFail} peak=${peak.toFixed(4)} ` +
+                `init=${Object.keys(initSegs).join(',') || '-'} err=${lastError || '-'}`;
+            }
           }
 
-          drawScope(hasRealData ? timeB : null, playing);
+          drawScope(hasRealData ? scopeData : null, playing);
         }
 
         animFrameId = requestAnimationFrame(update);
