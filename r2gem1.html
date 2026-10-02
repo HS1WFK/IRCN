@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Compact Header Meter V.1.4.4</title>
+  <title>International News - Compact Header Meter V.1.4.5</title>
   <!-- HLS.js Library (pinned to major version 1) -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -106,7 +106,7 @@
       width: 100%;
     }
 
-    /* Ticker Main Wrapper: ขยายเต็ม 100% จนชิดขอบขวา */
+    /* Ticker Main Wrapper: ขยายยาวเต็ม 100% ชิดขอบขวา */
     .station-ticker-wrapper {
       display: flex;
       align-items: center;
@@ -150,17 +150,6 @@
       100% {
         transform: translateX(-50%);
       }
-    }
-
-    .local-time-display {
-      font-size: 16px;
-      font-weight: 700;
-      color: #ff9800;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-      white-space: nowrap;
-      margin-top: 4px;
-      line-height: 1.2;
     }
 
     .scope-container {
@@ -271,11 +260,23 @@
       font-weight: 700;
     }
 
-    .global-vu-wrapper {
+    /* บรรทัดล่างสุด: รวม Time (ซ้าย) และ VU Meter (ขวา) ให้อยู่ระดับเดียวกัน */
+    .time-vu-row {
       margin-top: 2px;
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
+      align-items: flex-end;
       width: 100%;
+    }
+
+    .local-time-display {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ff9800;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+      white-space: nowrap;
+      line-height: 1.2;
     }
 
     .vu-container-global {
@@ -482,7 +483,7 @@
         font-size: 16px !important;
       }
       .local-time-display {
-        font-size: 14px !important;
+        font-size: 13px !important;
       }
       .channels-indicator {
         font-size: 14px;
@@ -497,7 +498,7 @@
       .vu-container-global {
         --bar-h: 9px;
         --label-h: 14px;
-        width: 60%;
+        width: 55%;
       }
       .vu-scale-labels {
         font-size: 11px;
@@ -571,11 +572,10 @@
           <span>Data Received <span class="status-highlight-red" id="conn-rx">0.00 MB</span></span>
         </div>
 
-        <!-- Time Display (ย้ายมาอยู่ใต้ CONNECTED) -->
-        <div class="local-time-display" id="local-clock">Time: --:--:--</div>
+        <!-- Row เดียวกันสำหรับ Time Display (ซ้าย) และ Global VU Meter (ขวา) -->
+        <div class="time-vu-row">
+          <div class="local-time-display" id="local-clock">Time: --:--:--</div>
 
-        <!-- Global VU Meter Panel -->
-        <div class="global-vu-wrapper">
           <div class="vu-container-global">
             <div class="led-indicator" id="global-led"></div>
             <div class="vu-meter-panel">
@@ -594,7 +594,7 @@
   <div class="playlist-container" id="playlist"></div>
 
   <!-- Footer Version Text -->
-  <div class="page-version-footer">ver.1.4.4</div>
+  <div class="page-version-footer">ver.1.4.5</div>
 
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
