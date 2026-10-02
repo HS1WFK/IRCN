@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Compact Header Meter V.1.4.1</title>
+  <title>International News - Compact Header Meter V.1.4.3</title>
   <!-- HLS.js Library (pinned to major version 1) -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -108,9 +108,28 @@
       width: 100%;
     }
 
-    /* Container ครอบ Ticker พื้นที่ 50% ทางซ้าย ก่อนถึง Local Clock */
+    /* Ticker Main Wrapper: ครอบคลุมฝั่งซ้ายของแถบสถานี */
+    .station-ticker-wrapper {
+      display: flex;
+      align-items: center;
+      width: 65%;
+      overflow: hidden;
+    }
+
+    /* ชื่อสถานีที่แสดงค้างไว้ถาวร */
+    .station-fixed-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ff9800;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+      white-space: nowrap;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    /* กล่อง Scroll Ticker */
     .station-ticker-container {
-      width: 50%;
+      flex-grow: 1;
       overflow: hidden;
       white-space: nowrap;
       position: relative;
@@ -122,28 +141,16 @@
       font-weight: 600;
       color: #ff9800;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-      padding-left: 0; /* เริ่มต้นแสดงข้อความทันทีที่จุดเริ่มต้นขอบซ้าย */
-      will-change: transform;
+      white-space: nowrap;
+      animation: ticker-scroll-slow 45s linear infinite;
     }
 
-    /* Animation Steps:
-       0% - 15%: ปรากฏข้อความส่วนแรกทันทีแล้วค้างไว้
-       35% - 45%: Scroll ข้อความไปหยุดแสดงผลที่กึ่งกลางจอ
-       85% - 95%: Scroll ต่อไปทางซ้ายจนสุดข้อความ (พร้อมจุดไข่ปลาคั่นท้าย)
-       100%: วนกลับมาเริ่มต้นที่ตำแหน่งแรกใหม่
-    */
-    @keyframes ticker-step-scroll {
-      0%, 15% {
+    @keyframes ticker-scroll-slow {
+      0% {
         transform: translateX(0);
-      }
-      35%, 45% {
-        transform: translateX(-35%);
-      }
-      85%, 95% {
-        transform: translateX(-100%);
       }
       100% {
-        transform: translateX(0);
+        transform: translateX(-50%);
       }
     }
 
@@ -247,14 +254,23 @@
       background-color: #ef4444 !important;
     }
 
+    /* Connection Status Line: Justify ยาวไปขอบขวา */
     .connection-status-line {
-      margin-top: 1px;
+      margin-top: 3px;
       font-size: 16px;
       line-height: 1.2;
       font-weight: 600;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       color: #8ab4ff;
       letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .status-highlight-red {
+      color: #ef4444;
+      font-weight: 700;
     }
 
     .global-vu-wrapper {
@@ -463,12 +479,13 @@
       .utc-time-display {
         font-size: 16px;
       }
+      .station-fixed-title,
       .station-ticker-text,
       .local-time-display {
         font-size: 16px !important;
       }
-      .station-ticker-container {
-        width: 55%;
+      .station-ticker-wrapper {
+        width: 60%;
       }
       .channels-indicator {
         font-size: 14px;
@@ -478,7 +495,7 @@
         width: 60%;
       }
       .connection-status-line {
-        font-size: 13px;
+        font-size: 12px;
       }
       .vu-container-global {
         --bar-h: 9px;
@@ -515,8 +532,11 @@
 
       <!-- Station Location Ticker Row + Realtime Local Time -->
       <div class="station-info-row" id="station-info-row">
-        <div class="station-ticker-container">
-          <div class="station-ticker-text" id="station-ticker-text"></div>
+        <div class="station-ticker-wrapper">
+          <div class="station-fixed-title" id="station-fixed-title"></div>
+          <div class="station-ticker-container">
+            <div class="station-ticker-text" id="station-ticker-text"></div>
+          </div>
         </div>
         <div class="local-time-display" id="local-clock">Local --:--:--</div>
       </div>
@@ -546,9 +566,13 @@
           </div>
         </div>
 
-        <!-- CONNECTED | BR xxx kbps(rx xxxx) -->
+        <!-- CONNECTED | Bitrate: xxx kbps | Data Received xx.xx MB (Justified Full Width) -->
         <div class="connection-status-line" id="conn-status">
-          CONNECTED | BR -- kbps (rx 0.0MB)
+          <span>CONNECTED</span>
+          <span>|</span>
+          <span>Bitrate: <span class="status-highlight-red" id="conn-br">-- kbps</span></span>
+          <span>|</span>
+          <span>Data Received <span class="status-highlight-red" id="conn-rx">0.00 MB</span></span>
         </div>
 
         <!-- Global VU Meter Panel -->
@@ -571,7 +595,7 @@
   <div class="playlist-container" id="playlist"></div>
 
   <!-- Footer Version Text -->
-  <div class="page-version-footer">ver.1.4.1</div>
+  <div class="page-version-footer">ver.1.4.3</div>
 
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
@@ -623,6 +647,7 @@
     const utcClockElem = document.getElementById('utc-clock');
     const localClockElem = document.getElementById('local-clock');
     const stationInfoRow = document.getElementById('station-info-row');
+    const stationFixedTitle = document.getElementById('station-fixed-title');
     const stationTickerText = document.getElementById('station-ticker-text');
 
     const statsPanel = document.getElementById('audio-content-stats');
@@ -630,7 +655,9 @@
     const statStereo = document.getElementById('stat-stereo');
     const bufValElem = document.getElementById('buf-val');
     const bufBarElem = document.getElementById('buf-bar');
-    const connStatusElem = document.getElementById('conn-status');
+    
+    const connBrElem = document.getElementById('conn-br');
+    const connRxElem = document.getElementById('conn-rx');
 
     const globalVuFill = document.getElementById('global-vu-fill');
     const globalLed = document.getElementById('global-led');
@@ -763,13 +790,15 @@
     player.addEventListener('playing', () => {
       if (activeIndex !== -1) {
         const ch = channels[activeIndex];
-        // ใส่ชื่อสถานีตามด้วยข้อมูล และคั่นจุดไข่ปลาไว้ท้ายสุดเพื่อให้เว้นระยะห่างก่อนวนรอบใหม่
-        stationTickerText.innerText = `${ch.name} : ${ch.location} | ${ch.utc} | ${ch.about} • • • `;
         
-        // Reset and trigger CSS keyframe animation
+        stationFixedTitle.innerText = `${ch.name} :`;
+        
+        const detailText = `${ch.location} | ${ch.utc} | ${ch.about} \u00A0\u00A0•\u00A0\u00A0 `;
+        stationTickerText.innerText = detailText + detailText;
+        
         stationTickerText.style.animation = 'none';
         stationTickerText.offsetHeight; /* trigger reflow */
-        stationTickerText.style.animation = 'ticker-step-scroll 22s cubic-bezier(0.25, 0.1, 0.25, 1) infinite';
+        stationTickerText.style.animation = 'ticker-scroll-slow 45s linear infinite';
 
         stationInfoRow.style.visibility = 'visible';
         updateClocks();
@@ -1160,9 +1189,12 @@
             bufBarElem.classList.remove('green-status');
           }
 
-          const rxMB = (totalRxBytes / (1024 * 1024)).toFixed(1);
+          // อัปเดต Bitrate & Data Received
+          const rxMB = (totalRxBytes / (1024 * 1024)).toFixed(2);
           const brKbps = currentBitrate || 128;
-          connStatusElem.innerText = `CONNECTED | BR ${brKbps} kbps (rx ${rxMB}MB)`;
+          
+          connBrElem.innerText = `${brKbps} kbps`;
+          connRxElem.innerText = `${rxMB} MB`;
 
           globalVuFill.style.width = currentLevel.toFixed(1) + '%';
           if (currentLevel > 10) {
