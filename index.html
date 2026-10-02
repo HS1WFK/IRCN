@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Segment Meter V.1.3.1</title>
+  <title>International News - Segment Meter V.1.3.2</title>
   <!-- HLS.js Library (pinned to major version 1) -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -281,6 +281,7 @@
     }
 
     .vu-container {
+      --bar-h: 20px;            /* ความสูงแถบ VU = ขนาดฟอนต์ชื่อสถานี (เดสก์ท็อป 20px) */
       display: flex;
       align-items: center;
       gap: 12px;
@@ -299,6 +300,8 @@
       border-radius: 50%;
       background-color: #222222;
       flex-shrink: 0;
+      align-self: flex-end;     /* ชิดล่างของแถว เพื่อไปอยู่ระดับเดียวกับแถบ VU */
+      margin-bottom: calc((var(--bar-h) - 8.8px) / 2);  /* จัดกึ่งกลางแนวตั้งของแถบ */
       transition: background-color 0.05s ease, box-shadow 0.05s ease;
     }
 
@@ -334,7 +337,7 @@
     .vu-bar-bg {
       position: relative;
       width: 100%;
-      height: 9px;
+      height: var(--bar-h);
       background-color: rgba(17, 17, 17, 0.95);
       border: 1px solid #555555;
       border-radius: 2px;
@@ -416,6 +419,9 @@
       .channel-name {
         font-size: 15px;
       }
+      .vu-container {
+        --bar-h: 15px;          /* เท่าขนาดฟอนต์ชื่อสถานีบนมือถือ (15px) */
+      }
       .vu-scale-labels {
         font-size: 12px;
         height: 16px;
@@ -470,7 +476,7 @@
   <div class="playlist-container" id="playlist"></div>
 
   <!-- Footer Version Text -->
-  <div class="page-version-footer">ver.1.3.1</div>
+  <div class="page-version-footer">ver.1.3.2</div>
 
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
