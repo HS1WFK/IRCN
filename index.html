@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Segment Meter V.1.3.3</title>
+  <title>International News - Segment Meter V.1.3.5</title>
   <!-- HLS.js Library (pinned to major version 1) -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -479,7 +479,7 @@
   <div class="playlist-container" id="playlist"></div>
 
   <!-- Footer Version Text -->
-  <div class="page-version-footer">ver.1.3.3</div>
+  <div class="page-version-footer">ver.1.3.5</div>
 
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
 
@@ -489,7 +489,6 @@
       { name: "ABC Australia", location: "Sydney Australia", tz: "Australia/Sydney", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8" },
       { name: "Arirang Korea", location: "Seoul South Korea", tz: "Asia/Seoul", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8" },
       { name: "BBC News", location: "London UK", tz: "Europe/London", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8" },
-      { name: "Bloomberg", location: "New York USA", tz: "America/New_York", url: "https://bloomberg.com/media-manifest/streams/phoenix-us.m3u8" },
       { name: "CGTN", location: "Beijing China", tz: "Asia/Shanghai", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8" },
       { name: "CNA", location: "Singapore", tz: "Asia/Singapore", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8" },
       { name: "NHK English", location: "Tokyo Japan", tz: "Asia/Tokyo", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8" },
@@ -522,6 +521,10 @@
     const AUTO_SWITCH_MS = 4000;    // ถ้า analyser เงียบนานเท่านี้ ให้สลับไปโหมด segment
     const NOTE_DELAY_MS = 6000;     // รอกี่ ms ก่อนขึ้น NO METER DATA
     const DEBUG = /[?&]debug/.test(location.search);  // เปิดหน้าด้วย ?debug เพื่อดูสถานะมิเตอร์
+
+    // ใส่ URL ของ proxy (Cloudflare Worker) เช่น 'https://news-proxy.yourname.workers.dev/'
+    // ถ้าเว้นว่างไว้ จะเล่นทุกช่องโดยตรงเหมือนเดิม ช่องที่ตั้ง proxy: true จะผ่าน proxy เมื่อมีค่านี้เท่านั้น
+    const PROXY_BASE = '';
 
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -574,6 +577,9 @@
     let decodeOk = 0;
     let decodeFail = 0;
     let lastError = '';
+    let streamError = '';    // ข้อความแจ้งเมื่อโหลดสตรีมไม่ได้
+    let streamDetail = '';   // รายละเอียด error จาก hls.js (ดูได้ใน ?debug)
+    let netRetries = 0;
     const segTimeB = new Uint8Array(2048);
 
     function updateClocks() {
@@ -710,7 +716,20 @@
 
       activeIndex = index;
       items[index].classList.add('active');
-      playAudio(channels[index].url);
+      playAudio(resolveStreamUrl(channels[index]));
+    }
+
+    function resolveStreamUrl(ch) {
+      if (ch.proxy && PROXY_BASE) {
+        return PROXY_BASE + '?url=' + encodeURIComponent(ch.url);
+      }
+      return ch.url;
+    }
+
+    function showStreamError() {
+      if (statsPanel) statsPanel.style.display = 'block';
+      if (meterNote) meterNote.innerText = streamError;
+      if (DEBUG && debugLine) debugLine.innerText = 'hls=' + streamDetail;
     }
 
     function onPlayStarted() {
@@ -842,6 +861,9 @@
       decodeOk = 0;
       decodeFail = 0;
       lastError = '';
+      streamError = '';
+      streamDetail = '';
+      netRetries = 0;
     }
 
     /* ===== การเล่น ===== */
@@ -866,14 +888,36 @@
             .catch(e => console.log("Play error:", e));
         });
         hls.on(Hls.Events.BUFFER_APPENDING, (event, data) => handleBufferAppending(sid, data));
+        hls.on(Hls.Events.FRAG_LOADED, () => {
+          if (sid !== sessionId) return;
+          if (streamError) {
+            streamError = '';
+            streamDetail = '';
+            if (meterNote) meterNote.innerText = '';
+          }
+          netRetries = 0;
+        });
         hls.on(Hls.Events.ERROR, (event, data) => {
+          if (sid !== sessionId) return;
+          const code = (data.response && data.response.code) ? data.response.code : 0;
+          if (data.fatal) {
+            streamDetail = (data.details || data.type) + ' code=' + code;
+            streamError = 'STREAM ERROR' + (code ? ' (HTTP ' + code + ')' : ' (CORS/NETWORK)');
+            console.log("HLS error:", data);
+          }
           if (!data.fatal) return;
+
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            hls.startLoad();
+            if (++netRetries <= 3) {
+              hls.startLoad();
+            } else {
+              hls.stopLoad();
+              showStreamError();
+            }
           } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
             hls.recoverMediaError();
           } else {
-            console.log("HLS fatal error:", data);
+            showStreamError();
           }
         });
       } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
@@ -1076,7 +1120,9 @@
           if (statsPanel) {
             statsPanel.style.display = 'block';
 
-            if (noData) {
+            if (streamError) {
+              meterNote.innerText = streamError;
+            } else if (noData) {
               meterNote.innerText = usingNative ? 'NO METER DATA (native HLS)' : 'NO METER DATA';
             } else {
               meterNote.innerText = '';
@@ -1097,7 +1143,7 @@
               debugLine.innerText =
                 `mode=${meterMode} ios=${IS_IOS} native=${usingNative} t=${player.currentTime.toFixed(1)} ` +
                 `entries=${segEntries.length} ok=${decodeOk} fail=${decodeFail} peak=${peak.toFixed(4)} ` +
-                `init=${Object.keys(initSegs).join(',') || '-'} err=${lastError || '-'}`;
+                `init=${Object.keys(initSegs).join(',') || '-'} err=${lastError || '-'} hls=${streamDetail || '-'}`;
             }
           }
 
