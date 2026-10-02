@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>International News - Compact Header Meter V.1.4.1</title>
+  <!-- HLS.js Library (pinned to major version 1) -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #050a12;
+      color: #cccccc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 0 20px 20px 20px;
+      max-width: 820px;
+      margin: 0 auto;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Fixed Isolated Background Layer */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-image:
+        linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%),
+        url('ert91.jpg');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(2, 4, 8, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding-top: 16px;
+      padding-bottom: 12px;
+      padding-left: 12px;
+      padding-right: 12px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 0 0 8px 8px;
+    }
+
+    .header-container {
+      text-align: left;
+      padding-left: 6px;
+    }
+
+    .callsign {
+      font-size: 26px;
+      font-weight: 700;
+      color: #a0a0a0;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    h1.page-title {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .utc-time-display {
+      font-size: 26px;
+      font-weight: 600;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+      white-space: nowrap;
+    }
+
+    .station-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      min-height: 36px;
+      visibility: hidden;
+      width: 100%;
+    }
+
+    /* Container ครอบ Ticker พื้นที่ 50% ทางซ้าย ก่อนถึง Local Clock */
+    .station-ticker-container {
+      width: 50%;
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .station-ticker-text {
+      display: inline-block;
+      font-size: 20px;
+      font-weight: 600;
+      color: #ff9800;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+      padding-left: 0; /* เริ่มต้นแสดงข้อความทันทีที่จุดเริ่มต้นขอบซ้าย */
+      will-change: transform;
+    }
+
+    /* Animation Steps:
+       0% - 15%: ปรากฏข้อความส่วนแรกทันทีแล้วค้างไว้
+       35% - 45%: Scroll ข้อความไปหยุดแสดงผลที่กึ่งกลางจอ
+       85% - 95%: Scroll ต่อไปทางซ้ายจนสุดข้อความ (พร้อมจุดไข่ปลาคั่นท้าย)
+       100%: วนกลับมาเริ่มต้นที่ตำแหน่งแรกใหม่
+    */
+    @keyframes ticker-step-scroll {
+      0%, 15% {
+        transform: translateX(0);
+      }
+      35%, 45% {
+        transform: translateX(-35%);
+      }
+      85%, 95% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(0);
+      }
+    }
+
+    .local-time-display {
+      font-size: 26px !important;
+      font-weight: 700;
+      color: #ff9800;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+      white-space: nowrap;
+      flex-shrink: 0;
+      line-height: 1.2;
+    }
+
+    .scope-container {
+      position: relative;
+      width: 100%;
+      height: 50px;
+      background-color: rgba(5, 11, 5, 0.92);
+      border: 1px solid rgba(28, 59, 28, 0.85);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.7);
+      margin-bottom: 6px;
+    }
+
+    .scope-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: 20px 10px;
+      background-image:
+        linear-gradient(to right, rgba(0, 255, 0, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 255, 0, 0.08) 1px, transparent 1px);
+      pointer-events: none;
+    }
+
+    canvas#oscilloscope {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .audio-content-stats {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: none;
+      margin-top: 4px;
+      padding-left: 4px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+      color: #a0a0a0;
+    }
+
+    .stats-main-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .channels-indicator {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .buf-meter-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #8ab4ff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
+      white-space: nowrap;
+      width: 50%;
+    }
+
+    .buf-bar-bg {
+      flex-grow: 1;
+      height: 10px;
+      background-color: rgba(17, 17, 17, 0.95);
+      border: 1px solid #555555;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .buf-bar-fill {
+      width: 0%;
+      height: 100%;
+      background-color: #ef4444;
+      transition: width 0.1s linear, background-color 0.2s ease;
+    }
+
+    .buf-bar-fill.green-status {
+      background-color: #22c55e !important;
+    }
+
+    .buf-bar-fill.red-status {
+      background-color: #ef4444 !important;
+    }
+
+    .connection-status-line {
+      margin-top: 1px;
+      font-size: 16px;
+      line-height: 1.2;
+      font-weight: 600;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
+      color: #8ab4ff;
+      letter-spacing: 0.5px;
+    }
+
+    .global-vu-wrapper {
+      margin-top: 2px;
+      display: flex;
+      justify-content: flex-end;
+      width: 100%;
+    }
+
+    .vu-container-global {
+      --bar-h: 12px;
+      --label-h: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 50%;
+    }
+
+    .led-indicator {
+      width: 8.8px;
+      height: 8.8px;
+      border-radius: 50%;
+      background-color: #222222;
+      flex-shrink: 0;
+      align-self: flex-end;
+      margin-bottom: calc((var(--bar-h) - 8.8px) / 2);
+      transition: background-color 0.05s ease, box-shadow 0.05s ease;
+    }
+
+    .vu-meter-panel {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .vu-scale-labels {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      height: var(--label-h);
+      font-size: 15px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #e0e0e0;
+      font-weight: 500;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+    }
+
+    .scale-mark {
+      position: absolute;
+      transform: translateX(-50%);
+    }
+
+    .scale-mark.zero-db {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .vu-bar-bg {
+      position: relative;
+      width: 100%;
+      height: var(--bar-h);
+      background-color: rgba(17, 17, 17, 0.95);
+      border: 1px solid #555555;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .vu-grid-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background-color: #555555;
+      z-index: 2;
+    }
+
+    .vu-grid-line.zero-line {
+      background-color: #aaaaaa;
+    }
+
+    .vu-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg,
+        #22c55e 0%,
+        #22c55e 78%,
+        #ff9800 80%,
+        #ef4444 100%);
+      transition: width 0.04s ease-out;
+      z-index: 1;
+    }
+
+    .stat-term {
+      transition: color 0.15s ease;
+    }
+
+    .stat-term.active-red {
+      color: #ef4444 !important;
+    }
+
+    .stat-term.disable-gray {
+      color: #555555;
+    }
+
+    .playlist-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: rgba(0, 0, 0, 0.65);
+      padding: 18px 20px 24px 20px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+    }
+
+    .channel-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      user-select: none;
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 4px;
+      transition: background 0.15s ease;
+    }
+
+    .channel-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .radio-dot {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #777777;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.2s ease;
+    }
+
+    .radio-dot::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background-color: #ff9800;
+      border-radius: 50%;
+      opacity: 0;
+      transform: scale(0);
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .channel-item.active .radio-dot {
+      border-color: #ff9800;
+    }
+
+    .channel-item.active .radio-dot::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .channel-name {
+      font-size: 20px;
+      font-weight: 400;
+      color: #d0d0d0;
+      white-space: nowrap;
+      transition: color 0.2s ease;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+    }
+
+    .channel-item.active .channel-name {
+      color: #ff9800;
+      font-weight: 700;
+    }
+
+    .page-version-footer {
+      text-align: center;
+      font-size: 12px;
+      color: #666666;
+      margin-top: 18px;
+      letter-spacing: 0.5px;
+    }
+
+    audio, video {
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 0 12px 16px 12px;
+      }
+      .sticky-header {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+      .callsign {
+        font-size: 16px;
+      }
+      h1.page-title {
+        font-size: 25px;
+      }
+      .utc-time-display {
+        font-size: 16px;
+      }
+      .station-ticker-text,
+      .local-time-display {
+        font-size: 16px !important;
+      }
+      .station-ticker-container {
+        width: 55%;
+      }
+      .channels-indicator {
+        font-size: 14px;
+      }
+      .buf-meter-container {
+        font-size: 13px;
+        width: 60%;
+      }
+      .connection-status-line {
+        font-size: 13px;
+      }
+      .vu-container-global {
+        --bar-h: 9px;
+        --label-h: 14px;
+        width: 60%;
+      }
+      .vu-scale-labels {
+        font-size: 11px;
+      }
+      .playlist-container {
+        padding: 14px 12px 18px 12px;
+      }
+      .channel-name {
+        font-size: 16px;
+      }
+      .scope-container {
+        height: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Fixed Section -->
+  <div class="sticky-header">
+    <div class="header-container">
+      <div class="callsign">HS1WFK</div>
+
+      <!-- Title Row + Realtime UTC Time -->
+      <div class="title-row">
+        <h1 class="page-title">International News</h1>
+        <div class="utc-time-display" id="utc-clock">UTC --:--:--</div>
+      </div>
+
+      <!-- Station Location Ticker Row + Realtime Local Time -->
+      <div class="station-info-row" id="station-info-row">
+        <div class="station-ticker-container">
+          <div class="station-ticker-text" id="station-ticker-text"></div>
+        </div>
+        <div class="local-time-display" id="local-clock">Local --:--:--</div>
+      </div>
+
+      <!-- Oscilloscope Scope Under Title -->
+      <div class="scope-container">
+        <div class="scope-grid"></div>
+        <canvas id="oscilloscope"></canvas>
+      </div>
+
+      <!-- Audio Content Stats Section -->
+      <div class="audio-content-stats" id="audio-content-stats">
+        <div class="stats-main-row">
+          <div class="channels-indicator">
+            CH:
+            <span id="stat-mono" class="stat-term disable-gray">Mono</span>
+            |
+            <span id="stat-stereo" class="stat-term disable-gray">Stereo</span>
+          </div>
+
+          <!-- BUF XX.Xs & Bar Meter -->
+          <div class="buf-meter-container">
+            <span>BUF <span id="buf-val">0.0</span>s</span>
+            <div class="buf-bar-bg">
+              <div class="buf-bar-fill" id="buf-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONNECTED | BR xxx kbps(rx xxxx) -->
+        <div class="connection-status-line" id="conn-status">
+          CONNECTED | BR -- kbps (rx 0.0MB)
+        </div>
+
+        <!-- Global VU Meter Panel -->
+        <div class="global-vu-wrapper">
+          <div class="vu-container-global">
+            <div class="led-indicator" id="global-led"></div>
+            <div class="vu-meter-panel">
+              <div class="vu-scale-labels" id="global-scale-labels"></div>
+              <div class="vu-bar-bg">
+                <div id="global-grid-lines"></div>
+                <div class="vu-bar-fill" id="global-vu-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="playlist-container" id="playlist"></div>
+
+  <!-- Footer Version Text -->
+  <div class="page-version-footer">ver.1.4.1</div>
+
+  <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
+
+  <script>
+    const channels = [
+      { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network providing global news coverage, in-depth reporting, and current affairs analysis.", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8" },
+      { name: "ABC Australia", location: "Sydney, Australia", utc: "UTC+10", tz: "Australia/Sydney", about: "Australia’s public broadcasting service providing news, current affairs, and cultural programs across the Asia-Pacific region.", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8" },
+      { name: "Arirang Korea", location: "Seoul, South Korea", utc: "UTC+9", tz: "Asia/Seoul", about: "South Korean English-language international broadcasting network operated by the Korea International Broadcasting Foundation, showcasing news, culture, and life in Korea.", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8" },
+      { name: "BBC News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "The operational business division of the British Broadcasting Corporation (BBC) responsible for gathering and broadcasting news and current affairs worldwide.", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8" },
+      { name: "Bloomberg", location: "New York, USA", utc: "UTC-4", tz: "America/New_York", about: "American multinational cable news television channel providing global financial news, market analysis, economic data, and business reporting.", url: "" },
+      { name: "CGTN", location: "Beijing, China", utc: "UTC+8", tz: "Asia/Shanghai", about: "China Global Television Network, the international division of Chinese state media CCTV, broadcasting news and current affairs from a Chinese perspective.", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8" },
+      { name: "CNA", location: "Singapore", utc: "UTC+8", tz: "Asia/Singapore", about: "Channel NewsAsia, a Singaporean multinational news channel broadcasting news, business insights, and documentaries across Asia and beyond.", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8" },
+      { name: "NHK English", location: "Tokyo, Japan", utc: "UTC+9", tz: "Asia/Tokyo", about: "NHK World-Japan, the international broadcasting service of Japan's public broadcaster NHK, offering news and cultural programming in English.", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8" },
+      { name: "DW En", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "Deutsche Welle English, Germany's public international broadcaster delivering unbiased news, analysis, and documentaries to a global audience.", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8" },
+      { name: "France 24 En", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The English-language arm of France's state-owned international news network, offering a French and European perspective on global events.", url: "https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8" },
+      { name: "France 24 Fr", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The French-language domestic and international channel of France 24, providing global news and in-depth reporting in French.", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8" },
+      { name: "GB News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "A British free-to-air news and opinion channel focusing on debate, analysis, regional voices, and national news commentary.", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8" },
+      { name: "Tagesschau24", location: "Hamburg, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "A German specialized news channel operated by the public broadcasting alliance ARD, providing continuous rolling news updates, live reporting, and documentaries.", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8" },
+      { name: "TPTV", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Parliament Television, the public broadcasting channel operated by the Secretariat of the House of Representatives, coverage includes live parliamentary debates, legislative proceedings, and public policies.", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org" }
+    ];
+
+    const dbMarks = [
+      { db: "-20", pos: 0 },
+      { db: "-10", pos: 35 },
+      { db: "-5", pos: 60 },
+      { db: "0", pos: 80, isZero: true },
+      { db: "+2", pos: 90 },
+      { db: "+4", pos: 100 }
+    ];
+
+    const VU_REF_DBFS = -18;
+    const SIGNAL_PEAK_MIN = 0.0005;
+    const SCOPE_GAIN = 2.5;
+    const VU_WINDOW_SEC = 0.3;
+    const METER_OFFSET_SEC = 0;
+    const LOWEST_QUALITY = true;
+    const SEG_KEEP_SEC = 20;
+    const AUTO_SWITCH_MS = 4000;
+    const PROXY_BASE = '';
+
+    const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    const playlistContainer = document.getElementById('playlist');
+    const player = document.getElementById('media-player');
+    const canvas = document.getElementById('oscilloscope');
+    const canvasCtx = canvas.getContext('2d');
+
+    const utcClockElem = document.getElementById('utc-clock');
+    const localClockElem = document.getElementById('local-clock');
+    const stationInfoRow = document.getElementById('station-info-row');
+    const stationTickerText = document.getElementById('station-ticker-text');
+
+    const statsPanel = document.getElementById('audio-content-stats');
+    const statMono = document.getElementById('stat-mono');
+    const statStereo = document.getElementById('stat-stereo');
+    const bufValElem = document.getElementById('buf-val');
+    const bufBarElem = document.getElementById('buf-bar');
+    const connStatusElem = document.getElementById('conn-status');
+
+    const globalVuFill = document.getElementById('global-vu-fill');
+    const globalLed = document.getElementById('global-led');
+
+    let activeIndex = -1;
+    let hls = null;
+    let usingNative = false;
+
+    let audioCtx = null;
+    let analyser = null;
+    let analyserL = null;
+    let analyserR = null;
+    let splitter = null;
+    let sourceNode = null;
+    let animFrameId = null;
+
+    let currentLevel = 0;
+    let stereoRatio = 0;
+
+    let meterMode = 'none';
+    let sessionId = 0;
+    let playStartedAt = 0;
+    let silentSince = 0;
+
+    let segEntries = [];
+    let initSegs = {};
+    let offlineCtx = null;
+    let decodeQueue = 0;
+    let totalRxBytes = 0;
+    let currentBitrate = 0;
+    const segTimeB = new Uint8Array(2048);
+
+    function initGlobalVuMeterUI() {
+      const scaleLabelsElem = document.getElementById('global-scale-labels');
+      const gridLinesElem = document.getElementById('global-grid-lines');
+
+      scaleLabelsElem.innerHTML = dbMarks.map(m =>
+        `<span class="scale-mark ${m.isZero ? 'zero-db' : ''}" style="left: ${m.pos}%;">${m.db}</span>`
+      ).join('');
+
+      gridLinesElem.innerHTML = dbMarks.map(m =>
+        `<div class="vu-grid-line ${m.isZero ? 'zero-line' : ''}" style="left: ${m.pos}%;"></div>`
+      ).join('');
+    }
+    initGlobalVuMeterUI();
+
+    function updateClocks() {
+      const now = new Date();
+
+      const utcHours = String(now.getUTCHours()).padStart(2, '0');
+      const utcMinutes = String(now.getUTCMinutes()).padStart(2, '0');
+      const utcSeconds = String(now.getUTCSeconds()).padStart(2, '0');
+      utcClockElem.innerText = `UTC ${utcHours}:${utcMinutes}:${utcSeconds}`;
+
+      if (activeIndex !== -1 && channels[activeIndex]?.tz) {
+        try {
+          const options = {
+            timeZone: channels[activeIndex].tz,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          };
+          const formatter = new Intl.DateTimeFormat('en-GB', options);
+          localClockElem.innerText = `Local ${formatter.format(now)}`;
+        } catch (e) {
+          localClockElem.innerText = "Local --:--:--";
+        }
+      }
+    }
+    setInterval(updateClocks, 1000);
+    updateClocks();
+
+    function resizeCanvas() {
+      canvas.width = canvas.clientWidth * (window.devicePixelRatio || 1);
+      canvas.height = canvas.clientHeight * (window.devicePixelRatio || 1);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    channels.forEach((channel, index) => {
+      const item = document.createElement('div');
+      item.className = 'channel-item';
+      item.dataset.index = index;
+
+      item.innerHTML = `
+        <div class="radio-dot"></div>
+        <span class="channel-name">${channel.name}</span>
+      `;
+
+      item.addEventListener('click', () => toggleChannel(index));
+      playlistContainer.appendChild(item);
+    });
+
+    function initAudioContext() {
+      if (IS_IOS) return;
+
+      if (!audioCtx) {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContext();
+
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 2048;
+          analyser.smoothingTimeConstant = 0;
+
+          analyserL = audioCtx.createAnalyser();
+          analyserL.fftSize = 2048;
+          analyserR = audioCtx.createAnalyser();
+          analyserR.fftSize = 2048;
+
+          splitter = audioCtx.createChannelSplitter(2);
+
+          sourceNode = audioCtx.createMediaElementSource(player);
+          sourceNode.connect(analyser);
+          analyser.connect(audioCtx.destination);
+
+          sourceNode.connect(splitter);
+          splitter.connect(analyserL, 0);
+          splitter.connect(analyserR, 1);
+        } catch (e) {
+          console.log("AudioContext Notice:", e);
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    player.addEventListener('playing', () => {
+      if (activeIndex !== -1) {
+        const ch = channels[activeIndex];
+        // ใส่ชื่อสถานีตามด้วยข้อมูล และคั่นจุดไข่ปลาไว้ท้ายสุดเพื่อให้เว้นระยะห่างก่อนวนรอบใหม่
+        stationTickerText.innerText = `${ch.name} : ${ch.location} | ${ch.utc} | ${ch.about} • • • `;
+        
+        // Reset and trigger CSS keyframe animation
+        stationTickerText.style.animation = 'none';
+        stationTickerText.offsetHeight; /* trigger reflow */
+        stationTickerText.style.animation = 'ticker-step-scroll 22s cubic-bezier(0.25, 0.1, 0.25, 1) infinite';
+
+        stationInfoRow.style.visibility = 'visible';
+        updateClocks();
+      }
+    });
+
+    function toggleChannel(index) {
+      initAudioContext();
+
+      const items = document.querySelectorAll('.channel-item');
+
+      if (activeIndex === index) {
+        stopAudio();
+        items[index].classList.remove('active');
+        activeIndex = -1;
+        return;
+      }
+
+      if (activeIndex !== -1) {
+        items[activeIndex].classList.remove('active');
+      }
+
+      stationInfoRow.style.visibility = 'hidden';
+
+      activeIndex = index;
+      items[index].classList.add('active');
+      
+      const streamUrl = resolveStreamUrl(channels[index]);
+      if (!streamUrl) {
+        alert("No stream URL available for " + channels[index].name);
+        return;
+      }
+      playAudio(streamUrl);
+    }
+
+    function resolveStreamUrl(ch) {
+      if (!ch.url) return "";
+      if (ch.proxy && PROXY_BASE) {
+        return PROXY_BASE + '?url=' + encodeURIComponent(ch.url);
+      }
+      return ch.url;
+    }
+
+    function onPlayStarted() {
+      initAudioContext();
+      playStartedAt = performance.now();
+      silentSince = 0;
+      startVUMeter();
+    }
+
+    function getOfflineCtx() {
+      if (!offlineCtx) {
+        const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        offlineCtx = new OAC(2, 1, 44100);
+      }
+      return offlineCtx;
+    }
+
+    function decodeBuffer(arrayBuffer) {
+      return new Promise((resolve, reject) => {
+        const p = getOfflineCtx().decodeAudioData(arrayBuffer, resolve, reject);
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      });
+    }
+
+    async function ingestSegment(sid, init, media, start) {
+      if (decodeQueue >= 4) return;
+      decodeQueue++;
+      try {
+        const joined = new Uint8Array(init.length + media.length);
+        joined.set(init, 0);
+        joined.set(media, init.length);
+
+        const audio = await decodeBuffer(joined.buffer);
+        if (sid !== sessionId) return;
+
+        const n = audio.length;
+        const rate = audio.sampleRate;
+        const L = audio.getChannelData(0);
+        const R = audio.numberOfChannels > 1 ? audio.getChannelData(1) : null;
+        const mono = new Float32Array(n);
+        let sumDiff = 0, sumTotal = 0;
+        for (let i = 0; i < n; i++) {
+          const l = L[i];
+          const r = R ? R[i] : l;
+          mono[i] = (l + r) * 0.5;
+          const d = l - r;
+          sumDiff += d * d;
+          sumTotal += l * l + r * r;
+        }
+        const stereo = R ? (sumDiff / (sumTotal + 1e-12) > 0.02) : false;
+
+        segEntries.push({ start: start, end: start + n / rate, rate: rate, mono: mono, stereo: stereo });
+        const cutoff = player.currentTime - SEG_KEEP_SEC;
+        segEntries = segEntries.filter(e => e.end > cutoff).slice(-12);
+      } catch (e) {
+      } finally {
+        decodeQueue--;
+      }
+    }
+
+    function handleBufferAppending(sid, d) {
+      if (sid !== sessionId) return;
+      if (!d || !d.data || d.type === 'video') return;
+
+      const u8 = (d.data instanceof Uint8Array) ? d.data : new Uint8Array(d.data);
+      if (u8.length < 12) return;
+
+      totalRxBytes += u8.length;
+
+      const tag = String.fromCharCode(u8[4], u8[5], u8[6], u8[7]);
+
+      if (tag === 'ftyp' || tag === 'moov') {
+        initSegs[d.type] = u8.slice();
+        return;
+      }
+
+      if (meterMode !== 'segments') return;
+      const init = initSegs[d.type];
+      if (!init || !d.frag) return;
+
+      const start = Number.isFinite(d.frag.startPTS) ? d.frag.startPTS : d.frag.start;
+      if (!Number.isFinite(start)) return;
+
+      ingestSegment(sid, init, u8.slice(), start);
+    }
+
+    function findSegEntry(t) {
+      for (let i = segEntries.length - 1; i >= 0; i--) {
+        const e = segEntries[i];
+        if (t >= e.start && t < e.end) return e;
+      }
+      return null;
+    }
+
+    function segmentFrame() {
+      const t = player.currentTime + METER_OFFSET_SEC;
+      const e = findSegEntry(t);
+      if (!e) return null;
+
+      const idx = Math.min(e.mono.length - 1, Math.max(0, Math.floor((t - e.start) * e.rate)));
+      const nVU = Math.max(1, Math.floor(VU_WINDOW_SEC * e.rate));
+      const a = Math.max(0, idx - nVU);
+
+      let sum = 0;
+      for (let i = a; i <= idx; i++) {
+        const v = e.mono[i];
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / (idx - a + 1));
+
+      const N = segTimeB.length;
+      for (let k = 0; k < N; k++) {
+        const src = idx - N + 1 + k;
+        const v = src >= 0 ? e.mono[src] : 0;
+        segTimeB[k] = Math.max(0, Math.min(255, Math.round(128 + v * 127)));
+      }
+      return { rms: rms, stereo: e.stereo };
+    }
+
+    function resetSegmentMeter() {
+      segEntries = [];
+      initSegs = {};
+      decodeQueue = 0;
+      totalRxBytes = 0;
+      currentBitrate = 0;
+    }
+
+    function playAudio(url) {
+      stopAudio(false);
+      player.disableRemotePlayback = true;
+
+      const sid = sessionId;
+
+      if (window.Hls && Hls.isSupported()) {
+        usingNative = false;
+        meterMode = IS_IOS ? 'segments' : 'analyser';
+
+        hls = new Hls({ enableWorker: true, startLevel: 0 });
+        hls.loadSource(url);
+        hls.attachMedia(player);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (LOWEST_QUALITY) hls.autoLevelCapping = 0;
+          player.play().then(onPlayStarted)
+            .catch(e => console.log("Play error:", e));
+        });
+
+        hls.on(Hls.Events.LEVEL_LOADED, (event, data) => {
+          if (data.details && data.details.totalduration) {
+            currentBitrate = Math.round((data.details.totalduration > 0 ? (data.details.bandwidth || 128000) : 128000) / 1000);
+          }
+        });
+
+        hls.on(Hls.Events.BUFFER_APPENDING, (event, data) => handleBufferAppending(sid, data));
+      } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
+        usingNative = true;
+        meterMode = IS_IOS ? 'none' : 'analyser';
+        player.src = url;
+        player.play().then(onPlayStarted)
+          .catch(e => console.log("Play error:", e));
+      }
+    }
+
+    function stopAudio(clearSrc = true) {
+      sessionId++;
+      player.pause();
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      if (hls) { hls.destroy(); hls = null; }
+      if (clearSrc) {
+        player.removeAttribute('src');
+        player.load();
+      }
+      resetSegmentMeter();
+      meterMode = 'none';
+      silentSince = 0;
+      currentLevel = 0;
+      stereoRatio = 0;
+      drawScopeFlat();
+
+      stationInfoRow.style.visibility = 'hidden';
+      if (statsPanel) statsPanel.style.display = 'none';
+      statMono.className = 'stat-term disable-gray';
+      statStereo.className = 'stat-term disable-gray';
+      globalVuFill.style.width = '0%';
+      globalLed.style.backgroundColor = '#222222';
+      globalLed.style.boxShadow = 'none';
+    }
+
+    function vuToPercent(vu) {
+      const first = parseFloat(dbMarks[0].db);
+      const last = parseFloat(dbMarks[dbMarks.length - 1].db);
+      if (vu <= first) return 0;
+      if (vu >= last) return 100;
+      for (let i = 1; i < dbMarks.length; i++) {
+        const d1 = parseFloat(dbMarks[i].db);
+        if (vu <= d1) {
+          const d0 = parseFloat(dbMarks[i - 1].db);
+          const p0 = dbMarks[i - 1].pos;
+          const p1 = dbMarks[i].pos;
+          return p0 + (vu - d0) / (d1 - d0) * (p1 - p0);
+        }
+      }
+      return 100;
+    }
+
+    function drawScope(timeData, isPlaying) {
+      const width = canvas.width;
+      const height = canvas.height;
+      const centerY = height / 2;
+
+      canvasCtx.clearRect(0, 0, width, height);
+      canvasCtx.lineWidth = 1.5 * (window.devicePixelRatio || 1);
+      canvasCtx.strokeStyle = '#22c55e';
+      canvasCtx.shadowColor = '#22c55e';
+      canvasCtx.shadowBlur = 4;
+
+      if (!isPlaying || activeIndex === -1 || !timeData || timeData.length === 0) {
+        canvasCtx.beginPath();
+        canvasCtx.moveTo(0, centerY);
+        canvasCtx.lineTo(width, centerY);
+        canvasCtx.stroke();
+        return;
+      }
+
+      const numBars = 75;
+      const barWidth = width / numBars;
+      const step = Math.max(1, Math.floor(timeData.length / numBars));
+
+      for (let i = 0; i < numBars; i++) {
+        let peak = 0;
+        for (let j = 0; j < step; j++) {
+          const v = Math.abs((timeData[i * step + j] - 128) / 128.0);
+          if (v > peak) peak = v;
+        }
+        const barHeight = Math.min(peak * SCOPE_GAIN, 1) * (height * 0.85);
+
+        if (barHeight > 1) {
+          canvasCtx.beginPath();
+          canvasCtx.moveTo(i * barWidth, centerY - barHeight / 2);
+          canvasCtx.lineTo(i * barWidth, centerY + barHeight / 2);
+          canvasCtx.stroke();
+        } else {
+          canvasCtx.beginPath();
+          canvasCtx.moveTo(i * barWidth, centerY);
+          canvasCtx.lineTo(i * barWidth + 1, centerY);
+          canvasCtx.stroke();
+        }
+      }
+    }
+
+    function drawScopeFlat() {
+      drawScope(null, false);
+    }
+
+    function startVUMeter() {
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+
+      const timeF = analyser ? new Float32Array(analyser.fftSize) : null;
+      const timeB = analyser ? new Uint8Array(analyser.fftSize) : null;
+      const bufL = analyserL ? new Float32Array(analyserL.fftSize) : null;
+      const bufR = analyserR ? new Float32Array(analyserR.fftSize) : null;
+
+      function update() {
+        const nowMs = performance.now();
+        const playing = !player.paused;
+        let targetLevel = 0;
+        let hasRealData = false;
+        let scopeData = null;
+        let stereoState = null;
+        let peak = 0;
+
+        if (meterMode === 'analyser' && analyser && timeF) {
+          analyser.getFloatTimeDomainData(timeF);
+          let sum = 0;
+          for (let i = 0; i < timeF.length; i++) {
+            const v = timeF[i];
+            sum += v * v;
+            const a = Math.abs(v);
+            if (a > peak) peak = a;
+          }
+          hasRealData = peak > SIGNAL_PEAK_MIN;
+
+          if (hasRealData) {
+            const rms = Math.sqrt(sum / timeF.length);
+            const vu = 20 * Math.log10(rms + 1e-9) - VU_REF_DBFS;
+            targetLevel = vuToPercent(vu);
+            analyser.getByteTimeDomainData(timeB);
+            scopeData = timeB;
+
+            if (bufL && bufR) {
+              analyserL.getFloatTimeDomainData(bufL);
+              analyserR.getFloatTimeDomainData(bufR);
+              let sumDiff = 0, sumTotal = 0;
+              for (let i = 0; i < bufL.length; i++) {
+                const d = bufL[i] - bufR[i];
+                sumDiff += d * d;
+                sumTotal += bufL[i] * bufL[i] + bufR[i] * bufR[i];
+              }
+              stereoRatio = stereoRatio * 0.97 + (sumDiff / (sumTotal + 1e-12)) * 0.03;
+              stereoState = stereoRatio > 0.02;
+            }
+          }
+
+          if (playing && hls && nowMs - playStartedAt > 2000) {
+            if (hasRealData) {
+              silentSince = 0;
+            } else if (!silentSince) {
+              silentSince = nowMs;
+            } else if (nowMs - silentSince > AUTO_SWITCH_MS) {
+              meterMode = 'segments';
+              silentSince = 0;
+            }
+          }
+        } else if (meterMode === 'segments') {
+          const f = segmentFrame();
+          if (f) {
+            peak = 1;
+            hasRealData = true;
+            const vu = 20 * Math.log10(f.rms + 1e-9) - VU_REF_DBFS;
+            targetLevel = vuToPercent(vu);
+            scopeData = segTimeB;
+            stereoState = f.stereo;
+          }
+        }
+
+        currentLevel += (targetLevel - currentLevel) * (targetLevel > currentLevel ? 0.5 : 0.08);
+
+        if (activeIndex !== -1) {
+          let bufSec = 0;
+          if (player.buffered && player.buffered.length > 0) {
+            for (let i = 0; i < player.buffered.length; i++) {
+              if (player.currentTime >= player.buffered.start(i) && player.currentTime <= player.buffered.end(i)) {
+                bufSec = player.buffered.end(i) - player.currentTime;
+                break;
+              }
+            }
+          }
+          bufValElem.innerText = bufSec.toFixed(1);
+          const bufPercent = Math.min(100, (bufSec / 25) * 100);
+          bufBarElem.style.width = bufPercent.toFixed(1) + '%';
+
+          if (bufPercent > 50) {
+            bufBarElem.classList.add('green-status');
+            bufBarElem.classList.remove('red-status');
+          } else {
+            bufBarElem.classList.add('red-status');
+            bufBarElem.classList.remove('green-status');
+          }
+
+          const rxMB = (totalRxBytes / (1024 * 1024)).toFixed(1);
+          const brKbps = currentBitrate || 128;
+          connStatusElem.innerText = `CONNECTED | BR ${brKbps} kbps (rx ${rxMB}MB)`;
+
+          globalVuFill.style.width = currentLevel.toFixed(1) + '%';
+          if (currentLevel > 10) {
+            globalLed.style.backgroundColor = '#22c55e';
+            globalLed.style.boxShadow = '0 0 6px #22c55e';
+          } else {
+            globalLed.style.backgroundColor = '#222222';
+            globalLed.style.boxShadow = 'none';
+          }
+
+          if (statsPanel) {
+            statsPanel.style.display = 'block';
+
+            if (stereoState === true) {
+              statStereo.className = 'stat-term active-red';
+              statMono.className = 'stat-term disable-gray';
+            } else if (stereoState === false) {
+              statMono.className = 'stat-term active-red';
+              statStereo.className = 'stat-term disable-gray';
+            } else if (!hasRealData) {
+              statMono.className = 'stat-term disable-gray';
+              statStereo.className = 'stat-term disable-gray';
+            }
+          }
+
+          drawScope(hasRealData ? scopeData : null, playing);
+        }
+
+        animFrameId = requestAnimationFrame(update);
+      }
+
+      update();
+    }
+
+    drawScopeFlat();
+  </script>
+</body>
+</html>
