@@ -1,727 +1,746 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project 4 Streams (YouTube Edition) - Version 1.0.9</title>
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Google Fonts: Inter & JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- YouTube IFrame Player API -->
-  <script src="https://www.youtube.com/iframe_api"></script>
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            darkBg: '#090d16',
-            panelBg: '#111827',
-            panelHeader: '#1e293b',
-            panelBorder: '#334155',
-            accentRed: '#ef4444',
-            accentBlue: '#3b82f6',
-            accentGreen: '#10b981',
-            accentAmber: '#f59e0b',
-            accentCyan: '#06b6d4',
-          }
-        }
-      }
-    }
-  </script>
-
+  <title>Project 4 Streams - YouTube Edition v1.0.9</title>
   <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: #111827;
+      --border-color: #1f2937;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-blue: #3b82f6;
+      --accent-gold: #f59e0b;
+      --header-bg: #161e2e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      background-color: #090d16;
-      color: #f1f5f9;
-      user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
       overflow-x: hidden;
     }
-    
-    /* Dynamic Grid Layout Modes */
+
+    /* Top Navigation Bar */
+    header {
+      background-color: var(--header-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      z-index: 100;
+    }
+
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #ffffff;
+    }
+
+    .brand-badge {
+      background-color: var(--accent-red);
+      color: white;
+      font-size: 0.65rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .controls-main {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-group {
+      display: flex;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      padding: 2px;
+      border: 1px solid var(--border-color);
+    }
+
+    .btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .btn:hover {
+      color: var(--text-main);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn.active {
+      background-color: var(--accent-blue);
+      color: white;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page-view {
+      display: none;
+      flex: 1;
+      width: 100%;
+    }
+
+    .page-view.active {
+      display: block;
+    }
+
+    /* Grid Layout Modes */
     .grid-2x2 {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-template-rows: repeat(2, 1fr);
       gap: 0.75rem;
-      height: calc(100vh - 4.5rem);
+      height: calc(100vh - 75px);
     }
 
     .grid-focus {
       display: grid;
-      grid-template-columns: 3.2fr 1fr;
+      grid-template-columns: 2.8fr 1fr;
       grid-template-rows: repeat(3, 1fr);
       gap: 0.75rem;
-      height: calc(100vh - 4.5rem);
+      height: calc(100vh - 75px);
     }
 
-    .grid-focus #screen-slot-0 {
-      grid-column: 1 / 2;
-      grid-row: 1 / 4;
+    .grid-focus .screen-card:nth-child(1) {
+      grid-row: span 3;
     }
 
-    .grid-focus #screen-slot-1 { grid-column: 2 / 3; grid-row: 1 / 2; }
-    .grid-focus #screen-slot-2 { grid-column: 2 / 3; grid-row: 2 / 3; }
-    .grid-focus #screen-slot-3 { grid-column: 2 / 3; grid-row: 3 / 4; }
-
-    @media (max-width: 1024px) {
+    @media (max-width: 900px) {
       .grid-2x2, .grid-focus {
-        display: flex;
-        flex-direction: column;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
         height: auto;
       }
+      .grid-focus .screen-card:nth-child(1) {
+        grid-row: auto;
+      }
       .screen-card {
-        min-height: 320px;
+        height: 280px;
       }
     }
 
-    /* Live Pulsing Dot Animation */
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      background-color: #ef4444;
-      border-radius: 50%;
-      display: inline-block;
-      box-shadow: 0 0 8px #ef4444;
-      animation: pulse 1.5s infinite;
+    /* Screen Card UI */
+    .screen-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
     }
 
-    @keyframes pulse {
-      0% { transform: scale(0.85); opacity: 0.8; }
-      50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 12px #ef4444; }
-      100% { transform: scale(0.85); opacity: 0.8; }
+    .screen-card.solo-active {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 0 1px var(--accent-green);
     }
 
-    /* Active Solo Audio Glow Animation */
-    .card-audio-active {
-      border-color: #10b981 !important;
-      box-shadow: 0 0 18px rgba(16, 185, 129, 0.35);
+    .screen-header {
+      background-color: rgba(0, 0, 0, 0.4);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.35rem 0.6rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
     }
 
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #090d16;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
+    .ch-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+      background: rgba(245, 158, 11, 0.1);
+      padding: 0.1rem 0.4rem;
       border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #3b82f6;
+      white-space: nowrap;
     }
 
-    /* Video Frame Overlay Controls */
-    .iframe-overlay {
-      pointer-events: none;
+    .station-select {
+      background-color: #0d121d;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 0.2rem 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      outline: none;
+      flex: 1;
+      max-width: 180px;
+      cursor: pointer;
     }
-    .iframe-overlay * {
-      pointer-events: auto;
+
+    .station-select optgroup {
+      background-color: #111827;
+      color: var(--accent-gold);
+    }
+
+    .screen-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .action-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .action-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .action-btn.solo-btn {
+      color: #9ca3af;
+    }
+
+    .action-btn.solo-btn.active {
+      background-color: var(--accent-green);
+      color: white;
+      border-color: var(--accent-green);
+    }
+
+    /* Video Frame Container */
+    .video-wrapper {
+      flex: 1;
+      position: relative;
+      background-color: #000;
+      width: 100%;
+      height: 100%;
+    }
+
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Screen Footer Overlay for Manual URL Input */
+    .screen-footer {
+      background-color: rgba(10, 15, 25, 0.95);
+      border-top: 1px solid var(--border-color);
+      padding: 0.3rem 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .url-input {
+      flex: 1;
+      background-color: #05080e;
+      border: 1px solid var(--border-color);
+      border-radius: 3px;
+      color: var(--text-main);
+      padding: 0.2rem 0.4rem;
+      font-size: 0.7rem;
+      font-family: monospace;
+      outline: none;
+    }
+
+    .url-input:focus {
+      border-color: var(--accent-blue);
     }
   </style>
+  <script src="https://www.youtube.com/iframe_api"></script>
 </head>
-<body class="font-sans antialiased bg-darkBg text-slate-100 min-h-screen flex flex-col">
+<body>
 
-  <!-- Top Navigation Bar -->
-  <header class="h-14 bg-panelBg border-b border-panelBorder px-4 flex items-center justify-between shadow-lg sticky top-0 z-50">
-    <!-- Brand / Title -->
-    <div class="flex items-center space-x-3">
-      <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-red-600/20 text-red-500 border border-red-500/30">
-        <i class="fa-solid fa-brands fa-youtube text-lg"></i>
-      </div>
-      <div>
-        <h1 class="font-bold text-sm tracking-wide text-slate-100 flex items-center gap-2">
-          PROJECT 4 STREAMS
-          <span class="bg-red-500/20 text-red-400 text-[10px] font-mono px-2 py-0.5 rounded border border-red-500/30 uppercase">YT Edition v1.0.9</span>
-        </h1>
-      </div>
+  <!-- Top Navigation -->
+  <header>
+    <div class="brand-title">
+      PROJECT 4 STREAMS <span class="brand-badge">YouTube 1.0.9</span>
     </div>
 
-    <!-- Center Page Switcher -->
-    <div class="flex items-center bg-slate-900/80 p-1 rounded-lg border border-panelBorder space-x-1">
-      <button id="btn-page-1" onclick="switchPage(1)" class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-2 bg-blue-600 text-white shadow-md">
-        <i class="fa-solid fa-border-all"></i>
-        <span>[PAGE 1] CH1-4</span>
-      </button>
-      <button id="btn-page-2" onclick="switchPage(2)" class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800">
-        <i class="fa-solid fa-border-all"></i>
-        <span>[PAGE 2] CH5-8</span>
-      </button>
-    </div>
-
-    <!-- Right Global Controls -->
-    <div class="flex items-center space-x-2">
-      <!-- Layout Mode Selector -->
-      <div class="hidden sm:flex items-center bg-slate-900/80 p-1 rounded-lg border border-panelBorder">
-        <button id="layout-grid-btn" onclick="setLayout('2x2')" title="Grid 2x2 View" class="px-2.5 py-1 rounded text-xs text-blue-400 bg-blue-500/20 font-mono">
-          <i class="fa-solid fa-grip"></i> 2x2
-        </button>
-        <button id="layout-focus-btn" onclick="setLayout('focus')" title="Focus View (1 Main + 3 Side)" class="px-2.5 py-1 rounded text-xs text-slate-400 hover:text-white font-mono">
-          <i class="fa-solid fa-table-columns"></i> Focus
-        </button>
+    <div class="controls-main">
+      <!-- Page Switcher -->
+      <div class="btn-group">
+        <button class="btn active" id="btn-page1" onclick="switchPage(1)">Page 1 (CH1-4)</button>
+        <button class="btn" id="btn-page2" onclick="switchPage(2)">Page 2 (CH5-8)</button>
       </div>
 
-      <!-- Reset All Configurations -->
-      <button onclick="resetDefaults()" title="Reset All Channels & Layout to Default" class="px-2.5 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-red-400 border border-slate-700 text-xs font-mono transition-colors">
-        <i class="fa-solid fa-rotate-left"></i> <span class="hidden md:inline">Reset</span>
-      </button>
+      <!-- Layout Switcher -->
+      <div class="btn-group">
+        <button class="btn active" id="btn-grid" onclick="setLayout('grid')">2x2 Grid</button>
+        <button class="btn" id="btn-focus" onclick="setLayout('focus')">Main + Sidebar</button>
+      </div>
 
-      <!-- Fullscreen Toggle -->
-      <button onclick="toggleGlobalFullscreen()" title="Toggle Fullscreen" class="px-2.5 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-mono transition-colors">
-        <i class="fa-solid fa-expand"></i>
+      <!-- Global Actions -->
+      <button class="btn" onclick="muteAllCurrentPage()" style="border: 1px solid var(--border-color);">
+        Mute All
       </button>
     </div>
   </header>
 
-  <!-- Main Grid Viewport Container -->
-  <main class="flex-1 p-3">
-    <div id="grid-container" class="grid-2x2 transition-all duration-300">
-      
-      <!-- Screen Slot 0 (Index 0) -->
-      <div id="screen-slot-0" class="screen-card bg-panelBg border border-panelBorder rounded-xl overflow-hidden flex flex-col relative transition-all shadow-md">
-        <!-- Screen Header / Bar -->
-        <div class="h-9 bg-panelHeader/90 border-b border-panelBorder px-3 flex items-center justify-between text-xs font-mono shrink-0">
-          <div class="flex items-center space-x-2 truncate mr-2">
-            <span id="badge-0" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white">CH1</span>
-            <div class="live-dot"></div>
-            <!-- Preset Dropdown Selector -->
-            <select id="preset-select-0" onchange="onPresetChange(0, this.value)" class="bg-slate-900 text-slate-200 border border-slate-700 rounded px-2 py-0.5 text-xs focus:outline-none focus:border-blue-500 max-w-[140px] sm:max-w-[180px]">
-              <!-- Options populated via JS -->
-            </select>
+  <!-- Main View Area -->
+  <main>
+    <!-- PAGE 1 -->
+    <div id="page-1" class="page-view active">
+      <div class="grid-2x2" id="grid-p1">
+        <!-- CH 1 -->
+        <div class="screen-card" id="card-1">
+          <div class="screen-header">
+            <span class="ch-tag">CH 1</span>
+            <select class="station-select" id="select-1" onchange="onSelectStation(1)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-1" onclick="toggleSolo(1)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(1)">Reload</button>
+            </div>
           </div>
-
-          <!-- Controls Right -->
-          <div class="flex items-center space-x-1 shrink-0">
-            <button id="solo-btn-0" onclick="toggleSoloAudio(0)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-emerald-600/80 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-sans transition-colors flex items-center gap-1">
-              <i class="fa-solid fa-volume-xmark text-slate-400"></i>
-              <span class="hidden sm:inline">Solo</span>
-            </button>
-            <button onclick="openConfigModal(0)" title="Change Custom URL / Video ID" class="p-1 px-1.5 text-slate-400 hover:text-cyan-400 rounded hover:bg-slate-800">
-              <i class="fa-solid fa-gear"></i>
-            </button>
-            <button onclick="reloadScreen(0)" title="Reload Screen" class="p-1 px-1.5 text-slate-400 hover:text-amber-400 rounded hover:bg-slate-800">
-              <i class="fa-solid fa-rotate-right"></i>
-            </button>
-            <button onclick="toggleScreenFullscreen(0)" title="Fullscreen Screen 1" class="p-1 px-1.5 text-slate-400 hover:text-white rounded hover:bg-slate-800">
-              <i class="fa-solid fa-expand"></i>
-            </button>
+          <div class="video-wrapper">
+            <div id="player-1"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-1" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(1)">Set</button>
           </div>
         </div>
 
-        <!-- Video Frame Wrapper -->
-        <div class="flex-1 bg-black relative flex items-center justify-center overflow-hidden">
-          <div id="player-0" class="w-full h-full"></div>
+        <!-- CH 2 -->
+        <div class="screen-card" id="card-2">
+          <div class="screen-header">
+            <span class="ch-tag">CH 2</span>
+            <select class="station-select" id="select-2" onchange="onSelectStation(2)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-2" onclick="toggleSolo(2)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(2)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-2"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-2" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(2)">Set</button>
+          </div>
+        </div>
+
+        <!-- CH 3 -->
+        <div class="screen-card" id="card-3">
+          <div class="screen-header">
+            <span class="ch-tag">CH 3</span>
+            <select class="station-select" id="select-3" onchange="onSelectStation(3)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-3" onclick="toggleSolo(3)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(3)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-3"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-3" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(3)">Set</button>
+          </div>
+        </div>
+
+        <!-- CH 4 -->
+        <div class="screen-card" id="card-4">
+          <div class="screen-header">
+            <span class="ch-tag">CH 4</span>
+            <select class="station-select" id="select-4" onchange="onSelectStation(4)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-4" onclick="toggleSolo(4)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(4)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-4"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-4" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(4)">Set</button>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Screen Slot 1 (Index 1) -->
-      <div id="screen-slot-1" class="screen-card bg-panelBg border border-panelBorder rounded-xl overflow-hidden flex flex-col relative transition-all shadow-md">
-        <div class="h-9 bg-panelHeader/90 border-b border-panelBorder px-3 flex items-center justify-between text-xs font-mono shrink-0">
-          <div class="flex items-center space-x-2 truncate mr-2">
-            <span id="badge-1" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white">CH2</span>
-            <div class="live-dot"></div>
-            <select id="preset-select-1" onchange="onPresetChange(1, this.value)" class="bg-slate-900 text-slate-200 border border-slate-700 rounded px-2 py-0.5 text-xs focus:outline-none focus:border-blue-500 max-w-[140px] sm:max-w-[180px]">
-            </select>
+    <!-- PAGE 2 -->
+    <div id="page-2" class="page-view">
+      <div class="grid-2x2" id="grid-p2">
+        <!-- CH 5 -->
+        <div class="screen-card" id="card-5">
+          <div class="screen-header">
+            <span class="ch-tag">CH 5</span>
+            <select class="station-select" id="select-5" onchange="onSelectStation(5)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-5" onclick="toggleSolo(5)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(5)">Reload</button>
+            </div>
           </div>
-          <div class="flex items-center space-x-1 shrink-0">
-            <button id="solo-btn-1" onclick="toggleSoloAudio(1)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-emerald-600/80 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-sans transition-colors flex items-center gap-1">
-              <i class="fa-solid fa-volume-xmark text-slate-400"></i>
-              <span class="hidden sm:inline">Solo</span>
-            </button>
-            <button onclick="openConfigModal(1)" title="Change Custom URL / Video ID" class="p-1 px-1.5 text-slate-400 hover:text-cyan-400 rounded hover:bg-slate-800">
-              <i class="fa-solid fa-gear"></i>
-            </button>
-            <button onclick="reloadScreen(1)" title="Reload Screen" class="p-1 px-1.5 text-slate-400 hover:text-amber-400 rounded hover:bg-slate-800">
-              <i class="fa-solid fa-rotate-right"></i>
-            </button>
-            <button onclick="toggleScreenFullscreen(1)" title="Fullscreen Screen 2" class="p-1 px-1.5 text-slate-400 hover:text-white rounded hover:bg-slate-800">
-              <i class="fa-solid fa-expand"></i>
-            </button>
+          <div class="video-wrapper">
+            <div id="player-5"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-5" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(5)">Set</button>
           </div>
         </div>
-        <div class="flex-1 bg-black relative flex items-center justify-center overflow-hidden">
-          <div id="player-1" class="w-full h-full"></div>
+
+        <!-- CH 6 -->
+        <div class="screen-card" id="card-6">
+          <div class="screen-header">
+            <span class="ch-tag">CH 6</span>
+            <select class="station-select" id="select-6" onchange="onSelectStation(6)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-6" onclick="toggleSolo(6)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(6)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-6"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-6" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(6)">Set</button>
+          </div>
+        </div>
+
+        <!-- CH 7 -->
+        <div class="screen-card" id="card-7">
+          <div class="screen-header">
+            <span class="ch-tag">CH 7</span>
+            <select class="station-select" id="select-7" onchange="onSelectStation(7)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-7" onclick="toggleSolo(7)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(7)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-7"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-7" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(7)">Set</button>
+          </div>
+        </div>
+
+        <!-- CH 8 -->
+        <div class="screen-card" id="card-8">
+          <div class="screen-header">
+            <span class="ch-tag">CH 8</span>
+            <select class="station-select" id="select-8" onchange="onSelectStation(8)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-8" onclick="toggleSolo(8)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(8)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-8"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-8" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(8)">Set</button>
+          </div>
         </div>
       </div>
-
-      <!-- Screen Slot 2 (Index 2) -->
-      <div id="screen-slot-2" class="screen-card bg-panelBg border border-panelBorder rounded-xl overflow-hidden flex flex-col relative transition-all shadow-md">
-        <div class="h-9 bg-panelHeader/90 border-b border-panelBorder px-3 flex items-center justify-between text-xs font-mono shrink-0">
-          <div class="flex items-center space-x-2 truncate mr-2">
-            <span id="badge-2" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white">CH3</span>
-            <div class="live-dot"></div>
-            <select id="preset-select-2" onchange="onPresetChange(2, this.value)" class="bg-slate-900 text-slate-200 border border-slate-700 rounded px-2 py-0.5 text-xs focus:outline-none focus:border-blue-500 max-w-[140px] sm:max-w-[180px]">
-            </select>
-          </div>
-          <div class="flex items-center space-x-1 shrink-0">
-            <button id="solo-btn-2" onclick="toggleSoloAudio(2)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-emerald-600/80 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-sans transition-colors flex items-center gap-1">
-              <i class="fa-solid fa-volume-xmark text-slate-400"></i>
-              <span class="hidden sm:inline">Solo</span>
-            </button>
-            <button onclick="openConfigModal(2)" title="Change Custom URL / Video ID" class="p-1 px-1.5 text-slate-400 hover:text-cyan-400 rounded hover:bg-slate-800">
-              <i class="fa-solid fa-gear"></i>
-            </button>
-            <button onclick="reloadScreen(2)" title="Reload Screen" class="p-1 px-1.5 text-slate-400 hover:text-amber-400 rounded hover:bg-slate-800">
-              <i class="fa-solid fa-rotate-right"></i>
-            </button>
-            <button onclick="toggleScreenFullscreen(2)" title="Fullscreen Screen 3" class="p-1 px-1.5 text-slate-400 hover:text-white rounded hover:bg-slate-800">
-              <i class="fa-solid fa-expand"></i>
-            </button>
-          </div>
-        </div>
-        <div class="flex-1 bg-black relative flex items-center justify-center overflow-hidden">
-          <div id="player-2" class="w-full h-full"></div>
-        </div>
-      </div>
-
-      <!-- Screen Slot 3 (Index 3) -->
-      <div id="screen-slot-3" class="screen-card bg-panelBg border border-panelBorder rounded-xl overflow-hidden flex flex-col relative transition-all shadow-md">
-        <div class="h-9 bg-panelHeader/90 border-b border-panelBorder px-3 flex items-center justify-between text-xs font-mono shrink-0">
-          <div class="flex items-center space-x-2 truncate mr-2">
-            <span id="badge-3" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white">CH4</span>
-            <div class="live-dot"></div>
-            <select id="preset-select-3" onchange="onPresetChange(3, this.value)" class="bg-slate-900 text-slate-200 border border-slate-700 rounded px-2 py-0.5 text-xs focus:outline-none focus:border-blue-500 max-w-[140px] sm:max-w-[180px]">
-            </select>
-          </div>
-          <div class="flex items-center space-x-1 shrink-0">
-            <button id="solo-btn-3" onclick="toggleSoloAudio(3)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-emerald-600/80 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-sans transition-colors flex items-center gap-1">
-              <i class="fa-solid fa-volume-xmark text-slate-400"></i>
-              <span class="hidden sm:inline">Solo</span>
-            </button>
-            <button onclick="openConfigModal(3)" title="Change Custom URL / Video ID" class="p-1 px-1.5 text-slate-400 hover:text-cyan-400 rounded hover:bg-slate-800">
-              <i class="fa-solid fa-gear"></i>
-            </button>
-            <button onclick="reloadScreen(3)" title="Reload Screen" class="p-1 px-1.5 text-slate-400 hover:text-amber-400 rounded hover:bg-slate-800">
-              <i class="fa-solid fa-rotate-right"></i>
-            </button>
-            <button onclick="toggleScreenFullscreen(3)" title="Fullscreen Screen 4" class="p-1 px-1.5 text-slate-400 hover:text-white rounded hover:bg-slate-800">
-              <i class="fa-solid fa-expand"></i>
-            </button>
-          </div>
-        </div>
-        <div class="flex-1 bg-black relative flex items-center justify-center overflow-hidden">
-          <div id="player-3" class="w-full h-full"></div>
-        </div>
-      </div>
-
     </div>
   </main>
 
-  <!-- Settings Modal (Custom Video ID or Full URL Input) -->
-  <div id="config-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-    <div class="bg-panelBg border border-panelBorder rounded-xl w-full max-w-md p-5 shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-panelBorder pb-3">
-        <h3 class="text-sm font-bold text-slate-100 font-mono flex items-center gap-2">
-          <i class="fa-solid fa-sliders text-blue-500"></i>
-          CONFIGURE SCREEN SLOT <span id="modal-slot-num" class="text-blue-400">1</span>
-        </h3>
-        <button onclick="closeConfigModal()" class="text-slate-400 hover:text-white text-base">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="space-y-3">
-        <div>
-          <label class="block text-xs font-mono text-slate-400 mb-1">Enter YouTube Live URL or Video ID:</label>
-          <input type="text" id="modal-input-id" placeholder="e.g. gCNeDWCI0vo or https://www.youtube.com/watch?v=..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none focus:border-blue-500">
-          <p class="text-[11px] text-slate-500 mt-1">Accepts full links (youtube.com/live/..., watch?v=...) or direct 11-character Video IDs.</p>
-        </div>
-      </div>
-
-      <div class="flex justify-end space-x-2 pt-2 border-t border-panelBorder">
-        <button onclick="closeConfigModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono">Cancel</button>
-        <button onclick="saveConfigModal()" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-semibold">Update Stream</button>
-      </div>
-    </div>
-  </div>
-
   <script>
-    /* ===================================================================
-       1. MASTER STATION REGISTRY (12 STATIONS)
-       =================================================================== */
-    const MASTER_STATIONS = [
-      { id: "gCNeDWCI0vo", name: "Al Jazeera" },
-      { id: "xDWQ3LkccY8", name: "Sky News" },
-      { id: "XWq5kBlakcQ", name: "CNA (Channel NewsAsia)" },
-      { id: "QB5BNdBFujE", name: "Bloomberg Business News" },
-      { id: "LuKwFajn37U", name: "DW English" },
-      { id: "0i7n3r01L2U", name: "CGTN English" },
-      { id: "HvZt-nh9sGg", name: "France 24 English" },
-      { id: "hADDeXdg_lk", name: "ANN news (Japan)" },
-      { id: "pykpO5kQJ98", name: "Euronews" },
-      { id: "O9s2TMny6KQ", name: "GB News" },
-      { id: "KQp-e_XQnDE", name: "Yahoo Finance 24/7" },
-      { id: "qBe59l6p_EU", name: "TRT World" }
+    // Master Registry of Stations (News & Music)
+    const STATION_REGISTRY = [
+      // --- NEWS STATIONS ---
+      { id: 'aljazeera', name: 'Al Jazeera', videoId: 'gCNeDWCI0vo', category: 'News' },
+      { id: 'skynews', name: 'Sky News', videoId: 'xDWQ3LkccY8', category: 'News' },
+      { id: 'cna', name: 'CNA', videoId: 'XWq5kBlakcQ', category: 'News' },
+      { id: 'bloomberg', name: 'Bloomberg Business', videoId: 'QB5BNdBFujE', category: 'News' },
+      { id: 'dw', name: 'DW English', videoId: 'LuKwFajn37U', category: 'News' },
+      { id: 'cgtn', name: 'CGTN English', videoId: '0i7n3r01L2U', category: 'News' },
+      { id: 'france24', name: 'France 24 English', videoId: 'HvZt-nh9sGg', category: 'News' },
+      { id: 'ann', name: 'ANN news (Jp)', videoId: 'hADDeXdg_lk', category: 'News' },
+      { id: 'euronews', name: 'Euro News', videoId: 'pykpO5kQJ98', category: 'News' },
+      { id: 'gbnews', name: 'GB News', videoId: 'O9s2TMny6KQ', category: 'News' },
+      { id: 'yahoofinance', name: 'Yahoo Finance 24/7', videoId: 'KQp-e_XQnDE', category: 'News' },
+      { id: 'trtworld', name: 'TRT World', videoId: 'qBe59l6p_EU', category: 'News' },
+
+      // --- MUSIC & AUDIO RELAXATION ---
+      { id: 'native_flute', name: 'Rain & Native American Flute', videoId: 'Unbi1YfQfBU', category: 'Music' },
+      { id: 'beethoven_triple', name: 'Beethoven Triplekonzert', videoId: 'jkD6XuJaj_E', category: 'Music' },
+      { id: 'smooth_jazz', name: 'Smooth Jazz & R&B 90s', videoId: 'oNPKYDvJ6VY', category: 'Music' }
     ];
 
-    /* Default Mapping for Pages */
-    const DEFAULT_PAGE_1 = ["gCNeDWCI0vo", "xDWQ3LkccY8", "XWq5kBlakcQ", "QB5BNdBFujE"];
-    const DEFAULT_PAGE_2 = ["LuKwFajn37U", "0i7n3r01L2U", "HvZt-nh9sGg", "hADDeXdg_lk"];
+    // Default Configurations for Screens
+    const DEFAULT_CONFIGS = {
+      1: { stationId: 'aljazeera', videoId: 'gCNeDWCI0vo' },
+      2: { stationId: 'skynews', videoId: 'xDWQ3LkccY8' },
+      3: { stationId: 'cna', videoId: 'XWq5kBlakcQ' },
+      4: { stationId: 'bloomberg', videoId: 'QB5BNdBFujE' },
+      5: { stationId: 'dw', videoId: 'LuKwFajn37U' },
+      6: { stationId: 'cgtn', videoId: '0i7n3r01L2U' },
+      7: { stationId: 'france24', videoId: 'HvZt-nh9sGg' },
+      8: { stationId: 'ann', videoId: 'hADDeXdg_lk' }
+    };
 
-    /* ===================================================================
-       2. GLOBAL STATE VARIABLES
-       =================================================================== */
     let currentPage = 1;
-    let page1Channels = [...DEFAULT_PAGE_1];
-    let page2Channels = [...DEFAULT_PAGE_2];
-    let currentLayout = '2x2'; // '2x2' or 'focus'
-    
-    // YouTube Players Array for active 4 slots
-    let players = [null, null, null, null];
-    let activeSoloSlot = null; // Currently soloed slot index
-    let currentTargetModalSlot = 0;
-    let isApiReady = false;
+    let currentLayout = 'grid';
+    let players = {};
+    let playerReadyStatus = {};
+    let screenConfigs = JSON.parse(JSON.stringify(DEFAULT_CONFIGS));
 
-    /* ===================================================================
-       3. STORAGE MANAGEMENT
-       =================================================================== */
-    function loadSavedState() {
-      try {
-        const savedPage1 = localStorage.getItem("p4s_yt_page1");
-        const savedPage2 = localStorage.getItem("p4s_yt_page2");
-        const savedPage = localStorage.getItem("p4s_yt_active_page");
-        const savedLayout = localStorage.getItem("p4s_yt_layout");
-
-        if (savedPage1) page1Channels = JSON.parse(savedPage1);
-        if (savedPage2) page2Channels = JSON.parse(savedPage2);
-        if (savedPage) currentPage = parseInt(savedPage, 10);
-        if (savedLayout) currentLayout = savedLayout;
-      } catch (e) {
-        console.warn("LocalStorage access issue, fallback to defaults.", e);
-      }
-    }
-
-    function saveState() {
-      try {
-        localStorage.setItem("p4s_yt_page1", JSON.stringify(page1Channels));
-        localStorage.setItem("p4s_yt_page2", JSON.stringify(page2Channels));
-        localStorage.setItem("p4s_yt_active_page", currentPage.toString());
-        localStorage.setItem("p4s_yt_layout", currentLayout);
-      } catch (e) {
-        console.warn("Unable to save to LocalStorage.", e);
-      }
-    }
-
-    /* ===================================================================
-       4. YOUTUBE IFRAME PLAYER API INTEGRATION
-       =================================================================== */
+    // YouTube API Ready Callback
     function onYouTubeIframeAPIReady() {
-      isApiReady = true;
-      initAllPlayers();
-    }
-
-    function getActiveChannels() {
-      return currentPage === 1 ? page1Channels : page2Channels;
-    }
-
-    function initAllPlayers() {
-      if (!isApiReady) return;
-      const channels = getActiveChannels();
-
-      for (let i = 0; i < 4; i++) {
-        initPlayerSlot(i, channels[i]);
+      populateDropdowns();
+      for (let i = 1; i <= 8; i++) {
+        initPlayer(i);
       }
-      updateUIElements();
     }
 
-    function initPlayerSlot(slotIndex, videoId) {
-      // Destroy existing player if present
-      if (players[slotIndex]) {
-        try { players[slotIndex].destroy(); } catch (e) {}
-        players[slotIndex] = null;
+    // Populate Dropdowns with Grouping
+    function populateDropdowns() {
+      const newsStations = STATION_REGISTRY.filter(s => s.category === 'News');
+      const musicTracks = STATION_REGISTRY.filter(s => s.category === 'Music');
+
+      for (let i = 1; i <= 8; i++) {
+        const select = document.getElementById(`select-${i}`);
+        select.innerHTML = '';
+
+        // News Group
+        const newsGroup = document.createElement('optgroup');
+        newsGroup.label = '--- NEWS CHANNELS ---';
+        newsStations.forEach(st => {
+          const opt = document.createElement('option');
+          opt.value = st.id;
+          opt.textContent = st.name;
+          newsGroup.appendChild(opt);
+        });
+        select.appendChild(newsGroup);
+
+        // Music Group
+        const musicGroup = document.createElement('optgroup');
+        musicGroup.label = '--- MUSIC & RELAXATION ---';
+        musicTracks.forEach(st => {
+          const opt = document.createElement('option');
+          opt.value = st.id;
+          opt.textContent = st.name;
+          musicGroup.appendChild(opt);
+        });
+        select.appendChild(musicGroup);
+
+        // Custom Choice Option
+        const customOpt = document.createElement('option');
+        customOpt.value = 'custom';
+        customOpt.textContent = 'Custom Video ID';
+        select.appendChild(customOpt);
+
+        select.value = screenConfigs[i].stationId;
       }
+    }
 
-      // Re-create DOM placeholder
-      const container = document.getElementById(`screen-slot-${slotIndex}`).querySelector('.bg-black');
-      container.innerHTML = `<div id="player-${slotIndex}" class="w-full h-full"></div>`;
-
-      players[slotIndex] = new YT.Player(`player-${slotIndex}`, {
+    // Initialize YouTube Player Instance
+    function initPlayer(ch) {
+      const videoId = screenConfigs[ch].videoId;
+      players[ch] = new YT.Player(`player-${ch}`, {
         videoId: videoId,
         playerVars: {
           autoplay: 1,
-          mute: 1, // Must be muted for autoplay policy
+          mute: 1,
           controls: 1,
           modestbranding: 1,
           rel: 0,
           playsinline: 1
         },
         events: {
-          'onReady': (event) => {
-            event.target.playVideo();
-            // If this slot was previously soloed, unmute it
-            if (activeSoloSlot === slotIndex) {
-              event.target.unMute();
-            } else {
-              event.target.mute();
-            }
+          onReady: (e) => {
+            playerReadyStatus[ch] = true;
+            e.target.playVideo();
+            e.target.mute();
           }
         }
       });
     }
 
-    /* ===================================================================
-       5. AUDIO SOLO MANAGEMENT & CONTROLS
-       =================================================================== */
-    function toggleSoloAudio(slotIndex) {
-      const cardEl = document.getElementById(`screen-slot-${slotIndex}`);
+    // Handle Dropdown Selection Change
+    function onSelectStation(ch) {
+      const select = document.getElementById(`select-${ch}`);
+      const selectedValue = select.value;
 
-      if (activeSoloSlot === slotIndex) {
-        // Toggle OFF solo mode -> Mute all
-        activeSoloSlot = null;
-        players.forEach(p => { if (p && p.mute) p.mute(); });
+      if (selectedValue === 'custom') return;
+
+      const station = STATION_REGISTRY.find(s => s.id === selectedValue);
+      if (station) {
+        screenConfigs[ch].stationId = station.id;
+        screenConfigs[ch].videoId = station.videoId;
+        document.getElementById(`input-${ch}`).value = station.videoId;
+        loadVideoToScreen(ch, station.videoId);
+      }
+    }
+
+    // Load Video by ID into Specific Screen
+    function loadVideoToScreen(ch, videoId) {
+      if (players[ch] && typeof players[ch].loadVideoById === 'function') {
+        players[ch].loadVideoById(videoId);
+        players[ch].mute();
+        updateSoloButtonUI(ch, false);
+      }
+    }
+
+    // Helper: Parse Video ID from YouTube URL or Plain ID
+    function extractVideoId(input) {
+      const trimmed = input.trim();
+      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+      const match = trimmed.match(regex);
+      return match ? match[1] : (trimmed.length === 11 ? trimmed : null);
+    }
+
+    // Apply Custom Input (URL/ID)
+    function applyCustomInput(ch) {
+      const inputVal = document.getElementById(`input-${ch}`).value;
+      const vid = extractVideoId(inputVal);
+
+      if (vid) {
+        screenConfigs[ch].stationId = 'custom';
+        screenConfigs[ch].videoId = vid;
+        document.getElementById(`select-${ch}`).value = 'custom';
+        loadVideoToScreen(ch, vid);
       } else {
-        // Toggle ON solo mode for selected slot
-        activeSoloSlot = slotIndex;
-        players.forEach((p, idx) => {
-          if (p && p.mute && p.unMute) {
-            if (idx === slotIndex) {
-              p.unMute();
+        alert('Invalid YouTube URL or Video ID. Please check and try again.');
+      }
+    }
+
+    // Reload Screen Stream
+    function reloadScreen(ch) {
+      if (players[ch] && typeof players[ch].loadVideoById === 'function') {
+        players[ch].loadVideoById(screenConfigs[ch].videoId);
+      }
+    }
+
+    // Toggle Audio Solo Mode
+    function toggleSolo(ch) {
+      const isSoloActive = document.getElementById(`solo-${ch}`).classList.contains('active');
+      const targetPage = ch <= 4 ? 1 : 2;
+      const startCh = targetPage === 1 ? 1 : 5;
+      const endCh = targetPage === 1 ? 4 : 8;
+
+      if (isSoloActive) {
+        // Mute this screen
+        if (players[ch] && playerReadyStatus[ch]) players[ch].mute();
+        updateSoloButtonUI(ch, false);
+      } else {
+        // Mute all other screens in this page & Unmute target screen
+        for (let i = startCh; i <= endCh; i++) {
+          if (players[i] && playerReadyStatus[i]) {
+            if (i === ch) {
+              players[i].unMute();
+              updateSoloButtonUI(i, true);
             } else {
-              p.mute();
+              players[i].mute();
+              updateSoloButtonUI(i, false);
             }
           }
-        });
-      }
-      updateSoloButtonStyles();
-    }
-
-    function updateSoloButtonStyles() {
-      for (let i = 0; i < 4; i++) {
-        const cardEl = document.getElementById(`screen-slot-${i}`);
-        const btnEl = document.getElementById(`solo-btn-${i}`);
-        
-        if (activeSoloSlot === i) {
-          cardEl.classList.add("card-audio-active");
-          btnEl.className = "px-2 py-0.5 rounded bg-emerald-600 text-white border border-emerald-400 text-[11px] font-sans transition-colors flex items-center gap-1 font-semibold";
-          btnEl.innerHTML = `<i class="fa-solid fa-volume-high text-white"></i><span class="hidden sm:inline">SOLO ON</span>`;
-        } else {
-          cardEl.classList.remove("card-audio-active");
-          btnEl.className = "px-2 py-0.5 rounded bg-slate-800 hover:bg-emerald-600/80 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-sans transition-colors flex items-center gap-1";
-          btnEl.innerHTML = `<i class="fa-solid fa-volume-xmark text-slate-400"></i><span class="hidden sm:inline">Solo</span>`;
         }
       }
     }
 
-    /* ===================================================================
-       6. PAGE SWITCHING & LAYOUT MANAGEMENT
-       =================================================================== */
-    function switchPage(pageNumber) {
-      if (currentPage === pageNumber) return;
-      currentPage = pageNumber;
-      activeSoloSlot = null; // Reset audio solo on page switch
-      
-      saveState();
-      updatePageNavUI();
-      initAllPlayers();
-      updateSoloButtonStyles();
-    }
-
-    function updatePageNavUI() {
-      const btn1 = document.getElementById("btn-page-1");
-      const btn2 = document.getElementById("btn-page-2");
-
-      if (currentPage === 1) {
-        btn1.className = "px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-2 bg-blue-600 text-white shadow-md";
-        btn2.className = "px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800";
+    // Update Solo Button Visual State
+    function updateSoloButtonUI(ch, active) {
+      const btn = document.getElementById(`solo-${ch}`);
+      const card = document.getElementById(`card-${ch}`);
+      if (active) {
+        btn.classList.add('active');
+        card.classList.add('solo-active');
       } else {
-        btn2.className = "px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-2 bg-blue-600 text-white shadow-md";
-        btn1.className = "px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800";
-      }
-
-      // Update slot badge labels
-      for (let i = 0; i < 4; i++) {
-        const badge = document.getElementById(`badge-${i}`);
-        const chNum = currentPage === 1 ? (i + 1) : (i + 5);
-        badge.innerText = `CH${chNum}`;
+        btn.classList.remove('active');
+        card.classList.remove('solo-active');
       }
     }
 
-    function setLayout(layoutType) {
-      currentLayout = layoutType;
-      const container = document.getElementById("grid-container");
-      const btnGrid = document.getElementById("layout-grid-btn");
-      const btnFocus = document.getElementById("layout-focus-btn");
-
-      if (layoutType === 'focus') {
-        container.className = "grid-focus transition-all duration-300";
-        btnFocus.className = "px-2.5 py-1 rounded text-xs text-blue-400 bg-blue-500/20 font-mono font-bold";
-        btnGrid.className = "px-2.5 py-1 rounded text-xs text-slate-400 hover:text-white font-mono";
-      } else {
-        container.className = "grid-2x2 transition-all duration-300";
-        btnGrid.className = "px-2.5 py-1 rounded text-xs text-blue-400 bg-blue-500/20 font-mono font-bold";
-        btnFocus.className = "px-2.5 py-1 rounded text-xs text-slate-400 hover:text-white font-mono";
-      }
-      saveState();
-    }
-
-    /* ===================================================================
-       7. PRESETS DROPDOWN & MANUAL CUSTOM URL CONFIG
-       =================================================================== */
-    function populatePresetDropdowns() {
-      for (let slot = 0; slot < 4; slot++) {
-        const selectEl = document.getElementById(`preset-select-${slot}`);
-        selectEl.innerHTML = "";
-
-        MASTER_STATIONS.forEach(station => {
-          const opt = document.createElement("option");
-          opt.value = station.id;
-          opt.textContent = station.name;
-          selectEl.appendChild(opt);
-        });
-
-        // Add Option for custom URL if set
-        const customOpt = document.createElement("option");
-        customOpt.value = "CUSTOM";
-        customOpt.textContent = "⚙ Custom ID / URL";
-        selectEl.appendChild(customOpt);
-      }
-    }
-
-    function updateUIElements() {
-      const activeChannels = getActiveChannels();
-      for (let slot = 0; slot < 4; slot++) {
-        const selectEl = document.getElementById(`preset-select-${slot}`);
-        const currentId = activeChannels[slot];
-
-        // Check if current ID exists in preset list
-        const exists = MASTER_STATIONS.some(s => s.id === currentId);
-        if (exists) {
-          selectEl.value = currentId;
-        } else {
-          selectEl.value = "CUSTOM";
+    // Mute All Screens on Active Page
+    function muteAllCurrentPage() {
+      const startCh = currentPage === 1 ? 1 : 5;
+      const endCh = currentPage === 1 ? 4 : 8;
+      for (let i = startCh; i <= endCh; i++) {
+        if (players[i] && playerReadyStatus[i]) {
+          players[i].mute();
+          updateSoloButtonUI(i, false);
         }
       }
-      updatePageNavUI();
-      setLayout(currentLayout);
     }
 
-    function onPresetChange(slotIndex, selectedValue) {
-      if (selectedValue === "CUSTOM") {
-        openConfigModal(slotIndex);
-        return;
-      }
+    // Switch Active Page (Page 1 vs Page 2)
+    function switchPage(pageNum) {
+      currentPage = pageNum;
+      document.getElementById('page-1').classList.toggle('active', pageNum === 1);
+      document.getElementById('page-2').classList.toggle('active', pageNum === 2);
 
-      const activeChannels = getActiveChannels();
-      activeChannels[slotIndex] = selectedValue;
-      saveState();
+      document.getElementById('btn-page1').classList.toggle('active', pageNum === 1);
+      document.getElementById('btn-page2').classList.toggle('active', pageNum === 2);
 
-      initPlayerSlot(slotIndex, selectedValue);
-    }
-
-    function reloadScreen(slotIndex) {
-      const activeChannels = getActiveChannels();
-      initPlayerSlot(slotIndex, activeChannels[slotIndex]);
-    }
-
-    /* ===================================================================
-       8. MODAL FOR CUSTOM VIDEO ID OR FULL URL
-       =================================================================== */
-    function openConfigModal(slotIndex) {
-      currentTargetModalSlot = slotIndex;
-      const activeChannels = getActiveChannels();
-      
-      document.getElementById("modal-slot-num").innerText = currentPage === 1 ? (slotIndex + 1) : (slotIndex + 5);
-      document.getElementById("modal-input-id").value = activeChannels[slotIndex];
-      document.getElementById("config-modal").classList.remove("hidden");
-    }
-
-    function closeConfigModal() {
-      document.getElementById("config-modal").classList.add("hidden");
-    }
-
-    function parseYouTubeVideoId(input) {
-      if (!input) return "";
-      input = input.trim();
-      
-      // Direct 11-char ID
-      if (input.length === 11 && !input.includes("/")) return input;
-
-      // Regular expressions for various YouTube URL forms
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|live\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-      const match = input.match(regExp);
-
-      return (match && match[2].length === 11) ? match[2] : input;
-    }
-
-    function saveConfigModal() {
-      const rawInput = document.getElementById("modal-input-id").value;
-      const extractedId = parseYouTubeVideoId(rawInput);
-
-      if (!extractedId) return;
-
-      const activeChannels = getActiveChannels();
-      activeChannels[currentTargetModalSlot] = extractedId;
-      saveState();
-
-      closeConfigModal();
-      initPlayerSlot(currentTargetModalSlot, extractedId);
-      updateUIElements();
-    }
-
-    /* ===================================================================
-       9. FULLSCREEN HELPERS & RESET
-       =================================================================== */
-    function toggleScreenFullscreen(slotIndex) {
-      const cardEl = document.getElementById(`screen-slot-${slotIndex}`);
-      if (!document.fullscreenElement) {
-        if (cardEl.requestFullscreen) cardEl.requestFullscreen();
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
+      // Mute the page being hidden
+      const inactiveStart = pageNum === 1 ? 5 : 1;
+      const inactiveEnd = pageNum === 1 ? 8 : 4;
+      for (let i = inactiveStart; i <= inactiveEnd; i++) {
+        if (players[i] && playerReadyStatus[i]) {
+          players[i].mute();
+          updateSoloButtonUI(i, false);
+        }
       }
     }
 
-    function toggleGlobalFullscreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-      }
-    }
+    // Set Layout Mode (Grid vs Focus)
+    function setLayout(mode) {
+      currentLayout = mode;
+      const gridP1 = document.getElementById('grid-p1');
+      const gridP2 = document.getElementById('grid-p2');
 
-    function resetDefaults() {
-      if (confirm("Reset all channel slots and layout to factory defaults?")) {
-        page1Channels = [...DEFAULT_PAGE_1];
-        page2Channels = [...DEFAULT_PAGE_2];
-        currentPage = 1;
-        currentLayout = '2x2';
-        activeSoloSlot = null;
-        
-        saveState();
-        initAllPlayers();
-        updateSoloButtonStyles();
-      }
-    }
+      const targetClass = mode === 'grid' ? 'grid-2x2' : 'grid-focus';
 
-    /* ===================================================================
-       10. INITIALIZATION ON WINDOW LOAD
-       =================================================================== */
-    window.onload = function() {
-      loadSavedState();
-      populatePresetDropdowns();
-      
-      // If YouTube API loaded before window.onload triggered
-      if (window.YT && window.YT.Player) {
-        isApiReady = true;
-        initAllPlayers();
-      }
-    };
+      gridP1.className = targetClass;
+      gridP2.className = targetClass;
+
+      document.getElementById('btn-grid').classList.toggle('active', mode === 'grid');
+      document.getElementById('btn-focus').classList.toggle('active', mode === 'focus');
+    }
   </script>
 </body>
 </html>
