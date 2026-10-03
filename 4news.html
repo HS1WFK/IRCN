@@ -69,6 +69,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 8px;
     }
 
     .channel-title {
@@ -78,6 +79,39 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    /* ปุ่ม Reload ตรงกลาง */
+    .reload-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      background-color: #2a2a2a;
+      color: #28a745;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid #444;
+      transition: background-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+
+    .reload-btn:hover {
+      background-color: #3a3a3a;
+      color: #34d058;
+    }
+
+    .reload-btn svg {
+      width: 13px;
+      height: 13px;
+      fill: currentColor;
+      transition: transform 0.3s ease;
+    }
+
+    .reload-btn:active svg {
+      transform: rotate(180deg);
     }
 
     .audio-toggle {
@@ -109,57 +143,97 @@
 <body>
 
   <div class="grid-container">
-    <!-- Channel 1: BBC News -->
+    <!-- Channel 1: Al Jazeera -->
     <div class="video-card">
       <div class="video-wrapper">
         <video id="video1" controls muted playsinline></video>
       </div>
       <div class="controls-panel">
         <span class="channel-title">Channel 1 (Al Jazeera)</span>
+        
+        <!-- ปุ่ม Reload ตรงกลาง -->
+        <button class="reload-btn" onclick="reloadVideo('video1')" title="Reload Stream">
+          <svg viewBox="0 0 16 16">
+            <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+            <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
+          </svg>
+          Reload
+        </button>
+
         <label class="audio-toggle">
-          <input type="checkbox" onchange="toggleAudio('video1', this)">
+          <input type="checkbox" id="mute1" onchange="toggleAudio('video1', this)">
           <span>Unmute</span>
         </label>
       </div>
     </div>
 
-    <!-- Channel 2: DW News -->
+    <!-- Channel 2: BBC News -->
     <div class="video-card">
       <div class="video-wrapper">
         <video id="video2" controls muted playsinline></video>
       </div>
       <div class="controls-panel">
         <span class="channel-title">Channel 2 (BBC News)</span>
+        
+        <!-- ปุ่ม Reload ตรงกลาง -->
+        <button class="reload-btn" onclick="reloadVideo('video2')" title="Reload Stream">
+          <svg viewBox="0 0 16 16">
+            <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+            <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
+          </svg>
+          Reload
+        </button>
+
         <label class="audio-toggle">
-          <input type="checkbox" onchange="toggleAudio('video2', this)">
+          <input type="checkbox" id="mute2" onchange="toggleAudio('video2', this)">
           <span>Unmute</span>
         </label>
       </div>
     </div>
 
-    <!-- Channel 3: (CNA) -->
+    <!-- Channel 3: CGTN -->
     <div class="video-card">
       <div class="video-wrapper">
         <video id="video3" controls muted playsinline></video>
       </div>
       <div class="controls-panel">
         <span class="channel-title">Channel 3 (CGTN)</span>
+        
+        <!-- ปุ่ม Reload ตรงกลาง -->
+        <button class="reload-btn" onclick="reloadVideo('video3')" title="Reload Stream">
+          <svg viewBox="0 0 16 16">
+            <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+            <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
+          </svg>
+          Reload
+        </button>
+
         <label class="audio-toggle">
-          <input type="checkbox" onchange="toggleAudio('video3', this)">
+          <input type="checkbox" id="mute3" onchange="toggleAudio('video3', this)">
           <span>Unmute</span>
         </label>
       </div>
     </div>
 
-    <!-- Channel 4: NHK World -->
+    <!-- Channel 4: CNA -->
     <div class="video-card">
       <div class="video-wrapper">
         <video id="video4" controls muted playsinline></video>
       </div>
       <div class="controls-panel">
         <span class="channel-title">Channel 4 (CNA)</span>
+        
+        <!-- ปุ่ม Reload ตรงกลาง -->
+        <button class="reload-btn" onclick="reloadVideo('video4')" title="Reload Stream">
+          <svg viewBox="0 0 16 16">
+            <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+            <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
+          </svg>
+          Reload
+        </button>
+
         <label class="audio-toggle">
-          <input type="checkbox" onchange="toggleAudio('video4', this)">
+          <input type="checkbox" id="mute4" onchange="toggleAudio('video4', this)">
           <span>Unmute</span>
         </label>
       </div>
@@ -174,15 +248,24 @@
       { id: 'video4', url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8' }
     ];
 
+    // เก็บอ้างอิง HLS Instance ของแต่ละวิดีโอ
+    const hlsInstances = {};
+
     function initVideo(id, url) {
       const video = document.getElementById(id);
-      video.muted = true; // ปิดเสียงเป็นค่าเริ่มต้น
+      
+      // ทำลาย HLS Instance เดิมหากมีอยู่
+      if (hlsInstances[id]) {
+        hlsInstances[id].destroy();
+        delete hlsInstances[id];
+      }
 
       if (Hls.isSupported()) {
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: true
         });
+        hlsInstances[id] = hls;
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, function () {
@@ -201,6 +284,13 @@
       }
     }
 
+    function reloadVideo(videoId) {
+      const stream = streams.find(s => s.id === videoId);
+      if (stream) {
+        initVideo(stream.id, stream.url);
+      }
+    }
+
     function toggleAudio(videoId, checkbox) {
       const video = document.getElementById(videoId);
       video.muted = !checkbox.checked;
@@ -208,7 +298,11 @@
 
     // เริ่มต้นโหลดสตรีมเมื่อเปิดหน้าเว็บ
     window.addEventListener('DOMContentLoaded', () => {
-      streams.forEach(stream => initVideo(stream.id, stream.url));
+      streams.forEach(stream => {
+        const video = document.getElementById(stream.id);
+        video.muted = true; // ปิดเสียงเป็นค่าเริ่มต้น
+        initVideo(stream.id, stream.url);
+      });
     });
   </script>
 </body>
