@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Stream News - V1.0.6</title>
+  <title>Live Stream News - V1.0.7</title>
   <!-- HLS.js Library for playing .m3u8 streams -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -271,7 +271,7 @@
       </div>
       <div class="controls-panel">
         <div class="panel-left">
-          <span class="version-tag">ver. 1.0.6</span>
+          <span class="version-tag">ver. 1.0.7</span>
         </div>
         <div class="panel-right">
           <span class="channel-title">CH4: CNA English</span>
@@ -321,7 +321,7 @@
       </div>
     </div>
 
-    <!-- CH6: France 24 English -->
+    <!-- CH6: NHK English -->
     <div class="video-card">
       <div class="video-wrapper">
         <video id="video6" controls muted playsinline></video>
@@ -329,7 +329,7 @@
       <div class="controls-panel">
         <div class="panel-left"></div>
         <div class="panel-right">
-          <span class="channel-title">CH6: France 24 English</span>
+          <span class="channel-title">CH6: NHK English</span>
           <button class="reload-btn" onclick="reloadVideo('video6')" title="Reload Stream">
             <svg viewBox="0 0 16 16">
               <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
@@ -345,7 +345,7 @@
       </div>
     </div>
 
-    <!-- CH7: NHK English -->
+    <!-- CH7: Thai PBS -->
     <div class="video-card">
       <div class="video-wrapper">
         <video id="video7" controls muted playsinline></video>
@@ -353,7 +353,7 @@
       <div class="controls-panel">
         <div class="panel-left"></div>
         <div class="panel-right">
-          <span class="channel-title">CH7: NHK English</span>
+          <span class="channel-title">CH7: Thai PBS</span>
           <button class="reload-btn" onclick="reloadVideo('video7')" title="Reload Stream">
             <svg viewBox="0 0 16 16">
               <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
@@ -376,7 +376,7 @@
       </div>
       <div class="controls-panel">
         <div class="panel-left">
-          <span class="version-tag">ver. 1.0.6</span>
+          <span class="version-tag">ver. 1.0.7</span>
         </div>
         <div class="panel-right">
           <span class="channel-title">CH8: TPTV</span>
@@ -407,9 +407,16 @@
       
       // Page 2
       { id: 'video5', page: 2, url: 'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8' },
-      { id: 'video6', page: 2, url: 'https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8' },
-      { id: 'video7', page: 2, url: 'https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8' },
+      { id: 'video6', page: 2, url: 'https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8' },
+      { id: 'video7', page: 2, url: 'https://thaipbs-mcx0wm.cdn.byteark.com/vtt-live/variant_1080p.m3u8' },
       { id: 'video8', page: 2, url: 'https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org' }
+    ];
+
+    // คลังข้อมูล URL สตรีมที่ยังไม่ได้ใช้งาน (สำรองไว้ใช้ในอนาคต)
+    const unusedBackupStreams = [
+      { name: 'France 24 English', url: 'https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8' },
+      { name: 'ThaiPBS ByteArk Backup 1', url: 'https://thaipbs-live.cdn.byteark.com/live/playlist_1080p.m3u8' },
+      { name: 'ThaiPBS Official Backup 2', url: 'https://live-cdn.thaipbs.or.th/live/thaipbs/hd/playlist.m3u8' }
     ];
 
     const hlsInstances = {};
