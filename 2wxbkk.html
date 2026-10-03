@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bangkok BMA Radar Live Monitor - ระบบติดตามเรดาร์สภาพอากาศ กทม.</title>
+    <title>Bangkok BMA Radar Live Monitor - ระบบติดตามเรดาร์ กทม.</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -72,15 +72,19 @@
             overflow: hidden;
         }
 
-        /* iOS Direct Image Mode */
-        .ios-direct-img {
+        /* iOS Smart Launchpad UI */
+        .ios-launchpad {
             display: none;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background-color: #0f172a;
-            padding: 0.5rem;
-            z-index: 10;
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(145deg, #0f172a 0%, #0b0f17 100%);
+            z-index: 50;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
         }
 
         .radar-radio input[type="radio"] { display: none; }
@@ -114,20 +118,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        /* Error Fallback Box */
-        .error-fallback {
-            display: none;
-            position: absolute;
-            inset: 0;
-            background-color: #0f172a;
-            z-index: 20;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 1.5rem;
-        }
     </style>
 </head>
 <body class="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden">
@@ -142,16 +132,16 @@
                 <h1 class="text-xs md:text-sm font-semibold text-slate-100 flex items-center gap-2">
                     <span class="truncate max-w-[150px] sm:max-w-none">ศูนย์เรดาร์ กทม.</span>
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] md:text-xs font-mono bg-slate-800 text-slate-400 border border-slate-700">
-                        v.1.0.5
+                        v.1.0.6
                     </span>
                 </h1>
-                <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">โหมดหน้าจอ: กำลังตรวจสอบระบบ...</p>
+                <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">กำลังตรวจสอบระบบปฏิบัติการ...</p>
             </div>
         </div>
 
         <div class="flex items-center gap-2 md:gap-3">
             <!-- Zoom Controls (Desktop Only) -->
-            <div id="desktop-zoom-controls" class="hidden md:flex items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 text-xs mr-2 transition-opacity">
+            <div id="desktop-zoom-controls" class="hidden md:flex items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 text-xs mr-2">
                 <button onclick="adjustScale(-0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 transition-colors"><i class="fa-solid fa-minus"></i></button>
                 <button onclick="resetScale()" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 font-mono text-[11px] transition-colors">Reset</button>
                 <button onclick="adjustScale(0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 transition-colors"><i class="fa-solid fa-plus"></i></button>
@@ -179,8 +169,8 @@
     <!-- Main Content -->
     <main class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 p-2 bg-slate-950 overflow-hidden relative">
         
-        <!-- LEFT COLUMN -->
-        <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
+        <!-- ================= LEFT COLUMN ================= -->
+        <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative shadow-lg">
             <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
                 <div class="flex items-center gap-2 text-sky-400 truncate">
                     <i class="fa-solid fa-circle-play"></i>
@@ -196,45 +186,42 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-2 shrink-0">
-                    <a id="link-left" href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" rel="noopener" class="text-slate-400 hover:text-sky-300 text-[11px] flex items-center gap-1">
-                        <span>เปิดเว็บตรง</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                    </a>
-                </div>
             </div>
 
             <div id="box-left" class="radar-box flex-1">
-                <div id="loader-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity duration-300">
-                    <div class="spinner"></div>
-                    <p class="text-xs text-slate-400">กำลังดึงข้อมูล...</p>
+                <!-- iOS Launchpad UI -->
+                <div id="ios-launchpad-left" class="ios-launchpad">
+                    <div class="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center mb-4 border border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.3)]">
+                        <i class="fa-solid fa-cloud-showers-heavy text-sky-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-slate-100 font-medium text-sm mb-2">เรดาร์ภาพเคลื่อนไหว</h3>
+                    <p class="text-slate-400 text-[11px] mb-6 max-w-[250px] leading-relaxed">ระบบปฏิบัติการ iOS เปิดใช้งานโหมด Launchpad เพื่อการแสดงผลที่สมบูรณ์ที่สุด</p>
+                    <a id="btn-launch-left" href="#" target="_blank" class="w-48 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-sky-900/40 flex items-center justify-center gap-2 transition-transform active:scale-95">
+                        <i class="fa-solid fa-satellite-dish"></i>
+                        <span>เปิดเรดาร์ (แท็บใหม่)</span>
+                    </a>
                 </div>
 
-                <!-- 1. Desktop Iframe Module -->
+                <div id="loader-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity duration-300">
+                    <div class="spinner"></div>
+                    <p class="text-xs text-slate-400">กำลังประมวลผลข้อมูล...</p>
+                </div>
+
+                <!-- Desktop Iframe -->
                 <div class="scaler-wrapper" id="scaler-wrapper-left">
                     <div id="scaler-left" class="iframe-crop-left">
                         <iframe id="iframe-left" src="" class="radar-iframe" scrolling="no" onload="onIframeLoaded('loader-left')"></iframe>
                     </div>
                 </div>
-
-                <!-- 2. iOS Direct Image Module -->
-                <img id="img-left" class="ios-direct-img" alt="BMA Radar Left" onload="onImageLoaded('loader-left')" onerror="onImageError('error-left', 'loader-left')">
-
-                <!-- 3. Error Fallback (If Direct Image Fails) -->
-                <div id="error-left" class="error-fallback">
-                    <i class="fa-solid fa-link-slash text-amber-500 text-3xl mb-3"></i>
-                    <p class="text-slate-300 text-xs mb-3">ไม่สามารถเชื่อมต่อไฟล์รูปภาพโดยตรงได้</p>
-                    <a id="error-link-left" href="#" target="_blank" class="px-4 py-2 bg-sky-600 text-white rounded text-xs font-medium">เปิดหน้าเว็บต้นฉบับ</a>
-                </div>
             </div>
         </section>
 
-        <!-- RIGHT COLUMN -->
-        <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
+        <!-- ================= RIGHT COLUMN ================= -->
+        <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative shadow-lg">
             <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
                 <div class="flex items-center gap-2 text-indigo-400 truncate">
                     <i class="fa-solid fa-crosshairs"></i>
-                    <span class="text-slate-200 font-semibold truncate">High Res</span>
+                    <span class="text-slate-200 font-semibold truncate">High Res Fit</span>
                     <div class="flex items-center gap-1 ml-2">
                         <div class="radar-radio">
                             <input type="radio" id="radio-right-bkk" name="radar-right" value="bkk" checked onchange="changeRightRadar('bkk')">
@@ -246,35 +233,32 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-2 shrink-0">
-                    <a id="link-right" href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" rel="noopener" class="text-slate-400 hover:text-indigo-300 text-[11px] flex items-center gap-1">
-                        <span>เปิดเว็บตรง</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                    </a>
-                </div>
             </div>
 
             <div id="box-right" class="radar-box flex-1">
-                <div id="loader-right" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity duration-300">
-                    <div class="spinner"></div>
-                    <p class="text-xs text-slate-400">กำลังดึงข้อมูล...</p>
+                <!-- iOS Launchpad UI -->
+                <div id="ios-launchpad-right" class="ios-launchpad">
+                    <div class="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4 border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.3)]">
+                        <i class="fa-solid fa-map-location-dot text-indigo-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-slate-100 font-medium text-sm mb-2">เรดาร์ความละเอียดสูง</h3>
+                    <p class="text-slate-400 text-[11px] mb-6 max-w-[250px] leading-relaxed">ระบบปฏิบัติการ iOS เปิดใช้งานโหมด Launchpad เพื่อการแสดงผลที่สมบูรณ์ที่สุด</p>
+                    <a id="btn-launch-right" href="#" target="_blank" class="w-48 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-900/40 flex items-center justify-center gap-2 transition-transform active:scale-95">
+                        <i class="fa-solid fa-satellite-dish"></i>
+                        <span>เปิดเรดาร์ (แท็บใหม่)</span>
+                    </a>
                 </div>
 
-                <!-- 1. Desktop Iframe Module -->
+                <div id="loader-right" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity duration-300">
+                    <div class="spinner"></div>
+                    <p class="text-xs text-slate-400">กำลังประมวลผลข้อมูล...</p>
+                </div>
+
+                <!-- Desktop Iframe -->
                 <div class="scaler-wrapper" id="scaler-wrapper-right">
                     <div id="scaler-right" class="iframe-crop-right">
                         <iframe id="iframe-right" src="" class="radar-iframe" scrolling="no" onload="onIframeLoaded('loader-right')"></iframe>
                     </div>
-                </div>
-
-                <!-- 2. iOS Direct Image Module -->
-                <img id="img-right" class="ios-direct-img" alt="BMA Radar Right" onload="onImageLoaded('loader-right')" onerror="onImageError('error-right', 'loader-right')">
-
-                <!-- 3. Error Fallback (If Direct Image Fails) -->
-                <div id="error-right" class="error-fallback">
-                    <i class="fa-solid fa-link-slash text-amber-500 text-3xl mb-3"></i>
-                    <p class="text-slate-300 text-xs mb-3">ไม่สามารถเชื่อมต่อไฟล์รูปภาพโดยตรงได้</p>
-                    <a id="error-link-right" href="#" target="_blank" class="px-4 py-2 bg-indigo-600 text-white rounded text-xs font-medium">เปิดหน้าเว็บต้นฉบับ</a>
                 </div>
             </div>
         </section>
@@ -285,9 +269,9 @@
     <footer class="h-7 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
         <div class="flex items-center gap-2">
             <i class="fa-solid fa-arrows-rotate text-sky-400 text-[10px]"></i>
-            <span>รีเฟรชทุก 3 นาที</span>
+            <span>รีเฟรชอัตโนมัติ 3 นาที</span>
             <span class="text-slate-600 hidden sm:inline">|</span>
-            <span class="hidden sm:inline">อัปเดตล่าสุด: <span id="last-updated-time" class="text-slate-300 font-mono">-</span></span>
+            <span class="hidden sm:inline">อัปเดต: <span id="last-updated-time" class="text-slate-300 font-mono">-</span></span>
         </div>
         <div class="text-slate-400 flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
@@ -302,7 +286,6 @@
         let rightScaleUserOffset = 0;
         let isIOS = false;
 
-        // โหมด Desktop (Webpage URLs)
         const iframeSources = {
             left: {
                 nk: "https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx",
@@ -314,77 +297,53 @@
             }
         };
 
-        // โหมด iOS (Direct Image URLs)
-        const imageSources = {
-            left: {
-                nk: "https://weather.bangkok.go.th/Radar/pics/radar.gif",
-                nj: "https://weather.bangkok.go.th/Radar/pics/radar_nj.gif"
-            },
-            right: {
-                bkk: "https://weather.bangkok.go.th/Radar/pics/radarnk.jpg",
-                svp: "https://weather.tmd.go.th/svp240.png"
-            }
-        };
-
         let currentLeftType = 'nk';
         let currentRightType = 'bkk';
 
-        /**
-         * System Detection Logic
-         */
         function detectIOS() {
             const isIOSDevice = [
                 'iPad Simulator', 'iPhone Simulator', 'iPod Simulator', 'iPad', 'iPhone', 'iPod'
             ].includes(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
             
-            // อัปเดตสถานะให้ผู้ใช้เห็น
             const statusText = document.getElementById('os-status-text');
             if(statusText) {
-                statusText.textContent = isIOSDevice ? "โหมดการทำงาน: iOS Direct Image" : "โหมดการทำงาน: Desktop Iframe Scale";
+                statusText.textContent = isIOSDevice ? "โหมด: iOS Smart Launchpad" : "โหมด: Desktop Iframe Scale";
             }
             return isIOSDevice;
         }
 
-        /**
-         * Core Loading Execution (Dual Module)
-         */
         function executeLoad() {
             const timestamp = new Date().getTime();
-            
-            // อัปเดตลิงก์ภายนอก
-            document.getElementById('link-left').href = iframeSources.left[currentLeftType];
-            document.getElementById('link-right').href = iframeSources.right[currentRightType];
-            document.getElementById('error-link-left').href = iframeSources.left[currentLeftType];
-            document.getElementById('error-link-right').href = iframeSources.right[currentRightType];
-
-            // Reset Errors
-            document.getElementById('error-left').style.display = 'none';
-            document.getElementById('error-right').style.display = 'none';
+            const leftUrl = iframeSources.left[currentLeftType];
+            const rightUrl = iframeSources.right[currentRightType];
 
             if (isIOS) {
-                // [Module 2] - iOS Direct Image 
+                // iOS: ซ่อน Iframe เปิดหน้า Launchpad UI
                 document.getElementById('scaler-wrapper-left').style.display = 'none';
                 document.getElementById('scaler-wrapper-right').style.display = 'none';
                 document.getElementById('desktop-zoom-controls').style.display = 'none';
-
-                const imgLeft = document.getElementById('img-left');
-                const imgRight = document.getElementById('img-right');
                 
-                imgLeft.style.display = 'block';
-                imgRight.style.display = 'block';
+                // ซ่อน Loader ทันทีเพราะไม่ต้องรอโหลด Iframe
+                hideLoader('loader-left');
+                hideLoader('loader-right');
 
-                imgLeft.src = `${imageSources.left[currentLeftType]}?t=${timestamp}`;
-                imgRight.src = `${imageSources.right[currentRightType]}?t=${timestamp}`;
+                // แสดง Launchpad
+                document.getElementById('ios-launchpad-left').style.display = 'flex';
+                document.getElementById('ios-launchpad-right').style.display = 'flex';
+
+                // อัปเดตลิงก์ปุ่ม
+                document.getElementById('btn-launch-left').href = leftUrl;
+                document.getElementById('btn-launch-right').href = rightUrl;
                 
             } else {
-                // [Module 1] - Desktop Iframe
-                document.getElementById('iframe-left').src = `${iframeSources.left[currentLeftType]}?t=${timestamp}`;
-                document.getElementById('iframe-right').src = `${iframeSources.right[currentRightType]}?t=${timestamp}`;
+                // Desktop: โหลด Iframe ตามปกติ
+                document.getElementById('iframe-left').src = `${leftUrl}?t=${timestamp}`;
+                document.getElementById('iframe-right').src = `${rightUrl}?t=${timestamp}`;
                 applyDynamicTransforms();
             }
         }
 
-        // --- Iframe Transformation Logic (Desktop Only) ---
+        // --- Iframe Transform Engine (Desktop Only) ---
         function applyDynamicTransforms() {
             if (isIOS) return; 
 
@@ -395,6 +354,7 @@
 
             if (!boxLeft || !boxRight || !scalerLeft || !scalerRight) return;
 
+            // Left pane sizing
             scalerLeft.style.width = '1000px';
             scalerLeft.style.height = '900px';
             const leftW = boxLeft.clientWidth;
@@ -402,6 +362,7 @@
             let leftScale = Math.min(leftW / 920, leftH / 850) * 1.15;
             scalerLeft.style.transform = `scale(${leftScale}) translate(0px, -90px)`;
 
+            // Right pane sizing
             const rightW = boxRight.clientWidth;
             const rightH = boxRight.clientHeight;
             let baseRightScale, rightYOffset;
@@ -425,21 +386,20 @@
         function adjustScale(delta) { rightScaleUserOffset += delta; applyDynamicTransforms(); }
         function resetScale() { rightScaleUserOffset = 0; applyDynamicTransforms(); }
 
-        // --- Data Control Handlers ---
+        // --- Event Handlers ---
         function changeLeftRadar(type) {
             currentLeftType = type;
-            showLoader('loader-left');
+            if(!isIOS) showLoader('loader-left');
             executeLoad();
         }
 
         function changeRightRadar(type) {
             currentRightType = type;
             rightScaleUserOffset = 0;
-            showLoader('loader-right');
+            if(!isIOS) showLoader('loader-right');
             executeLoad();
         }
 
-        // --- Timer & Refresh ---
         function updateTimerUI() {
             const m = Math.floor(countdown / 60);
             const s = countdown % 60;
@@ -454,9 +414,11 @@
                 updateTimerUI();
                 if (countdown <= 0) {
                     countdown = REFRESH_SECONDS;
-                    showLoader('loader-left');
-                    showLoader('loader-right');
-                    executeLoad();
+                    if(!isIOS) {
+                        showLoader('loader-left');
+                        showLoader('loader-right');
+                        executeLoad();
+                    }
                     updateTimestamp();
                 }
             }, 1000);
@@ -466,9 +428,12 @@
             const icon = document.getElementById('refresh-icon');
             if (icon) icon.classList.add('fa-spin');
             countdown = REFRESH_SECONDS;
-            showLoader('loader-left');
-            showLoader('loader-right');
-            executeLoad();
+            
+            if(!isIOS) {
+                showLoader('loader-left');
+                showLoader('loader-right');
+                executeLoad();
+            }
             updateTimestamp();
             setTimeout(() => { if (icon) icon.classList.remove('fa-spin'); }, 800);
         }
@@ -477,7 +442,6 @@
             document.getElementById('last-updated-time').textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 
-        // --- Loader Management ---
         function hideLoader(loaderId) {
             const loader = document.getElementById(loaderId);
             if (loader) {
@@ -485,6 +449,7 @@
                 setTimeout(() => loader.style.display = 'none', 300);
             }
         }
+
         function showLoader(loaderId) {
             const loader = document.getElementById(loaderId);
             if (loader) {
@@ -492,19 +457,13 @@
                 loader.style.opacity = '1';
             }
         }
-        function onIframeLoaded(loaderId) { hideLoader(loaderId); applyDynamicTransforms(); }
-        function onImageLoaded(loaderId) { hideLoader(loaderId); }
-        function onImageError(errorId, loaderId) {
+
+        function onIframeLoaded(loaderId) {
             hideLoader(loaderId);
-            const errBox = document.getElementById(errorId);
-            if(errBox) errBox.style.display = 'flex';
-            // ซ่อนรูปภาพที่โหลดไม่ขึ้นเพื่อไม่ให้แสดงไอคอนรูปแตก
-            const imgId = errorId.replace('error-', 'img-');
-            const imgTag = document.getElementById(imgId);
-            if(imgTag) imgTag.style.display = 'none';
+            applyDynamicTransforms();
         }
 
-        // --- Initialization ---
+        // --- Init ---
         window.addEventListener('DOMContentLoaded', () => {
             isIOS = detectIOS();
             updateTimestamp();
@@ -512,11 +471,13 @@
             startCountdown();
             executeLoad();
 
-            // Fallback hide loaders if something hangs
-            setTimeout(() => {
-                hideLoader('loader-left');
-                hideLoader('loader-right');
-            }, 5000);
+            // Safety timeout for loaders
+            if(!isIOS) {
+                setTimeout(() => {
+                    hideLoader('loader-left');
+                    hideLoader('loader-right');
+                }, 5000);
+            }
         });
 
         window.addEventListener('resize', applyDynamicTransforms);
