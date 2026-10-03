@@ -20,6 +20,7 @@
 
         html, body {
             height: 100vh;
+            /* iOS Safari fix for 100vh */
             height: -webkit-fill-available;
             width: 100vw;
             margin: 0;
@@ -51,22 +52,28 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            -webkit-overflow-scrolling: touch;
         }
 
-        /* iOS Safari Scaling Optimization Fixes */
+        /* Container for scaling */
         .iframe-crop-left, .iframe-crop-right {
             position: absolute;
             transform-origin: center center;
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s, height 0.2s;
             pointer-events: auto;
-            -webkit-transform-style: preserve-3d;
-            -webkit-backface-visibility: hidden;
-            will-change: transform;
+            /* Force Hardware Acceleration to fix iOS blank render */
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            opacity: 0.99; 
         }
 
+        /* THE FIX FOR iOS IFRAME BUG */
         .radar-iframe {
-            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            /* iOS Safari Workaround: Forces iframe to respect container width */
+            width: 1px;
+            min-width: 100%;
             height: 100%;
             border: none;
             background-color: #0f172a;
@@ -130,29 +137,37 @@
             </div>
             <div>
                 <h1 class="text-xs md:text-sm font-semibold text-slate-100 flex items-center gap-2">
-                    <span class="truncate max-w-[180px] sm:max-w-none">ศูนย์เรดาร์สภาพอากาศ กทม.</span>
+                    <span class="truncate max-w-[150px] sm:max-w-none">ศูนย์เรดาร์ กทม.</span>
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-live"></span>
-                        iOS Ready
+                        Auto Fit
                     </span>
                 </h1>
-                <p class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ปรับสเกลภาพเรดาร์ Auto Fit รองรับอุปกรณ์เคลื่อนที่</p>
+                <p class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ระบบติดตามสภาพอากาศแบบเรียลไทม์ (รองรับมือถือ)</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-2 md:gap-4">
-            <div class="flex items-center gap-2 bg-slate-950/80 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg border border-slate-800">
+        <div class="flex items-center gap-2 md:gap-3">
+            
+            <!-- Zoom Controls (Restored) -->
+            <div class="hidden md:flex items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 text-xs mr-2">
+                <button onclick="adjustScale(-0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 transition-colors"><i class="fa-solid fa-minus"></i></button>
+                <button onclick="resetScale()" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 font-mono text-[11px] transition-colors">Reset Fit</button>
+                <button onclick="adjustScale(0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 transition-colors"><i class="fa-solid fa-plus"></i></button>
+            </div>
+
+            <div class="flex items-center gap-2 bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
                 <i class="fa-regular fa-clock text-sky-400 text-xs"></i>
                 <div class="text-[11px] md:text-xs font-mono flex items-center gap-1.5">
                     <span id="countdown-timer" class="text-sky-400 font-bold">03:00</span>
                 </div>
-                <div class="w-8 md:w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden ml-0.5">
+                <div class="w-8 md:w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden ml-1">
                     <div id="progress-bar" class="h-full bg-sky-400 transition-all duration-1000 ease-linear w-full"></div>
                 </div>
             </div>
 
             <button id="refresh-btn" onclick="manualRefresh()" 
-                class="flex items-center gap-1.5 px-2.5 py-1.5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm focus:outline-none">
+                class="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm focus:outline-none">
                 <i id="refresh-icon" class="fa-solid fa-arrows-rotate text-xs"></i>
                 <span class="hidden sm:inline">รีเฟรช</span>
             </button>
@@ -169,7 +184,7 @@
                     <i class="fa-solid fa-circle-play"></i>
                     <span class="text-slate-200 font-semibold truncate">ภาพเคลื่อนไหว</span>
                     
-                    <div class="flex items-center gap-1 ml-1">
+                    <div class="flex items-center gap-1 ml-2">
                         <div class="radar-radio">
                             <input type="radio" id="radio-left-nk" name="radar-left" value="nk" checked onchange="changeLeftRadar('nk')">
                             <label for="radio-left-nk">NK</label>
@@ -184,7 +199,7 @@
                 <div class="flex items-center gap-2 shrink-0">
                     <a id="link-left" href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" rel="noopener" 
                        class="text-slate-400 hover:text-sky-300 text-[11px] flex items-center gap-1 transition-colors">
-                        <span>ต้นทาง</span>
+                        <span>เปิดเว็บตรง</span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                     </a>
                 </div>
@@ -209,15 +224,6 @@
                         </iframe>
                     </div>
                 </div>
-
-                <div id="error-left" class="hidden absolute inset-0 bg-slate-900/95 z-20 p-4 flex flex-col items-center justify-center text-center">
-                    <i class="fa-solid fa-circle-exclamation text-amber-400 text-2xl mb-2"></i>
-                    <p class="text-xs text-slate-300 mb-3">ระบบรักษาความปลอดภัย iOS บล็อกการแสดงผลภาพ</p>
-                    <a id="error-btn-left" href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" 
-                       class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs">
-                        เปิดหน้าเว็บตรง
-                    </a>
-                </div>
             </div>
         </section>
 
@@ -226,9 +232,9 @@
             <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
                 <div class="flex items-center gap-2 text-indigo-400 truncate">
                     <i class="fa-solid fa-crosshairs"></i>
-                    <span class="text-slate-200 font-semibold truncate">High Res</span>
+                    <span class="text-slate-200 font-semibold truncate">High Res - Fit</span>
                     
-                    <div class="flex items-center gap-1 ml-1">
+                    <div class="flex items-center gap-1 ml-2">
                         <div class="radar-radio">
                             <input type="radio" id="radio-right-bkk" name="radar-right" value="bkk" checked onchange="changeRightRadar('bkk')">
                             <label for="radio-right-bkk">BKK</label>
@@ -243,7 +249,7 @@
                 <div class="flex items-center gap-2 shrink-0">
                     <a id="link-right" href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" rel="noopener" 
                        class="text-slate-400 hover:text-indigo-300 text-[11px] flex items-center gap-1 transition-colors">
-                        <span>ต้นทาง</span>
+                        <span>เปิดเว็บตรง</span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                     </a>
                 </div>
@@ -268,38 +274,30 @@
                         </iframe>
                     </div>
                 </div>
-
-                <div id="error-right" class="hidden absolute inset-0 bg-slate-900/95 z-20 p-4 flex flex-col items-center justify-center text-center">
-                    <i class="fa-solid fa-circle-exclamation text-amber-400 text-2xl mb-2"></i>
-                    <p class="text-xs text-slate-300 mb-3">ระบบรักษาความปลอดภัย iOS บล็อกการแสดงผลภาพ</p>
-                    <a id="error-btn-right" href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" 
-                       class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs">
-                        เปิดหน้าเว็บตรง
-                    </a>
-                </div>
             </div>
         </section>
 
     </main>
 
     <!-- Footer Status Bar -->
-    <footer class="h-7 bg-slate-900 border-t border-slate-800 px-3 flex items-center justify-between text-[10px] md:text-[11px] text-slate-400 shrink-0">
-        <div class="flex items-center gap-1.5">
+    <footer class="h-7 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
+        <div class="flex items-center gap-2">
             <i class="fa-solid fa-arrows-rotate text-sky-400 text-[10px]"></i>
-            <span>รีเฟรชทุก 3 นาที</span>
-            <span class="text-slate-600">|</span>
-            <span>อัปเดต: <span id="last-updated-time" class="text-slate-300 font-mono">-</span></span>
+            <span>รีเฟรชข้อมูลอัตโนมัติทุก 3 นาที</span>
+            <span class="text-slate-600 hidden sm:inline">|</span>
+            <span class="hidden sm:inline">อัปเดตล่าสุด: <span id="last-updated-time" class="text-slate-300 font-mono">-</span></span>
         </div>
-        <div class="text-slate-400 flex items-center gap-1">
+        <div class="text-slate-400 flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
-            <span>กทม. & กรมอุตุนิยมวิทยา</span>
+            <span>สำนักการระบายน้ำ กทม.</span>
         </div>
     </footer>
 
     <script>
-        const REFRESH_SECONDS = 180; // 3 minutes
+        const REFRESH_SECONDS = 180;
         let countdown = REFRESH_SECONDS;
         let timerId = null;
+        let rightScaleUserOffset = 0; // Restored user zoom state
 
         const radarSources = {
             left: {
@@ -316,7 +314,7 @@
         let currentRightType = 'bkk';
 
         /**
-         * Dynamic scaling engine optimized for Mobile Safari & iPhone Screen Dimensions
+         * Dynamic scaling engine calculating screen dimensions
          */
         function applyDynamicTransforms() {
             const boxLeft = document.getElementById('box-left');
@@ -329,16 +327,17 @@
             const isMobile = window.innerWidth < 768;
 
             // --- Left Pane Scaling ---
+            // Set static pixel container size so iOS knows exactly how to render before scaling
             scalerLeft.style.width = '1000px';
             scalerLeft.style.height = '900px';
 
             const leftW = boxLeft.clientWidth;
             const leftH = boxLeft.clientHeight;
             
-            // Adjust scaling ratios specifically for mobile aspect ratios
-            let leftScale = Math.min(leftW / 920, leftH / 850) * (isMobile ? 1.05 : 1.15);
-            let leftYOffset = isMobile ? -60 : -80;
-            scalerLeft.style.transform = `scale(${leftScale}) translate3d(0px, ${leftYOffset}px, 0px)`;
+            // Allow slight user offset on left too if desired, but kept simple here
+            let leftScale = Math.min(leftW / 920, leftH / 850) * (isMobile ? 1.05 : 1.15) + rightScaleUserOffset;
+            let leftYOffset = isMobile ? -60 : -90;
+            scalerLeft.style.transform = `scale(${leftScale}) translate(0px, ${leftYOffset}px)`;
 
             // --- Right Pane Scaling ---
             const rightW = boxRight.clientWidth;
@@ -351,7 +350,7 @@
                 scalerRight.style.height = '1650px';
                 
                 baseRightScale = Math.min(rightW / 1850, rightH / 1650) * (isMobile ? 1.85 : 1.0);
-                rightYOffset = isMobile ? -140 : -110;
+                rightYOffset = isMobile ? -140 : -120;
                 rightXOffset = 0;
             } else {
                 scalerRight.style.width = '850px';
@@ -362,14 +361,25 @@
                 rightXOffset = 0;
             }
 
-            scalerRight.style.transform = `scale(${baseRightScale}) translate3d(${rightXOffset}px, ${rightYOffset}px, 0px)`;
+            const finalRightScale = Math.max(0.15, baseRightScale + rightScaleUserOffset);
+            scalerRight.style.transform = `scale(${finalRightScale}) translate(${rightXOffset}px, ${rightYOffset}px)`;
+        }
+
+        // Restored Zoom functions
+        function adjustScale(delta) {
+            rightScaleUserOffset += delta;
+            applyDynamicTransforms();
+        }
+
+        function resetScale() {
+            rightScaleUserOffset = 0;
+            applyDynamicTransforms();
         }
 
         function changeLeftRadar(type) {
             currentLeftType = type;
             const url = radarSources.left[type];
             document.getElementById('link-left').href = url;
-            document.getElementById('error-btn-left').href = url;
             showLoader('loader-left');
             document.getElementById('iframe-left').src = `${url}?t=${new Date().getTime()}`;
             applyDynamicTransforms();
@@ -379,7 +389,7 @@
             currentRightType = type;
             const url = radarSources.right[type];
             document.getElementById('link-right').href = url;
-            document.getElementById('error-btn-right').href = url;
+            rightScaleUserOffset = 0; // Reset user zoom on change
             applyDynamicTransforms();
             showLoader('loader-right');
             document.getElementById('iframe-right').src = `${url}?t=${new Date().getTime()}`;
@@ -395,9 +405,7 @@
             
             const progressPercent = (countdown / REFRESH_SECONDS) * 100;
             const progressBar = document.getElementById('progress-bar');
-            if (progressBar) {
-                progressBar.style.width = `${progressPercent}%`;
-            }
+            if (progressBar) progressBar.style.width = `${progressPercent}%`;
         }
 
         function startCountdown() {
@@ -414,14 +422,14 @@
             updateTimerUI();
             const timestamp = new Date().getTime();
             
-            const iframeLeft = document.getElementById('iframe-left');
-            const iframeRight = document.getElementById('iframe-right');
-
             showLoader('loader-left');
             showLoader('loader-right');
 
-            if (iframeLeft) iframeLeft.src = `${radarSources.left[currentLeftType]}?t=${timestamp}`;
-            if (iframeRight) iframeRight.src = `${radarSources.right[currentRightType]}?t=${timestamp}`;
+            const ifLeft = document.getElementById('iframe-left');
+            const ifRight = document.getElementById('iframe-right');
+
+            if (ifLeft) ifLeft.src = `${radarSources.left[currentLeftType]}?t=${timestamp}`;
+            if (ifRight) ifRight.src = `${radarSources.right[currentRightType]}?t=${timestamp}`;
 
             updateTimestamp();
         }
@@ -450,8 +458,6 @@
 
         function onIframeError(errorId, loaderId) {
             hideLoader(loaderId);
-            const errBox = document.getElementById(errorId);
-            if (errBox) errBox.classList.remove('hidden');
         }
 
         function hideLoader(loaderId) {
@@ -476,10 +482,11 @@
             startCountdown();
             applyDynamicTransforms();
 
+            // Fallback to hide loaders after 4s
             setTimeout(() => {
                 hideLoader('loader-left');
                 hideLoader('loader-right');
-            }, 3000);
+            }, 4000);
         });
 
         window.addEventListener('resize', applyDynamicTransforms);
