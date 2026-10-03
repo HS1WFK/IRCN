@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Stream News - V1.0.8 (Resilience Engine)</title>
+  <title>Live Stream News - V1.0.9</title>
   <!-- HLS.js Library for playing .m3u8 streams -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -185,49 +185,61 @@
   <!-- ==================== PAGE 1 ==================== -->
   <div id="page1" class="grid-page">
     
+    <!-- CH1: Al Jazeera -->
     <div class="video-card">
       <div class="video-wrapper"><video id="video1" controls muted playsinline></video></div>
       <div class="controls-panel">
         <div class="panel-left"><button class="page-btn" onclick="switchPage(2)" title="Switch to Page 2">Page2</button></div>
         <div class="panel-right">
           <span class="channel-title">CH1: Al Jazeera</span>
-          <button class="reload-btn" onclick="reloadVideo('video1')" title="Reload Stream"><svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload</button>
+          <button class="reload-btn" onclick="reloadVideo('video1')" title="Reload Stream">
+            <svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload
+          </button>
           <label class="audio-toggle"><input type="checkbox" onchange="toggleAudio('video1', this)"><span>Unmute</span></label>
         </div>
       </div>
     </div>
 
+    <!-- CH2: BBC News -->
     <div class="video-card">
       <div class="video-wrapper"><video id="video2" controls muted playsinline></video></div>
       <div class="controls-panel">
         <div class="panel-left"></div>
         <div class="panel-right">
           <span class="channel-title">CH2: BBC News</span>
-          <button class="reload-btn" onclick="reloadVideo('video2')" title="Reload Stream"><svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload</button>
+          <button class="reload-btn" onclick="reloadVideo('video2')" title="Reload Stream">
+            <svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload
+          </button>
           <label class="audio-toggle"><input type="checkbox" onchange="toggleAudio('video2', this)"><span>Unmute</span></label>
         </div>
       </div>
     </div>
 
+    <!-- CH3: CGTN English -->
     <div class="video-card">
       <div class="video-wrapper"><video id="video3" controls muted playsinline></video></div>
       <div class="controls-panel">
         <div class="panel-left"></div>
         <div class="panel-right">
           <span class="channel-title">CH3: CGTN English</span>
-          <button class="reload-btn" onclick="reloadVideo('video3')" title="Reload Stream"><svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload</button>
+          <button class="reload-btn" onclick="reloadVideo('video3')" title="Reload Stream">
+            <svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload
+          </button>
           <label class="audio-toggle"><input type="checkbox" onchange="toggleAudio('video3', this)"><span>Unmute</span></label>
         </div>
       </div>
     </div>
 
+    <!-- CH4: CNA English -->
     <div class="video-card">
       <div class="video-wrapper"><video id="video4" controls muted playsinline></video></div>
       <div class="controls-panel">
-        <div class="panel-left"><span class="version-tag">ver. 1.0.8</span></div>
+        <div class="panel-left"><span class="version-tag">ver. 1.0.9</span></div>
         <div class="panel-right">
           <span class="channel-title">CH4: CNA English</span>
-          <button class="reload-btn" onclick="reloadVideo('video4')" title="Reload Stream"><svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload</button>
+          <button class="reload-btn" onclick="reloadVideo('video4')" title="Reload Stream">
+            <svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload
+          </button>
           <label class="audio-toggle"><input type="checkbox" onchange="toggleAudio('video4', this)"><span>Unmute</span></label>
         </div>
       </div>
@@ -238,50 +250,61 @@
   <!-- ==================== PAGE 2 ==================== -->
   <div id="page2" class="grid-page hidden">
     
+    <!-- CH5: DW English -->
     <div class="video-card">
       <div class="video-wrapper"><video id="video5" controls muted playsinline></video></div>
       <div class="controls-panel">
         <div class="panel-left"><button class="page-btn" onclick="switchPage(1)" title="Switch to Page 1">Page1</button></div>
         <div class="panel-right">
           <span class="channel-title">CH5: DW English</span>
-          <button class="reload-btn" onclick="reloadVideo('video5')" title="Reload Stream"><svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload</button>
+          <button class="reload-btn" onclick="reloadVideo('video5')" title="Reload Stream">
+            <svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload
+          </button>
           <label class="audio-toggle"><input type="checkbox" onchange="toggleAudio('video5', this)"><span>Unmute</span></label>
         </div>
       </div>
     </div>
 
+    <!-- CH6: NHK English -->
     <div class="video-card">
       <div class="video-wrapper"><video id="video6" controls muted playsinline></video></div>
       <div class="controls-panel">
         <div class="panel-left"></div>
         <div class="panel-right">
           <span class="channel-title">CH6: NHK English</span>
-          <button class="reload-btn" onclick="reloadVideo('video6')" title="Reload Stream"><svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload</button>
+          <button class="reload-btn" onclick="reloadVideo('video6')" title="Reload Stream">
+            <svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload
+          </button>
           <label class="audio-toggle"><input type="checkbox" onchange="toggleAudio('video6', this)"><span>Unmute</span></label>
         </div>
       </div>
     </div>
 
-    <!-- CH7: Thai PBS (ติดตั้งระบบ Fallback URL ภายใน) -->
+    <!-- CH7: France 24 English -->
     <div class="video-card">
       <div class="video-wrapper"><video id="video7" controls muted playsinline></video></div>
       <div class="controls-panel">
         <div class="panel-left"></div>
         <div class="panel-right">
-          <span class="channel-title">CH7: Thai PBS</span>
-          <button class="reload-btn" onclick="reloadVideo('video7')" title="Reload Stream"><svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload</button>
+          <span class="channel-title">CH7: France 24 English</span>
+          <button class="reload-btn" onclick="reloadVideo('video7')" title="Reload Stream">
+            <svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload
+          </button>
           <label class="audio-toggle"><input type="checkbox" onchange="toggleAudio('video7', this)"><span>Unmute</span></label>
         </div>
       </div>
     </div>
 
+    <!-- CH8: TPTV -->
     <div class="video-card">
       <div class="video-wrapper"><video id="video8" controls muted playsinline></video></div>
       <div class="controls-panel">
-        <div class="panel-left"><span class="version-tag">ver. 1.0.8</span></div>
+        <div class="panel-left"><span class="version-tag">ver. 1.0.9</span></div>
         <div class="panel-right">
           <span class="channel-title">CH8: TPTV</span>
-          <button class="reload-btn" onclick="reloadVideo('video8')" title="Reload Stream"><svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload</button>
+          <button class="reload-btn" onclick="reloadVideo('video8')" title="Reload Stream">
+            <svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/></svg> Reload
+          </button>
           <label class="audio-toggle"><input type="checkbox" onchange="toggleAudio('video8', this)"><span>Unmute</span></label>
         </div>
       </div>
@@ -300,30 +323,25 @@
       // Page 2
       { id: 'video5', page: 2, url: 'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8' },
       { id: 'video6', page: 2, url: 'https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8' },
-      { 
-        id: 'video7', 
-        page: 2, 
-        url: 'https://thaipbs-mcx0wm.cdn.byteark.com/vtt-live/variant_1080p.m3u8',
-        // Fallback URL ป้องกันการถูก Block CORS จาก ByteArk
-        fallbackUrl: 'https://live-cdn.thaipbs.or.th/live/thaipbs/hd/playlist.m3u8' 
-      },
+      { id: 'video7', page: 2, url: 'https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8' },
       { id: 'video8', page: 2, url: 'https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org' }
     ];
 
+    // คลังข้อมูล URL สตรีมของ Thai PBS (เก็บไว้สำรองเรียกใช้ในอนาคต)
     const unusedBackupStreams = [
-      { name: 'France 24 English', url: 'https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8' },
-      { name: 'ThaiPBS ByteArk Backup 1', url: 'https://thaipbs-live.cdn.byteark.com/live/playlist_1080p.m3u8' }
+      { name: 'Thai PBS ByteArk Stream 1', url: 'https://thaipbs-mcx0wm.cdn.byteark.com/vtt-live/variant_1080p.m3u8' },
+      { name: 'Thai PBS ByteArk Stream 2', url: 'https://thaipbs-live.cdn.byteark.com/live/playlist_1080p.m3u8' },
+      { name: 'Thai PBS Official Direct Stream', url: 'https://live-cdn.thaipbs.or.th/live/thaipbs/hd/playlist.m3u8' }
     ];
 
     const hlsInstances = {};
     let currentPage = 1;
 
-    function initVideo(id, url, isFallback = false) {
+    function initVideo(id, url) {
       const video = document.getElementById(id);
-      const streamData = streams.find(s => s.id === id);
       if (!video) return;
 
-      if (!isFallback) stopVideo(id); 
+      stopVideo(id); 
 
       if (Hls.isSupported()) {
         const hls = new Hls({
@@ -331,24 +349,14 @@
           lowLatencyMode: true
         });
         hlsInstances[id] = hls;
-        
-        // --- HLS Error Recovery Engine (ระบบดักจับ Error และใช้ Fallback URL อัตโนมัติ) ---
+
         hls.on(Hls.Events.ERROR, function (event, data) {
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                console.warn(`[Network Error] on ${id}, Attempting recovery...`);
-                // ถ้ามีลิงก์ Fallback และยังไม่ได้ถูกเรียกใช้งาน ให้สลับไปใช้ทันที
-                if (streamData.fallbackUrl && !hls.fallbackTriggered) {
-                  console.log(`[Switching] ${id} to Fallback URL`);
-                  hls.fallbackTriggered = true;
-                  hls.loadSource(streamData.fallbackUrl);
-                } else {
-                  hls.startLoad();
-                }
+                hls.startLoad();
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                console.warn(`[Media Error] on ${id}, Attempting media recovery...`);
                 hls.recoverMediaError();
                 break;
               default:
