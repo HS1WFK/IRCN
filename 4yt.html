@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project 4 Streams (YouTube Edition) v1.0.9</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Inter Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            darkBg: '#0e0e11',
+            panelBg: '#16161a',
+            panelBorder: '#282830',
+            accentRed: '#e53935',
+            accentBlue: '#2563eb',
+            accentGreen: '#10b981',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0e0e11;
+      color: #e2e8f0;
+      user-select: none;
+    }
+    
+    /* Grid Layout Variations */
+    .grid-2x2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 0.75rem;
+      height: calc(100vh - 4.25rem);
+    }
+
+    .grid-focus {
+      display: grid;
+      grid-template-columns: 3fr 1fr;
+      grid-template-rows: repeat(3, 1fr);
+      gap: 0.75rem;
+      height: calc(100vh - 4.25rem);
+    }
+
+    .grid-focus #card-0 {
+      grid-column: 1 / 2;
+      grid-row: 1 / 4;
+    }
+
+    .grid-focus #card-1 { grid-column: 2 / 3; grid-row: 1 / 2; }
+    .grid-focus #card-2 { grid-column: 2 / 3; grid-row: 2 / 3; }
+    .grid-focus #card-3 { grid-column: 2 / 3; grid-row: 3 / 4; }
+
+    @media (max-width: 1024px) {
+      .grid-2x2, .grid-focus {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+      }
+      .screen-card {
+        min-height: 280px;
+      }
+    }
+
+    /* Live Pulsing Dot Animation */
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #ef4444;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 8px #ef4444;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 12px #ef4444; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    /* Active Audio Glow Effects */
+    .card-audio-active {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+    }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col font-sans">
+
+  <header class="h-14 bg-panelBg border-b border-panelBorder px-4 flex items-center justify-between z-10 shrink-0">
+    <!-- Title & Status -->
+    <div class="flex items-center space-x-3">
+      <div class="p-2 bg-red-600/10 border border-red-500/30 rounded-lg text-red-500">
+        <i class="fa-solid font-bold fa-tv text-lg"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-sm sm:text-base tracking-wide text-white flex items-center gap-2">
+          PROJECT 4 STREAMS
+          <span class="text-xs px-2 py-0.5 rounded bg-panelBorder text-red-400 font-mono font-semibold border border-red-500/20">v1.0.9 YT</span>
+        </h1>
+        <p class="text-xs text-gray-400 hidden sm:block">Multi-Screen Live Broadcast Control Console</p>
+      </div>
+    </div>
+
+    <!-- Center Status Indicator -->
+    <div class="hidden md:flex items-center space-x-4 bg-darkBg/60 px-3 py-1.5 rounded-lg border border-panelBorder text-xs font-mono">
+      <div class="flex items-center space-x-2">
+        <span class="live-dot"></span>
+        <span class="text-gray-300 font-medium">GLOBAL SYSTEM READY</span>
+      </div>
+      <span class="text-gray-600">|</span>
+      <div class="text-gray-400">
+        AUDIO SOLO: <span id="active-audio-label" class="text-emerald-400 font-bold">ALL MUTED</span>
+      </div>
+    </div>
+
+    <!-- Global Action Buttons -->
+    <div class="flex items-center space-x-2">
+      <!-- Mute All Button -->
+      <button id="btn-mute-all" onclick="muteAllStreams()" title="Mute All Channels"
+              class="px-3 py-1.5 rounded-md bg-panelBorder hover:bg-red-500/20 hover:text-red-400 text-gray-300 text-xs font-medium border border-transparent hover:border-red-500/30 transition flex items-center space-x-1.5">
+        <i class="fa-solid fa-volume-xmark"></i>
+        <span class="hidden sm:inline">Mute All</span>
+      </button>
+
+      <!-- Refresh All Button -->
+      <button id="btn-refresh-all" onclick="refreshAllStreams()" title="Reload All Streams"
+              class="px-3 py-1.5 rounded-md bg-panelBorder hover:bg-gray-700 text-gray-300 text-xs font-medium transition flex items-center space-x-1.5">
+        <i class="fa-solid fa-rotate"></i>
+        <span class="hidden sm:inline">Refresh All</span>
+      </button>
+
+      <!-- Layout Toggle Button -->
+      <button id="btn-layout-toggle" onclick="toggleLayout()" title="Switch Layout Grid"
+              class="px-3 py-1.5 rounded-md bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs font-medium transition flex items-center space-x-1.5">
+        <i class="fa-solid fa-table-cells-large" id="layout-icon"></i>
+        <span class="hidden sm:inline" id="layout-text">Grid Mode</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-1 p-2 sm:p-3 overflow-y-auto lg:overflow-hidden bg-darkBg">
+    <div id="streams-container" class="grid-2x2 transition-all duration-300">
+      <!-- Dynamic Stream Cards will be generated here -->
+    </div>
+  </main>
+
+  <div id="url-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-panelBg border border-panelBorder rounded-xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-panelBorder pb-3">
+        <h3 class="font-bold text-white flex items-center gap-2">
+          <i class="fa-brands fa-youtube text-red-500 text-lg"></i>
+          Change Channel Stream
+        </h3>
+        <button onclick="closeUrlModal()" class="text-gray-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Target Screen Slot</label>
+          <input type="text" id="modal-slot-name" disabled class="w-full bg-darkBg border border-panelBorder text-gray-400 text-xs rounded-md p-2 font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Channel Label</label>
+          <input type="text" id="modal-channel-name" class="w-full bg-darkBg border border-panelBorder text-white text-xs rounded-md p-2 focus:border-blue-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">YouTube URL or Video ID</label>
+          <input type="text" id="modal-video-input" placeholder="e.g. QB5BNdBFujE or https://www.youtube.com/watch?v=..." 
+                 class="w-full bg-darkBg border border-panelBorder text-white text-xs rounded-md p-2 font-mono focus:border-blue-500 outline-none">
+          <p class="text-[10px] text-gray-500 mt-1">Paste a full YouTube link or standard 11-character Video ID.</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeUrlModal()" class="px-4 py-1.5 bg-panelBorder hover:bg-gray-700 text-gray-300 text-xs rounded-md transition">Cancel</button>
+        <button onclick="saveStreamUrl()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-md transition">Update Stream</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initial Streams Configuration based on project specs
+    const DEFAULT_STREAMS = [
+      { id: 0, name: "Al Jazeera English", videoId: "gCNeDWCI0vo" },
+      { id: 1, name: "Euronews English", videoId: "pykpO5kQJ98" },
+      { id: 2, name: "Sky News", videoId: "xDWQ3LkccY8" },
+      { id: 3, name: "Bloomberg Television", videoId: "QB5BNdBFujE" }
+    ];
+
+    let streams = [...DEFAULT_STREAMS];
+    let players = {};
+    let activeAudioId = null;
+    let isFocusLayout = false;
+    let currentEditSlot = null;
+
+    // Load YouTube IFrame Player API
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    // Initial UI Render
+    document.addEventListener("DOMContentLoaded", () => {
+      renderStreamCards();
+    });
+
+    function renderStreamCards() {
+      const container = document.getElementById('streams-container');
+      container.innerHTML = '';
+
+      streams.forEach((stream) => {
+        const card = document.createElement('div');
+        card.id = `card-${stream.id}`;
+        card.className = `screen-card bg-panelBg border border-panelBorder rounded-lg flex flex-col overflow-hidden relative transition-all duration-300`;
+        
+        card.innerHTML = `
+          <!-- Card Header Bar -->
+          <div class="h-8 bg-panelBg/90 border-b border-panelBorder px-3 flex items-center justify-between shrink-0">
+            <div class="flex items-center space-x-2 overflow-hidden">
+              <span class="live-dot"></span>
+              <span class="font-bold text-xs text-gray-200 truncate font-sans">${stream.name}</span>
+            </div>
+            <div class="flex items-center space-x-2 font-mono text-[10px] text-gray-400">
+              <span id="audio-badge-${stream.id}" class="hidden px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">AUDIO ACTIVE</span>
+              <span class="bg-darkBg px-1.5 py-0.5 rounded border border-panelBorder">${stream.videoId}</span>
+            </div>
+          </div>
+
+          <!-- Video Player IFrame Wrapper -->
+          <div class="flex-1 bg-black relative overflow-hidden group">
+            <div id="player-${stream.id}" class="w-full h-full pointer-events-auto"></div>
+          </div>
+
+          <!-- Card Footer Control Strip -->
+          <div class="h-9 bg-panelBg border-t border-panelBorder px-2 flex items-center justify-between shrink-0 font-mono text-xs">
+            <!-- Audio Solo Switch Button -->
+            <button id="audio-btn-${stream.id}" onclick="toggleAudioSolo(${stream.id})" 
+                    class="px-2.5 py-1 rounded bg-darkBg hover:bg-emerald-600/20 hover:text-emerald-400 text-gray-400 border border-panelBorder transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-volume-xmark text-xs" id="audio-icon-${stream.id}"></i>
+              <span id="audio-text-${stream.id}" class="text-[11px]">Muted</span>
+            </button>
+
+            <!-- Action Controls -->
+            <div class="flex items-center space-x-1">
+              <button onclick="openUrlModal(${stream.id})" title="Change Stream URL/ID" 
+                      class="p-1.5 rounded hover:bg-darkBg text-gray-400 hover:text-blue-400 transition">
+                <i class="fa-solid fa-gear"></i>
+              </button>
+              <button onclick="reloadStream(${stream.id})" title="Reload Stream" 
+                      class="p-1.5 rounded hover:bg-darkBg text-gray-400 hover:text-gray-200 transition">
+                <i class="fa-solid fa-rotate-right"></i>
+              </button>
+              <button onclick="toggleCardFullscreen(${stream.id})" title="Toggle Fullscreen" 
+                      class="p-1.5 rounded hover:bg-darkBg text-gray-400 hover:text-gray-200 transition">
+                <i class="fa-solid fa-expand"></i>
+              </button>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function onYouTubeIframeAPIReady() {
+      streams.forEach((stream) => {
+        initPlayer(stream.id, stream.videoId);
+      });
+    }
+
+    function initPlayer(id, videoId) {
+      players[id] = new YT.Player(`player-${id}`, {
+        videoId: videoId,
+        playerVars: {
+          'autoplay': 1,
+          'mute': 1,
+          'controls': 1,
+          'modestbranding': 1,
+          'rel': 0,
+          'playsinline': 1
+        },
+        events: {
+          'onReady': (event) => {
+            event.target.playVideo();
+            event.target.mute();
+          }
+        }
+      });
+    }
+
+    function toggleAudioSolo(id) {
+      // If clicking the currently active audio stream -> Mute all
+      if (activeAudioId === id) {
+        muteAllStreams();
+        return;
+      }
+
+      // Mute all other players
+      Object.keys(players).forEach((key) => {
+        const playerKey = parseInt(key);
+        if (players[playerKey] && typeof players[playerKey].mute === 'function') {
+          players[playerKey].mute();
+          updateAudioUI(playerKey, false);
+        }
+      });
+
+      // Unmute selected stream
+      if (players[id] && typeof players[id].unMute === 'function') {
+        players[id].unMute();
+        players[id].setVolume(100);
+        activeAudioId = id;
+        updateAudioUI(id, true);
+        document.getElementById('active-audio-label').textContent = streams[id].name.toUpperCase();
+      }
+    }
+
+    function muteAllStreams() {
+      Object.keys(players).forEach((key) => {
+        const playerKey = parseInt(key);
+        if (players[playerKey] && typeof players[playerKey].mute === 'function') {
+          players[playerKey].mute();
+          updateAudioUI(playerKey, false);
+        }
+      });
+      activeAudioId = null;
+      document.getElementById('active-audio-label').textContent = 'ALL MUTED';
+    }
+
+    function updateAudioUI(id, isActive) {
+      const card = document.getElementById(`card-${id}`);
+      const btn = document.getElementById(`audio-btn-${id}`);
+      const icon = document.getElementById(`audio-icon-${id}`);
+      const text = document.getElementById(`audio-text-${id}`);
+      const badge = document.getElementById(`audio-badge-${id}`);
+
+      if (!btn || !icon || !text) return;
+
+      if (isActive) {
+        card.classList.add('card-audio-active');
+        btn.classList.remove('bg-darkBg', 'text-gray-400');
+        btn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-500');
+        icon.className = 'fa-solid fa-volume-high text-xs';
+        text.textContent = 'SOLO ON';
+        badge.classList.remove('hidden');
+      } else {
+        card.classList.remove('card-audio-active');
+        btn.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-500');
+        btn.classList.add('bg-darkBg', 'text-gray-400');
+        icon.className = 'fa-solid fa-volume-xmark text-xs';
+        text.textContent = 'Muted';
+        badge.classList.add('hidden');
+      }
+    }
+
+    function toggleLayout() {
+      const container = document.getElementById('streams-container');
+      const icon = document.getElementById('layout-icon');
+      const text = document.getElementById('layout-text');
+
+      isFocusLayout = !isFocusLayout;
+
+      if (isFocusLayout) {
+        container.className = 'grid-focus transition-all duration-300';
+        icon.className = 'fa-solid fa-border-all';
+        text.textContent = 'Focus Mode';
+      } else {
+        container.className = 'grid-2x2 transition-all duration-300';
+        icon.className = 'fa-solid fa-table-cells-large';
+        text.textContent = 'Grid Mode';
+      }
+    }
+
+    function refreshAllStreams() {
+      Object.keys(players).forEach((key) => {
+        reloadStream(parseInt(key));
+      });
+    }
+
+    function reloadStream(id) {
+      if (players[id] && typeof players[id].loadVideoById === 'function') {
+        players[id].loadVideoById(streams[id].videoId);
+        if (activeAudioId === id) {
+          players[id].unMute();
+        } else {
+          players[id].mute();
+        }
+      }
+    }
+
+    function toggleCardFullscreen(id) {
+      const card = document.getElementById(`card-${id}`);
+      if (!document.fullscreenElement) {
+        if (card.requestFullscreen) card.requestFullscreen();
+        else if (card.webkitRequestFullscreen) card.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    function openUrlModal(id) {
+      currentEditSlot = id;
+      document.getElementById('modal-slot-name').value = `Screen #${id + 1} (${streams[id].name})`;
+      document.getElementById('modal-channel-name').value = streams[id].name;
+      document.getElementById('modal-video-input').value = streams[id].videoId;
+      
+      const modal = document.getElementById('url-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeUrlModal() {
+      const modal = document.getElementById('url-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      currentEditSlot = null;
+    }
+
+    function extractYouTubeId(urlOrId) {
+      if (!urlOrId) return null;
+      const cleanInput = urlOrId.trim();
+      
+      // Standard 11-char ID pattern
+      if (/^[a-zA-Z0-9_-]{11}$/.test(cleanInput)) {
+        return cleanInput;
+      }
+      
+      // Regular expression for extracting YouTube IDs from standard links or live links
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|live\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = cleanInput.match(regExp);
+      
+      return (match && match[2].length === 11) ? match[2] : cleanInput;
+    }
+
+    function saveStreamUrl() {
+      if (currentEditSlot === null) return;
+
+      const newName = document.getElementById('modal-channel-name').value.trim();
+      const rawInput = document.getElementById('modal-video-input').value.trim();
+      const newVideoId = extractYouTubeId(rawInput);
+
+      if (!newVideoId) {
+        alert("Please enter a valid YouTube Video ID or URL.");
+        return;
+      }
+
+      // Update stream object
+      streams[currentEditSlot].name = newName || `Channel ${currentEditSlot + 1}`;
+      streams[currentEditSlot].videoId = newVideoId;
+
+      // Reload Player with new Video ID
+      if (players[currentEditSlot]) {
+        players[currentEditSlot].loadVideoById(newVideoId);
+      }
+
+      // Re-render UI labels
+      renderStreamCards();
+      
+      // Re-attach players listeners
+      onYouTubeIframeAPIReady();
+
+      closeUrlModal();
+    }
+  </script>
+</body>
+</html>
