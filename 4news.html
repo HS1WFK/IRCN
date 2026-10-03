@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Stream News</title>
+  <title>Live Stream News - V1.0.5</title>
   <!-- HLS.js Library for playing .m3u8 streams -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -24,13 +24,18 @@
       overflow: hidden;
     }
 
-    .grid-container {
+    .grid-page {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-template-rows: repeat(2, 1fr);
       gap: 12px;
       width: 100%;
       height: 100%;
+    }
+
+    /* ซ่อนหน้าที่ไม่ได้เลือก */
+    .grid-page.hidden {
+      display: none !important;
     }
 
     .video-card {
@@ -72,17 +77,57 @@
       gap: 8px;
     }
 
+    /* พื้นที่ซ้ายสุดของ Controls Panel */
+    .panel-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ปุ่ม Switch Page 1 / Page 2 */
+    .page-btn {
+      background-color: #007bff;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid #0056b3;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      white-space: nowrap;
+    }
+
+    .page-btn:hover {
+      background-color: #0056b3;
+    }
+
+    /* แสดงเวอร์ชันซ้ายล่าง */
+    .version-tag {
+      font-size: 11px;
+      color: #777777;
+      font-family: monospace;
+      user-select: none;
+    }
+
+    /* พื้นที่ขวาสุดของ Controls Panel (Label + Reload + Unmute) */
+    .panel-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
     .channel-title {
       font-size: 13px;
       font-weight: 600;
       color: #cccccc;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      flex: 1;
     }
 
-    /* ปุ่ม Reload ตรงกลาง */
+    /* ปุ่ม Reload */
     .reload-btn {
       display: flex;
       align-items: center;
@@ -142,123 +187,239 @@
 </head>
 <body>
 
-  <div class="grid-container">
-    <!-- Channel 1: Al Jazeera -->
+  <!-- ==================== PAGE 1 ==================== -->
+  <div id="page1" class="grid-page">
+    
+    <!-- CH1: Al Jazeera -->
     <div class="video-card">
       <div class="video-wrapper">
         <video id="video1" controls muted playsinline></video>
       </div>
       <div class="controls-panel">
-        <span class="channel-title">Channel 1 (Al Jazeera)</span>
-        
-        <!-- ปุ่ม Reload ตรงกลาง -->
-        <button class="reload-btn" onclick="reloadVideo('video1')" title="Reload Stream">
-          <svg viewBox="0 0 16 16">
-            <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-            <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
-          </svg>
-          Reload
-        </button>
-
-        <label class="audio-toggle">
-          <input type="checkbox" id="mute1" onchange="toggleAudio('video1', this)">
-          <span>Unmute</span>
-        </label>
+        <div class="panel-left">
+          <button class="page-btn" onclick="switchPage(2)" title="Switch to Page 2">Page2</button>
+        </div>
+        <div class="panel-right">
+          <span class="channel-title">CH1: Al Jazeera</span>
+          <button class="reload-btn" onclick="reloadVideo('video1')" title="Reload Stream">
+            <svg viewBox="0 0 16 16">
+              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
+            </svg>
+            Reload
+          </button>
+          <label class="audio-toggle">
+            <input type="checkbox" onchange="toggleAudio('video1', this)">
+            <span>Unmute</span>
+          </label>
+        </div>
       </div>
     </div>
 
-    <!-- Channel 2: BBC News -->
+    <!-- CH2: BBC News -->
     <div class="video-card">
       <div class="video-wrapper">
         <video id="video2" controls muted playsinline></video>
       </div>
       <div class="controls-panel">
-        <span class="channel-title">Channel 2 (BBC News)</span>
-        
-        <!-- ปุ่ม Reload ตรงกลาง -->
-        <button class="reload-btn" onclick="reloadVideo('video2')" title="Reload Stream">
-          <svg viewBox="0 0 16 16">
-            <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-            <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
-          </svg>
-          Reload
-        </button>
-
-        <label class="audio-toggle">
-          <input type="checkbox" id="mute2" onchange="toggleAudio('video2', this)">
-          <span>Unmute</span>
-        </label>
+        <div class="panel-left"></div>
+        <div class="panel-right">
+          <span class="channel-title">CH2: BBC News</span>
+          <button class="reload-btn" onclick="reloadVideo('video2')" title="Reload Stream">
+            <svg viewBox="0 0 16 16">
+              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
+            </svg>
+            Reload
+          </button>
+          <label class="audio-toggle">
+            <input type="checkbox" onchange="toggleAudio('video2', this)">
+            <span>Unmute</span>
+          </label>
+        </div>
       </div>
     </div>
 
-    <!-- Channel 3: CGTN -->
+    <!-- CH3: CGTN English -->
     <div class="video-card">
       <div class="video-wrapper">
         <video id="video3" controls muted playsinline></video>
       </div>
       <div class="controls-panel">
-        <span class="channel-title">Channel 3 (CGTN)</span>
-        
-        <!-- ปุ่ม Reload ตรงกลาง -->
-        <button class="reload-btn" onclick="reloadVideo('video3')" title="Reload Stream">
-          <svg viewBox="0 0 16 16">
-            <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-            <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
-          </svg>
-          Reload
-        </button>
-
-        <label class="audio-toggle">
-          <input type="checkbox" id="mute3" onchange="toggleAudio('video3', this)">
-          <span>Unmute</span>
-        </label>
+        <div class="panel-left"></div>
+        <div class="panel-right">
+          <span class="channel-title">CH3: CGTN English</span>
+          <button class="reload-btn" onclick="reloadVideo('video3')" title="Reload Stream">
+            <svg viewBox="0 0 16 16">
+              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
+            </svg>
+            Reload
+          </button>
+          <label class="audio-toggle">
+            <input type="checkbox" onchange="toggleAudio('video3', this)">
+            <span>Unmute</span>
+          </label>
+        </div>
       </div>
     </div>
 
-    <!-- Channel 4: CNA -->
+    <!-- CH4: CNA English -->
     <div class="video-card">
       <div class="video-wrapper">
         <video id="video4" controls muted playsinline></video>
       </div>
       <div class="controls-panel">
-        <span class="channel-title">Channel 4 (CNA)</span>
-        
-        <!-- ปุ่ม Reload ตรงกลาง -->
-        <button class="reload-btn" onclick="reloadVideo('video4')" title="Reload Stream">
-          <svg viewBox="0 0 16 16">
-            <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-            <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
-          </svg>
-          Reload
-        </button>
-
-        <label class="audio-toggle">
-          <input type="checkbox" id="mute4" onchange="toggleAudio('video4', this)">
-          <span>Unmute</span>
-        </label>
+        <div class="panel-left">
+          <span class="version-tag">ver. 1.0.5</span>
+        </div>
+        <div class="panel-right">
+          <span class="channel-title">CH4: CNA English</span>
+          <button class="reload-btn" onclick="reloadVideo('video4')" title="Reload Stream">
+            <svg viewBox="0 0 16 16">
+              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
+            </svg>
+            Reload
+          </button>
+          <label class="audio-toggle">
+            <input type="checkbox" onchange="toggleAudio('video4', this)">
+            <span>Unmute</span>
+          </label>
+        </div>
       </div>
     </div>
+
+  </div>
+
+  <!-- ==================== PAGE 2 ==================== -->
+  <div id="page2" class="grid-page hidden">
+    
+    <!-- CH5: DW English -->
+    <div class="video-card">
+      <div class="video-wrapper">
+        <video id="video5" controls muted playsinline></video>
+      </div>
+      <div class="controls-panel">
+        <div class="panel-left">
+          <button class="page-btn" onclick="switchPage(1)" title="Switch to Page 1">Page1</button>
+        </div>
+        <div class="panel-right">
+          <span class="channel-title">CH5: DW English</span>
+          <button class="reload-btn" onclick="reloadVideo('video5')" title="Reload Stream">
+            <svg viewBox="0 0 16 16">
+              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
+            </svg>
+            Reload
+          </button>
+          <label class="audio-toggle">
+            <input type="checkbox" onchange="toggleAudio('video5', this)">
+            <span>Unmute</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- CH6: France 24 English -->
+    <div class="video-card">
+      <div class="video-wrapper">
+        <video id="video6" controls muted playsinline></video>
+      </div>
+      <div class="controls-panel">
+        <div class="panel-left"></div>
+        <div class="panel-right">
+          <span class="channel-title">CH6: France 24 English</span>
+          <button class="reload-btn" onclick="reloadVideo('video6')" title="Reload Stream">
+            <svg viewBox="0 0 16 16">
+              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
+            </svg>
+            Reload
+          </button>
+          <label class="audio-toggle">
+            <input type="checkbox" onchange="toggleAudio('video6', this)">
+            <span>Unmute</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- CH7: NHK English -->
+    <div class="video-card">
+      <div class="video-wrapper">
+        <video id="video7" controls muted playsinline></video>
+      </div>
+      <div class="controls-panel">
+        <div class="panel-left"></div>
+        <div class="panel-right">
+          <span class="channel-title">CH7: NHK English</span>
+          <button class="reload-btn" onclick="reloadVideo('video7')" title="Reload Stream">
+            <svg viewBox="0 0 16 16">
+              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
+            </svg>
+            Reload
+          </button>
+          <label class="audio-toggle">
+            <input type="checkbox" onchange="toggleAudio('video7', this)">
+            <span>Unmute</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- CH8: ThaiPBS -->
+    <div class="video-card">
+      <div class="video-wrapper">
+        <video id="video8" controls muted playsinline></video>
+      </div>
+      <div class="controls-panel">
+        <div class="panel-left">
+          <span class="version-tag">ver. 1.0.5</span>
+        </div>
+        <div class="panel-right">
+          <span class="channel-title">CH8: ThaiPBS</span>
+          <button class="reload-btn" onclick="reloadVideo('video8')" title="Reload Stream">
+            <svg viewBox="0 0 16 16">
+              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 1.05a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V1.55a.5.5 0 0 1 .5-.5z"/>
+            </svg>
+            Reload
+          </button>
+          <label class="audio-toggle">
+            <input type="checkbox" onchange="toggleAudio('video8', this)">
+            <span>Unmute</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
     const streams = [
-      { id: 'video1', url: 'https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8' },
-      { id: 'video2', url: 'https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8' },
-      { id: 'video3', url: 'https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8' },
-      { id: 'video4', url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8' }
+      // Page 1
+      { id: 'video1', page: 1, url: 'https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8' },
+      { id: 'video2', page: 1, url: 'https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8' },
+      { id: 'video3', page: 1, url: 'https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8' },
+      { id: 'video4', page: 1, url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8' },
+      
+      // Page 2
+      { id: 'video5', page: 2, url: 'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8' },
+      { id: 'video6', page: 2, url: 'https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8' },
+      { id: 'video7', page: 2, url: 'https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8' },
+      { id: 'video8', page: 2, url: 'https://thaipbs-live.cdn.byteark.com/live/playlist.m3u8' }
     ];
 
-    // เก็บอ้างอิง HLS Instance ของแต่ละวิดีโอ
     const hlsInstances = {};
+    let currentPage = 1;
 
     function initVideo(id, url) {
       const video = document.getElementById(id);
-      
-      // ทำลาย HLS Instance เดิมหากมีอยู่
-      if (hlsInstances[id]) {
-        hlsInstances[id].destroy();
-        delete hlsInstances[id];
-      }
+      if (!video) return;
+
+      stopVideo(id); // ล้างสตรีมเดิมก่อนดึงใหม่
 
       if (Hls.isSupported()) {
         const hls = new Hls({
@@ -274,13 +435,25 @@
           });
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // รองรับ Safari / iOS Native HLS
         video.src = url;
         video.addEventListener('loadedmetadata', function () {
           video.play().catch(() => {
             console.log('Autoplay blocked for ' + id);
           });
         });
+      }
+    }
+
+    function stopVideo(id) {
+      const video = document.getElementById(id);
+      if (hlsInstances[id]) {
+        hlsInstances[id].destroy();
+        delete hlsInstances[id];
+      }
+      if (video) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
       }
     }
 
@@ -293,16 +466,45 @@
 
     function toggleAudio(videoId, checkbox) {
       const video = document.getElementById(videoId);
-      video.muted = !checkbox.checked;
+      if (video) {
+        video.muted = !checkbox.checked;
+      }
     }
 
-    // เริ่มต้นโหลดสตรีมเมื่อเปิดหน้าเว็บ
+    function switchPage(pageNumber) {
+      currentPage = pageNumber;
+
+      const page1Elem = document.getElementById('page1');
+      const page2Elem = document.getElementById('page2');
+
+      if (pageNumber === 1) {
+        page2Elem.classList.add('hidden');
+        page1Elem.classList.remove('hidden');
+
+        // หยุด Page 2 เพื่อประหยัด CPU/Bandwidth
+        streams.filter(s => s.page === 2).forEach(s => stopVideo(s.id));
+        // เล่น Page 1
+        streams.filter(s => s.page === 1).forEach(s => initVideo(s.id, s.url));
+      } else {
+        page1Elem.classList.add('hidden');
+        page2Elem.classList.remove('hidden');
+
+        // หยุด Page 1
+        streams.filter(s => s.page === 1).forEach(s => stopVideo(s.id));
+        // เล่น Page 2
+        streams.filter(s => s.page === 2).forEach(s => initVideo(s.id, s.url));
+      }
+    }
+
+    // เริ่มต้นโหลดสตรีม Page 1 เมื่อเปิดหน้าเว็บครั้งแรก
     window.addEventListener('DOMContentLoaded', () => {
       streams.forEach(stream => {
         const video = document.getElementById(stream.id);
-        video.muted = true; // ปิดเสียงเป็นค่าเริ่มต้น
-        initVideo(stream.id, stream.url);
+        if (video) video.muted = true; // ตั้งค่าเริ่มต้นให้ Muted
       });
+
+      // โหลดเฉพาะสตรีม Page 1
+      streams.filter(s => s.page === 1).forEach(s => initVideo(s.id, s.url));
     });
   </script>
 </body>
