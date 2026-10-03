@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bangkok BMA Radar Live Monitor - ระบบติดตามเรดาร์สภาพอากาศกรุงเทพมหานคร</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Bangkok BMA Radar Live Monitor - ระบบติดตามเรดาร์สภาพอากาศ กทม.</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -20,7 +20,6 @@
 
         html, body {
             height: 100vh;
-            /* iOS Safari fix for 100vh */
             height: -webkit-fill-available;
             width: 100vw;
             margin: 0;
@@ -30,7 +29,6 @@
             color: #f8fafc;
         }
 
-        /* Radar container wrapper */
         .radar-box {
             position: relative;
             width: 100%;
@@ -43,7 +41,7 @@
             border-radius: 0.75rem;
         }
 
-        /* Responsive Wrapper Scaling Container */
+        /* Desktop iframe wrapper */
         .scaler-wrapper {
             position: relative;
             width: 100%;
@@ -54,24 +52,18 @@
             overflow: hidden;
         }
 
-        /* Container for scaling */
         .iframe-crop-left, .iframe-crop-right {
             position: absolute;
             transform-origin: center center;
             transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s, height 0.2s;
             pointer-events: auto;
-            /* Force Hardware Acceleration to fix iOS blank render */
             transform: translateZ(0);
-            -webkit-transform: translateZ(0);
-            opacity: 0.99; 
         }
 
-        /* THE FIX FOR iOS IFRAME BUG */
         .radar-iframe {
             position: absolute;
             top: 0;
             left: 0;
-            /* iOS Safari Workaround: Forces iframe to respect container width */
             width: 1px;
             min-width: 100%;
             height: 100%;
@@ -80,10 +72,18 @@
             overflow: hidden;
         }
 
-        /* Custom Radio Button styling */
-        .radar-radio input[type="radio"] {
+        /* iOS Direct Image Mode */
+        .ios-direct-img {
             display: none;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-color: #0f172a;
+            padding: 0.5rem;
+            z-index: 10;
         }
+
+        .radar-radio input[type="radio"] { display: none; }
         .radar-radio label {
             cursor: pointer;
             padding: 2px 8px;
@@ -102,17 +102,6 @@
             box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
         }
 
-        /* Pulse animation */
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); opacity: 0.8; }
-            50% { transform: scale(1.15); opacity: 0.4; }
-            100% { transform: scale(0.95); opacity: 0.8; }
-        }
-        .pulse-live {
-            animation: pulse-ring 2s infinite ease-in-out;
-        }
-
-        /* Loading spinner */
         .spinner {
             border: 3px solid rgba(255, 255, 255, 0.1);
             border-radius: 50%;
@@ -125,11 +114,25 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Error Fallback Box */
+        .error-fallback {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background-color: #0f172a;
+            z-index: 20;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1.5rem;
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden">
 
-    <!-- Top Navigation Header Bar -->
+    <!-- Header -->
     <header class="h-12 md:h-14 bg-slate-900/95 border-b border-slate-800 px-3 md:px-5 flex items-center justify-between z-30 shrink-0">
         <div class="flex items-center space-x-2 md:space-x-3">
             <div class="p-1.5 md:p-2 bg-sky-500/10 text-sky-400 rounded-lg border border-sky-500/20">
@@ -138,24 +141,23 @@
             <div>
                 <h1 class="text-xs md:text-sm font-semibold text-slate-100 flex items-center gap-2">
                     <span class="truncate max-w-[150px] sm:max-w-none">ศูนย์เรดาร์ กทม.</span>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-live"></span>
-                        Auto Fit
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] md:text-xs font-mono bg-slate-800 text-slate-400 border border-slate-700">
+                        v.1.0.5
                     </span>
                 </h1>
-                <p class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ระบบติดตามสภาพอากาศแบบเรียลไทม์ (รองรับมือถือ)</p>
+                <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">โหมดหน้าจอ: กำลังตรวจสอบระบบ...</p>
             </div>
         </div>
 
         <div class="flex items-center gap-2 md:gap-3">
-            
-            <!-- Zoom Controls (Restored) -->
-            <div class="hidden md:flex items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 text-xs mr-2">
+            <!-- Zoom Controls (Desktop Only) -->
+            <div id="desktop-zoom-controls" class="hidden md:flex items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 text-xs mr-2 transition-opacity">
                 <button onclick="adjustScale(-0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 transition-colors"><i class="fa-solid fa-minus"></i></button>
-                <button onclick="resetScale()" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 font-mono text-[11px] transition-colors">Reset Fit</button>
+                <button onclick="resetScale()" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 font-mono text-[11px] transition-colors">Reset</button>
                 <button onclick="adjustScale(0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 transition-colors"><i class="fa-solid fa-plus"></i></button>
             </div>
 
+            <!-- Timer -->
             <div class="flex items-center gap-2 bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
                 <i class="fa-regular fa-clock text-sky-400 text-xs"></i>
                 <div class="text-[11px] md:text-xs font-mono flex items-center gap-1.5">
@@ -166,24 +168,23 @@
                 </div>
             </div>
 
-            <button id="refresh-btn" onclick="manualRefresh()" 
-                class="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm focus:outline-none">
+            <!-- Refresh Button -->
+            <button id="refresh-btn" onclick="manualRefresh()" class="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm focus:outline-none">
                 <i id="refresh-icon" class="fa-solid fa-arrows-rotate text-xs"></i>
                 <span class="hidden sm:inline">รีเฟรช</span>
             </button>
         </div>
     </header>
 
-    <!-- Main Split Screen -->
+    <!-- Main Content -->
     <main class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 p-2 bg-slate-950 overflow-hidden relative">
         
-        <!-- ================= LEFT COLUMN ================= -->
+        <!-- LEFT COLUMN -->
         <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
             <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
                 <div class="flex items-center gap-2 text-sky-400 truncate">
                     <i class="fa-solid fa-circle-play"></i>
                     <span class="text-slate-200 font-semibold truncate">ภาพเคลื่อนไหว</span>
-                    
                     <div class="flex items-center gap-1 ml-2">
                         <div class="radar-radio">
                             <input type="radio" id="radio-left-nk" name="radar-left" value="nk" checked onchange="changeLeftRadar('nk')">
@@ -195,10 +196,8 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="flex items-center gap-2 shrink-0">
-                    <a id="link-left" href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" rel="noopener" 
-                       class="text-slate-400 hover:text-sky-300 text-[11px] flex items-center gap-1 transition-colors">
+                    <a id="link-left" href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" rel="noopener" class="text-slate-400 hover:text-sky-300 text-[11px] flex items-center gap-1">
                         <span>เปิดเว็บตรง</span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                     </a>
@@ -208,32 +207,34 @@
             <div id="box-left" class="radar-box flex-1">
                 <div id="loader-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity duration-300">
                     <div class="spinner"></div>
-                    <p class="text-xs text-slate-400">กำลังโหลดภาพเรดาร์...</p>
+                    <p class="text-xs text-slate-400">กำลังดึงข้อมูล...</p>
                 </div>
 
-                <div class="scaler-wrapper">
+                <!-- 1. Desktop Iframe Module -->
+                <div class="scaler-wrapper" id="scaler-wrapper-left">
                     <div id="scaler-left" class="iframe-crop-left">
-                        <iframe 
-                            id="iframe-left"
-                            src="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" 
-                            class="radar-iframe"
-                            title="BMA Radar Animation Left"
-                            scrolling="no"
-                            onload="onIframeLoaded('loader-left')"
-                            onerror="onIframeError('error-left', 'loader-left')">
-                        </iframe>
+                        <iframe id="iframe-left" src="" class="radar-iframe" scrolling="no" onload="onIframeLoaded('loader-left')"></iframe>
                     </div>
+                </div>
+
+                <!-- 2. iOS Direct Image Module -->
+                <img id="img-left" class="ios-direct-img" alt="BMA Radar Left" onload="onImageLoaded('loader-left')" onerror="onImageError('error-left', 'loader-left')">
+
+                <!-- 3. Error Fallback (If Direct Image Fails) -->
+                <div id="error-left" class="error-fallback">
+                    <i class="fa-solid fa-link-slash text-amber-500 text-3xl mb-3"></i>
+                    <p class="text-slate-300 text-xs mb-3">ไม่สามารถเชื่อมต่อไฟล์รูปภาพโดยตรงได้</p>
+                    <a id="error-link-left" href="#" target="_blank" class="px-4 py-2 bg-sky-600 text-white rounded text-xs font-medium">เปิดหน้าเว็บต้นฉบับ</a>
                 </div>
             </div>
         </section>
 
-        <!-- ================= RIGHT COLUMN ================= -->
+        <!-- RIGHT COLUMN -->
         <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
             <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
                 <div class="flex items-center gap-2 text-indigo-400 truncate">
                     <i class="fa-solid fa-crosshairs"></i>
-                    <span class="text-slate-200 font-semibold truncate">High Res - Fit</span>
-                    
+                    <span class="text-slate-200 font-semibold truncate">High Res</span>
                     <div class="flex items-center gap-1 ml-2">
                         <div class="radar-radio">
                             <input type="radio" id="radio-right-bkk" name="radar-right" value="bkk" checked onchange="changeRightRadar('bkk')">
@@ -245,10 +246,8 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="flex items-center gap-2 shrink-0">
-                    <a id="link-right" href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" rel="noopener" 
-                       class="text-slate-400 hover:text-indigo-300 text-[11px] flex items-center gap-1 transition-colors">
+                    <a id="link-right" href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" rel="noopener" class="text-slate-400 hover:text-indigo-300 text-[11px] flex items-center gap-1">
                         <span>เปิดเว็บตรง</span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                     </a>
@@ -258,32 +257,35 @@
             <div id="box-right" class="radar-box flex-1">
                 <div id="loader-right" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity duration-300">
                     <div class="spinner"></div>
-                    <p class="text-xs text-slate-400">กำลังย่อและปรับสเกลภาพเรดาร์...</p>
+                    <p class="text-xs text-slate-400">กำลังดึงข้อมูล...</p>
                 </div>
 
-                <div class="scaler-wrapper">
+                <!-- 1. Desktop Iframe Module -->
+                <div class="scaler-wrapper" id="scaler-wrapper-right">
                     <div id="scaler-right" class="iframe-crop-right">
-                        <iframe 
-                            id="iframe-right"
-                            src="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" 
-                            class="radar-iframe"
-                            title="BMA Radar Right"
-                            scrolling="no"
-                            onload="onIframeLoaded('loader-right')"
-                            onerror="onIframeError('error-right', 'loader-right')">
-                        </iframe>
+                        <iframe id="iframe-right" src="" class="radar-iframe" scrolling="no" onload="onIframeLoaded('loader-right')"></iframe>
                     </div>
+                </div>
+
+                <!-- 2. iOS Direct Image Module -->
+                <img id="img-right" class="ios-direct-img" alt="BMA Radar Right" onload="onImageLoaded('loader-right')" onerror="onImageError('error-right', 'loader-right')">
+
+                <!-- 3. Error Fallback (If Direct Image Fails) -->
+                <div id="error-right" class="error-fallback">
+                    <i class="fa-solid fa-link-slash text-amber-500 text-3xl mb-3"></i>
+                    <p class="text-slate-300 text-xs mb-3">ไม่สามารถเชื่อมต่อไฟล์รูปภาพโดยตรงได้</p>
+                    <a id="error-link-right" href="#" target="_blank" class="px-4 py-2 bg-indigo-600 text-white rounded text-xs font-medium">เปิดหน้าเว็บต้นฉบับ</a>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Footer Status Bar -->
+    <!-- Footer -->
     <footer class="h-7 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
         <div class="flex items-center gap-2">
             <i class="fa-solid fa-arrows-rotate text-sky-400 text-[10px]"></i>
-            <span>รีเฟรชข้อมูลอัตโนมัติทุก 3 นาที</span>
+            <span>รีเฟรชทุก 3 นาที</span>
             <span class="text-slate-600 hidden sm:inline">|</span>
             <span class="hidden sm:inline">อัปเดตล่าสุด: <span id="last-updated-time" class="text-slate-300 font-mono">-</span></span>
         </div>
@@ -297,9 +299,11 @@
         const REFRESH_SECONDS = 180;
         let countdown = REFRESH_SECONDS;
         let timerId = null;
-        let rightScaleUserOffset = 0; // Restored user zoom state
+        let rightScaleUserOffset = 0;
+        let isIOS = false;
 
-        const radarSources = {
+        // โหมด Desktop (Webpage URLs)
+        const iframeSources = {
             left: {
                 nk: "https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx",
                 nj: "https://weather.bangkok.go.th/Radar/RadarAnimation.aspx"
@@ -310,13 +314,80 @@
             }
         };
 
+        // โหมด iOS (Direct Image URLs)
+        const imageSources = {
+            left: {
+                nk: "https://weather.bangkok.go.th/Radar/pics/radar.gif",
+                nj: "https://weather.bangkok.go.th/Radar/pics/radar_nj.gif"
+            },
+            right: {
+                bkk: "https://weather.bangkok.go.th/Radar/pics/radarnk.jpg",
+                svp: "https://weather.tmd.go.th/svp240.png"
+            }
+        };
+
         let currentLeftType = 'nk';
         let currentRightType = 'bkk';
 
         /**
-         * Dynamic scaling engine calculating screen dimensions
+         * System Detection Logic
          */
+        function detectIOS() {
+            const isIOSDevice = [
+                'iPad Simulator', 'iPhone Simulator', 'iPod Simulator', 'iPad', 'iPhone', 'iPod'
+            ].includes(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+            
+            // อัปเดตสถานะให้ผู้ใช้เห็น
+            const statusText = document.getElementById('os-status-text');
+            if(statusText) {
+                statusText.textContent = isIOSDevice ? "โหมดการทำงาน: iOS Direct Image" : "โหมดการทำงาน: Desktop Iframe Scale";
+            }
+            return isIOSDevice;
+        }
+
+        /**
+         * Core Loading Execution (Dual Module)
+         */
+        function executeLoad() {
+            const timestamp = new Date().getTime();
+            
+            // อัปเดตลิงก์ภายนอก
+            document.getElementById('link-left').href = iframeSources.left[currentLeftType];
+            document.getElementById('link-right').href = iframeSources.right[currentRightType];
+            document.getElementById('error-link-left').href = iframeSources.left[currentLeftType];
+            document.getElementById('error-link-right').href = iframeSources.right[currentRightType];
+
+            // Reset Errors
+            document.getElementById('error-left').style.display = 'none';
+            document.getElementById('error-right').style.display = 'none';
+
+            if (isIOS) {
+                // [Module 2] - iOS Direct Image 
+                document.getElementById('scaler-wrapper-left').style.display = 'none';
+                document.getElementById('scaler-wrapper-right').style.display = 'none';
+                document.getElementById('desktop-zoom-controls').style.display = 'none';
+
+                const imgLeft = document.getElementById('img-left');
+                const imgRight = document.getElementById('img-right');
+                
+                imgLeft.style.display = 'block';
+                imgRight.style.display = 'block';
+
+                imgLeft.src = `${imageSources.left[currentLeftType]}?t=${timestamp}`;
+                imgRight.src = `${imageSources.right[currentRightType]}?t=${timestamp}`;
+                
+            } else {
+                // [Module 1] - Desktop Iframe
+                document.getElementById('iframe-left').src = `${iframeSources.left[currentLeftType]}?t=${timestamp}`;
+                document.getElementById('iframe-right').src = `${iframeSources.right[currentRightType]}?t=${timestamp}`;
+                applyDynamicTransforms();
+            }
+        }
+
+        // --- Iframe Transformation Logic (Desktop Only) ---
         function applyDynamicTransforms() {
+            if (isIOS) return; 
+
             const boxLeft = document.getElementById('box-left');
             const boxRight = document.getElementById('box-right');
             const scalerLeft = document.getElementById('scaler-left');
@@ -324,88 +395,56 @@
 
             if (!boxLeft || !boxRight || !scalerLeft || !scalerRight) return;
 
-            const isMobile = window.innerWidth < 768;
-
-            // --- Left Pane Scaling ---
-            // Set static pixel container size so iOS knows exactly how to render before scaling
             scalerLeft.style.width = '1000px';
             scalerLeft.style.height = '900px';
-
             const leftW = boxLeft.clientWidth;
             const leftH = boxLeft.clientHeight;
-            
-            // Allow slight user offset on left too if desired, but kept simple here
-            let leftScale = Math.min(leftW / 920, leftH / 850) * (isMobile ? 1.05 : 1.15) + rightScaleUserOffset;
-            let leftYOffset = isMobile ? -60 : -90;
-            scalerLeft.style.transform = `scale(${leftScale}) translate(0px, ${leftYOffset}px)`;
+            let leftScale = Math.min(leftW / 920, leftH / 850) * 1.15;
+            scalerLeft.style.transform = `scale(${leftScale}) translate(0px, -90px)`;
 
-            // --- Right Pane Scaling ---
             const rightW = boxRight.clientWidth;
             const rightH = boxRight.clientHeight;
-            
-            let baseRightScale, rightYOffset, rightXOffset;
+            let baseRightScale, rightYOffset;
 
             if (currentRightType === 'bkk') {
                 scalerRight.style.width = '1850px';
                 scalerRight.style.height = '1650px';
-                
-                baseRightScale = Math.min(rightW / 1850, rightH / 1650) * (isMobile ? 1.85 : 1.0);
-                rightYOffset = isMobile ? -140 : -120;
-                rightXOffset = 0;
+                baseRightScale = Math.min(rightW / 1850, rightH / 1650);
+                rightYOffset = -120;
             } else {
                 scalerRight.style.width = '850px';
                 scalerRight.style.height = '850px';
-                
-                baseRightScale = Math.min(rightW / 850, rightH / 850) * (isMobile ? 0.95 : 1.0);
-                rightYOffset = isMobile ? 0 : 20;
-                rightXOffset = 0;
+                baseRightScale = Math.min(rightW / 850, rightH / 850);
+                rightYOffset = 20;
             }
 
             const finalRightScale = Math.max(0.15, baseRightScale + rightScaleUserOffset);
-            scalerRight.style.transform = `scale(${finalRightScale}) translate(${rightXOffset}px, ${rightYOffset}px)`;
+            scalerRight.style.transform = `scale(${finalRightScale}) translate(0px, ${rightYOffset}px)`;
         }
 
-        // Restored Zoom functions
-        function adjustScale(delta) {
-            rightScaleUserOffset += delta;
-            applyDynamicTransforms();
-        }
+        function adjustScale(delta) { rightScaleUserOffset += delta; applyDynamicTransforms(); }
+        function resetScale() { rightScaleUserOffset = 0; applyDynamicTransforms(); }
 
-        function resetScale() {
-            rightScaleUserOffset = 0;
-            applyDynamicTransforms();
-        }
-
+        // --- Data Control Handlers ---
         function changeLeftRadar(type) {
             currentLeftType = type;
-            const url = radarSources.left[type];
-            document.getElementById('link-left').href = url;
             showLoader('loader-left');
-            document.getElementById('iframe-left').src = `${url}?t=${new Date().getTime()}`;
-            applyDynamicTransforms();
+            executeLoad();
         }
 
         function changeRightRadar(type) {
             currentRightType = type;
-            const url = radarSources.right[type];
-            document.getElementById('link-right').href = url;
-            rightScaleUserOffset = 0; // Reset user zoom on change
-            applyDynamicTransforms();
+            rightScaleUserOffset = 0;
             showLoader('loader-right');
-            document.getElementById('iframe-right').src = `${url}?t=${new Date().getTime()}`;
+            executeLoad();
         }
 
+        // --- Timer & Refresh ---
         function updateTimerUI() {
-            const minutes = Math.floor(countdown / 60);
-            const seconds = countdown % 60;
-            const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            
-            const timerEl = document.getElementById('countdown-timer');
-            if (timerEl) timerEl.textContent = timeStr;
-            
-            const progressPercent = (countdown / REFRESH_SECONDS) * 100;
-            const progressBar = document.getElementById('progress-bar');
-            if (progressBar) progressBar.style.width = `${progressPercent}%`;
+            const m = Math.floor(countdown / 60);
+            const s = countdown % 60;
+            document.getElementById('countdown-timer').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            document.getElementById('progress-bar').style.width = `${(countdown / REFRESH_SECONDS) * 100}%`;
         }
 
         function startCountdown() {
@@ -413,53 +452,32 @@
             timerId = setInterval(() => {
                 countdown--;
                 updateTimerUI();
-                if (countdown <= 0) executeRefresh();
+                if (countdown <= 0) {
+                    countdown = REFRESH_SECONDS;
+                    showLoader('loader-left');
+                    showLoader('loader-right');
+                    executeLoad();
+                    updateTimestamp();
+                }
             }, 1000);
-        }
-
-        function executeRefresh() {
-            countdown = REFRESH_SECONDS;
-            updateTimerUI();
-            const timestamp = new Date().getTime();
-            
-            showLoader('loader-left');
-            showLoader('loader-right');
-
-            const ifLeft = document.getElementById('iframe-left');
-            const ifRight = document.getElementById('iframe-right');
-
-            if (ifLeft) ifLeft.src = `${radarSources.left[currentLeftType]}?t=${timestamp}`;
-            if (ifRight) ifRight.src = `${radarSources.right[currentRightType]}?t=${timestamp}`;
-
-            updateTimestamp();
         }
 
         function manualRefresh() {
             const icon = document.getElementById('refresh-icon');
             if (icon) icon.classList.add('fa-spin');
-            executeRefresh();
-            setTimeout(() => {
-                if (icon) icon.classList.remove('fa-spin');
-            }, 800);
+            countdown = REFRESH_SECONDS;
+            showLoader('loader-left');
+            showLoader('loader-right');
+            executeLoad();
+            updateTimestamp();
+            setTimeout(() => { if (icon) icon.classList.remove('fa-spin'); }, 800);
         }
 
         function updateTimestamp() {
-            const now = new Date();
-            const timeElement = document.getElementById('last-updated-time');
-            if (timeElement) {
-                timeElement.textContent = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            }
+            document.getElementById('last-updated-time').textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 
-        function onIframeLoaded(loaderId) {
-            hideLoader(loaderId);
-            applyDynamicTransforms();
-        }
-
-        function onIframeError(errorId, loaderId) {
-            hideLoader(loaderId);
-        }
-
+        // --- Loader Management ---
         function hideLoader(loaderId) {
             const loader = document.getElementById(loaderId);
             if (loader) {
@@ -467,7 +485,6 @@
                 setTimeout(() => loader.style.display = 'none', 300);
             }
         }
-
         function showLoader(loaderId) {
             const loader = document.getElementById(loaderId);
             if (loader) {
@@ -475,24 +492,34 @@
                 loader.style.opacity = '1';
             }
         }
+        function onIframeLoaded(loaderId) { hideLoader(loaderId); applyDynamicTransforms(); }
+        function onImageLoaded(loaderId) { hideLoader(loaderId); }
+        function onImageError(errorId, loaderId) {
+            hideLoader(loaderId);
+            const errBox = document.getElementById(errorId);
+            if(errBox) errBox.style.display = 'flex';
+            // ซ่อนรูปภาพที่โหลดไม่ขึ้นเพื่อไม่ให้แสดงไอคอนรูปแตก
+            const imgId = errorId.replace('error-', 'img-');
+            const imgTag = document.getElementById(imgId);
+            if(imgTag) imgTag.style.display = 'none';
+        }
 
+        // --- Initialization ---
         window.addEventListener('DOMContentLoaded', () => {
+            isIOS = detectIOS();
             updateTimestamp();
             updateTimerUI();
             startCountdown();
-            applyDynamicTransforms();
+            executeLoad();
 
-            // Fallback to hide loaders after 4s
+            // Fallback hide loaders if something hangs
             setTimeout(() => {
                 hideLoader('loader-left');
                 hideLoader('loader-right');
-            }, 4000);
+            }, 5000);
         });
 
         window.addEventListener('resize', applyDynamicTransforms);
-        window.addEventListener('orientationchange', () => {
-            setTimeout(applyDynamicTransforms, 200);
-        });
     </script>
 </body>
 </html>
