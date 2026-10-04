@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project 4 Streams - YouTube Edition v1.1.2</title>
+  <title>Project 4 Streams - YouTube Edition v1.2.0</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -15,6 +15,7 @@
       --accent-red: #ef4444;
       --accent-blue: #3b82f6;
       --accent-gold: #f59e0b;
+      --accent-thaipbs: #f97316;
       --header-bg: #161e2e;
     }
 
@@ -107,12 +108,26 @@
       color: white;
     }
 
+    /* ThaiPBS Custom Button Style */
+    .btn-thaipbs {
+      background-color: var(--accent-thaipbs);
+      color: #ffffff;
+      font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-thaipbs:hover {
+      background-color: #ea580c;
+      color: #ffffff;
+    }
+
     /* Main Container */
     main {
       flex: 1;
       padding: 0.75rem;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
 
     .page-view {
@@ -306,6 +321,60 @@
       gap: 0.4rem;
       font-weight: 700;
     }
+
+    /* Phase 2: ThaiPBS Mode Banner Banner Control Overlay */
+    .thaipbs-mode-overlay {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(11, 15, 25, 0.92);
+      backdrop-filter: blur(8px);
+      z-index: 500;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 1.2rem;
+      text-align: center;
+      padding: 1.5rem;
+    }
+
+    .thaipbs-mode-overlay.active {
+      display: flex;
+    }
+
+    .overlay-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent-thaipbs);
+    }
+
+    .overlay-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      max-width: 480px;
+      line-height: 1.5;
+    }
+
+    .btn-resume {
+      background-color: var(--accent-green);
+      color: #ffffff;
+      font-size: 1rem;
+      padding: 0.7rem 1.4rem;
+      font-weight: 700;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .btn-resume:hover {
+      background-color: #059669;
+      transform: translateY(-2px);
+    }
   </style>
   <script src="https://www.youtube.com/iframe_api"></script>
 </head>
@@ -314,10 +383,15 @@
   <!-- Top Navigation -->
   <header>
     <div class="brand-title">
-      PROJECT 4 STREAMS <span class="brand-badge">v1.1.2</span>
+      PROJECT 4 STREAMS <span class="brand-badge">v1.2.0 (ThaiPBS Live)</span>
     </div>
 
     <div class="controls-main">
+      <!-- ThaiPBS Live Trigger Button -->
+      <button class="btn btn-thaipbs" id="btn-thaipbs-live" onclick="openThaiPBSLive()">
+        🔴 ThaiPBS Live
+      </button>
+
       <!-- Page Switcher -->
       <div class="btn-group">
         <button class="btn active" id="btn-page1" onclick="switchPage(1)">Page 1 (CH1-4)</button>
@@ -342,6 +416,18 @@
 
   <!-- Main View Area -->
   <main>
+    <!-- Phase 2: ThaiPBS Standby Control Overlay -->
+    <div class="thaipbs-mode-overlay" id="thaipbs-overlay">
+      <div class="overlay-title">📺 ThaiPBS Live Mode Active</div>
+      <div class="overlay-desc">
+        4-Streams have been paused to minimize bandwidth & system resource usage.<br>
+        ThaiPBS Live stream is playing in a popup window.
+      </div>
+      <button class="btn-resume" onclick="closeThaiPBSAndResume()">
+        ⏹ Close ThaiPBS & Resume 4-Streams
+      </button>
+    </div>
+
     <!-- PAGE 1 -->
     <div id="page-1" class="page-view active">
       <div class="grid-2x2" id="grid-p1">
@@ -545,6 +631,7 @@
     let players = {};
     let playerReadyStatus = {};
     let screenConfigs = JSON.parse(JSON.stringify(DEFAULT_CONFIGS));
+    let thaipbsWindowRef = null; // Pop-up Window Reference
 
     // YouTube API Ready Callback
     function onYouTubeIframeAPIReady() {
@@ -762,7 +849,65 @@
     }
 
     /* ==========================================================================
-       PHASE 1: REAL-TIME HOURLY TIMER WITH EARLY TRIGGER (-10s) (v1.1.2)
+       PHASE 2: THAIPBS LIVE POPUP & RESOURCE MANAGEMENT ENGINE (v1.2.0)
+       ========================================================================== */
+
+    // Stop all YouTube streams to save network bandwidth and system resources
+    function stopAllStreamsToSaveResources() {
+      for (let i = 1; i <= 8; i++) {
+        if (players[i] && playerReadyStatus[i] && typeof players[i].stopVideo === 'function') {
+          players[i].stopVideo();
+          updateSoloButtonUI(i, false);
+        }
+      }
+    }
+
+    // Resume all YouTube streams when exiting ThaiPBS mode
+    function resumeAllStreams() {
+      for (let i = 1; i <= 8; i++) {
+        if (players[i] && playerReadyStatus[i] && typeof players[i].playVideo === 'function') {
+          players[i].playVideo();
+          players[i].mute();
+        }
+      }
+    }
+
+    // Open ThaiPBS Live Window & Pause 4-Streams
+    function openThaiPBSLive() {
+      // 1. Stop all 8 YouTubeStreams to free resources
+      stopAllStreamsToSaveResources();
+
+      // 2. Open ThaiPBS Live Web Page in a Popup Window
+      thaipbsWindowRef = window.open(
+        'https://www.thaipbs.or.th/live',
+        'ThaiPBSLiveWindow',
+        'width=1280,height=720,scrollbars=yes,resizable=yes'
+      );
+
+      // 3. Show Dashboard Control Overlay
+      document.getElementById('thaipbs-overlay').classList.add('active');
+    }
+
+    // Close ThaiPBS Window & Resume 4-Streams
+    function closeThaiPBSAndResume() {
+      // 1. Close Popup Window if opened
+      if (thaipbsWindowRef && !thaipbsWindowRef.closed) {
+        thaipbsWindowRef.close();
+      }
+
+      // 2. Hide Standby Overlay
+      document.getElementById('thaipbs-overlay').classList.remove('active');
+
+      // 3. Resume YouTube Streams
+      resumeAllStreams();
+
+      // 4. Default to Page 1 and Unmute CH1 (Al Jazeera)
+      switchPage(1);
+      toggleSolo(1);
+    }
+
+    /* ==========================================================================
+       REAL-TIME HOURLY TIMER WITH EARLY TRIGGER (-10s)
        ========================================================================== */
 
     let audioCtx = null;
@@ -815,7 +960,6 @@
         // Target trigger time is XX:59:50 (10 seconds before top of the hour)
         let target = new Date(now);
         if (now.getMinutes() > 59 || (now.getMinutes() === 59 && now.getSeconds() >= 50)) {
-          // If current time is past XX:59:50, set target to next hour's 59:50
           target.setHours(target.getHours() + 1);
         }
         target.setMinutes(59);
@@ -849,26 +993,27 @@
 
     // Action Trigger Function for Top-of-the-Hour Event (-10s Offset)
     function executeTopOfTheHourActions() {
+      // Ignore hourly alert if ThaiPBS Live Mode is active
+      if (document.getElementById('thaipbs-overlay').classList.contains('active')) {
+        return;
+      }
+
       console.log(`[Hourly Alert Triggered at XX:59:50] Time: ${new Date().toLocaleTimeString()}`);
 
       const isCh1Unmuted = players[1] && playerReadyStatus[1] && !players[1].isMuted();
       const isSolo1Active = document.getElementById('solo-1').classList.contains('active');
 
-      // Check Scenario: Is CH1 currently playing audio and visible on Page 1?
       if (currentPage === 1 && isCh1Unmuted && isSolo1Active) {
         console.log('[Timer] CH1 is already active & unmuted. Continuing seamless playback.');
-        return; // Continue playing seamlessly without interruption or beep
+        return;
       }
 
-      // Scenario B: CH1 is muted, another CH is selected, or user is on Page 2
-      playTripleBeep(); // Play Beep Alert
+      playTripleBeep();
 
-      // Switch back to Page 1 if currently viewing Page 2
       if (currentPage !== 1) {
         switchPage(1);
       }
 
-      // Unmute CH1 (Al Jazeera English) and Mute other channels
       toggleSolo(1);
     }
 
