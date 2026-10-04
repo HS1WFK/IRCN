@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bangkok BMA Radar Live Monitor - v.2.0.2</title>
+    <title>Bangkok BMA Radar Live Monitor - v.2.0.3</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -130,10 +130,10 @@
                 <h1 class="text-xs md:text-sm font-semibold text-slate-100 flex items-center gap-2">
                     <span class="truncate max-w-[120px] sm:max-w-none">ศูนย์เรดาร์ กทม.</span>
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] md:text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-default">
-                        v.2.0.2
+                        v.2.0.3
                     </span>
                 </h1>
-                <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ตรวจสอบระบบปฏิบัติการ...</p>
+                <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">กำลังเชื่อมต่อผ่าน Cloudflare Worker...</p>
             </div>
         </div>
 
@@ -183,7 +183,7 @@
                 </div>
                 <div id="box-left" class="radar-box flex-1">
                     <div id="loader-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
-                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังสแกนดึงภาพผ่าน Cloudflare Worker...</p>
+                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูลผ่าน Proxy...</p>
                     </div>
                     <div id="content-left" class="w-full h-full flex items-center justify-center"></div>
                 </div>
@@ -214,7 +214,7 @@
                 </div>
                 <div id="box-right" class="radar-box flex-1">
                     <div id="loader-right" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
-                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังสแกนดึงภาพผ่าน Cloudflare Worker...</p>
+                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูลผ่าน Proxy...</p>
                     </div>
                     <div id="content-right" class="w-full h-full flex items-center justify-center"></div>
                 </div>
@@ -233,7 +233,7 @@
         </div>
         <div class="text-slate-400 flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-            <span>Cloudflare Worker Scraper Engine</span>
+            <span>Cloudflare Image Binary Stream Proxy</span>
         </div>
     </footer>
 
@@ -277,7 +277,7 @@
             const containerRight = document.getElementById('content-right');
 
             if (isIOS) {
-                // บน iOS: ใช้ Worker Scraper ดึงภาพล่าสุดมาใส่ <img>
+                // บน iOS: ดึงภาพผ่าน Proxy Streaming
                 const leftImgProxy = WORKER_PROXY + encodeURIComponent(RAW_URLS.anim[currentLeftType]) + `&t=${timestamp}`;
                 const rightImgProxy = WORKER_PROXY + encodeURIComponent(RAW_URLS.hires[currentRightType]) + `&t=${timestamp}`;
 
@@ -411,7 +411,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             isIOS = detectIOS();
-            document.getElementById('os-status-text').textContent = isIOS ? "โหมด: iOS Scraper (Cloudflare Worker Proxy Enabled)" : "โหมด: Desktop Iframe (Cloudflare Worker Proxy Enabled)";
+            document.getElementById('os-status-text').textContent = isIOS ? "โหมด: iOS Image Stream Proxy Enabled" : "โหมด: Desktop Iframe Scale";
             updateTimestamp();
             updateTimerUI();
             startCountdown();
