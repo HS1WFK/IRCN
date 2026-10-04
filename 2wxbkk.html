@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bangkok BMA Radar Live Monitor - v.1.0.7</title>
+    <title>Bangkok BMA Radar Live Monitor - v.1.0.8</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -95,8 +95,8 @@
             border: 3px solid rgba(255, 255, 255, 0.1);
             border-radius: 50%;
             border-top: 3px solid #38bdf8;
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin {
@@ -125,7 +125,7 @@
                 <h1 class="text-xs md:text-sm font-semibold text-slate-100 flex items-center gap-2">
                     <span class="truncate max-w-[150px] sm:max-w-none">ศูนย์เรดาร์ กทม.</span>
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] md:text-xs font-mono bg-slate-800 text-slate-400 border border-slate-700 cursor-default">
-                        v.1.0.7
+                        v.1.0.8
                     </span>
                 </h1>
                 <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ตรวจสอบระบบปฏิบัติการ...</p>
@@ -161,7 +161,7 @@
     <!-- Main Content Area -->
     <main class="flex-1 relative overflow-hidden bg-slate-950 p-2">
         
-        <!-- ================= 1. DESKTOP LAYOUT ================= -->
+        <!-- ================= 1. DESKTOP LAYOUT (2 กรอบตามเดิม) ================= -->
         <div id="layout-desktop" class="hidden grid-cols-2 gap-2 h-full w-full">
             
             <!-- Left: Radar Animation -->
@@ -178,148 +178,98 @@
                     <a id="link-desk-left" href="#" target="_blank" class="text-slate-400 hover:text-sky-300"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                 </div>
                 <div id="box-desk-left" class="radar-box flex-1">
+                    <div id="loader-desk-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
+                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูล...</p>
+                    </div>
                     <div class="scaler-wrapper">
                         <div id="scaler-desk-left" class="iframe-crop">
-                            <iframe id="iframe-desk-left" class="radar-iframe" scrolling="no"></iframe>
+                            <iframe id="iframe-desk-left" class="radar-iframe" scrolling="no" onload="hideLoader('loader-desk-left')"></iframe>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Right: Split Top/Bottom -->
-            <div class="flex flex-col gap-2 h-full">
-                
-                <!-- Right Top: High Res -->
-                <section class="flex flex-col flex-1 bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
-                    <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
-                        <div class="flex items-center gap-2 text-indigo-400">
-                            <i class="fa-solid fa-crosshairs"></i>
-                            <span class="text-slate-200">High Res Fit</span>
-                            <div class="flex items-center gap-1 ml-2">
-                                <div class="radar-radio"><input type="radio" id="d-right-bkk" name="d-right" value="bkk" checked onchange="changeDeskRight('bkk')"><label for="d-right-bkk">BKK</label></div>
-                                <div class="radar-radio"><input type="radio" id="d-right-svp" name="d-right" value="svp" onchange="changeDeskRight('svp')"><label for="d-right-svp">SVP240</label></div>
-                            </div>
-                        </div>
-                        <a id="link-desk-right" href="#" target="_blank" class="text-slate-400 hover:text-indigo-300"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-                    </div>
-                    <div id="box-desk-right" class="radar-box flex-1">
-                        <div class="scaler-wrapper">
-                            <div id="scaler-desk-right" class="iframe-crop">
-                                <iframe id="iframe-desk-right" class="radar-iframe" scrolling="no"></iframe>
-                            </div>
+            <!-- Right: High Res + Satellite Button -->
+            <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
+                <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
+                    <div class="flex items-center gap-2 text-indigo-400 truncate">
+                        <i class="fa-solid fa-crosshairs"></i>
+                        <span class="text-slate-200">High Res Fit</span>
+                        <div class="flex items-center gap-1 ml-2">
+                            <div class="radar-radio"><input type="radio" id="d-right-bkk" name="d-right" value="bkk" checked onchange="changeDeskRight('bkk')"><label for="d-right-bkk">BKK</label></div>
+                            <div class="radar-radio"><input type="radio" id="d-right-svp" name="d-right" value="svp" onchange="changeDeskRight('svp')"><label for="d-right-svp">SVP240</label></div>
                         </div>
                     </div>
-                </section>
-
-                <!-- Right Bottom: Himawari Satellite -->
-                <section class="flex flex-col flex-1 bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
-                    <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
-                        <div class="flex items-center gap-2 text-emerald-400">
-                            <i class="fa-solid fa-globe"></i>
-                            <span class="text-slate-200">ดาวเทียม Himawari (TMD)</span>
-                        </div>
-                        <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="text-slate-400 hover:text-emerald-300"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-                    </div>
-                    <div class="flex-1 bg-black relative flex items-center justify-center p-1">
-                        <!-- Video with HTTPS priority -->
-                        <video id="desk-video" class="w-full h-full object-contain" autoplay loop muted playsinline onerror="handleDeskVideoError()"></video>
+                    
+                    <div class="flex items-center gap-2 shrink-0">
+                        <!-- ปุ่มดาวเทียม (สร้างหน้าต่างใหม่ในแอป) -->
+                        <button onclick="openSatelliteModal()" class="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30 text-emerald-400 rounded flex items-center gap-1.5 transition-colors text-[10px] sm:text-[11px] launch-btn shadow-sm">
+                            <i class="fa-solid fa-satellite"></i>
+                            <span class="font-medium hidden sm:inline">ดาวเทียม</span>
+                        </button>
                         
-                        <!-- Fallback Error Desktop -->
-                        <div id="desk-video-error" class="hidden absolute inset-0 bg-slate-900/95 flex-col items-center justify-center text-center p-4">
-                            <i class="fa-solid fa-shield-halved text-slate-500 text-2xl mb-2"></i>
-                            <p class="text-xs text-slate-400 mb-3">เบราว์เซอร์บล็อกการเล่นวิดีโอ (Mixed Content)</p>
-                            <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs">เปิดในแท็บใหม่</a>
+                        <a id="link-desk-right" href="#" target="_blank" class="text-slate-400 hover:text-indigo-300 ml-1 text-[11px]"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
+                </div>
+                <div id="box-desk-right" class="radar-box flex-1">
+                    <div id="loader-desk-right" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
+                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูล...</p>
+                    </div>
+                    <div class="scaler-wrapper">
+                        <div id="scaler-desk-right" class="iframe-crop">
+                            <iframe id="iframe-desk-right" class="radar-iframe" scrolling="no" onload="hideLoader('loader-desk-right')"></iframe>
                         </div>
                     </div>
-                </section>
-            </div>
+                </div>
+            </section>
         </div>
 
-        <!-- ================= 2. iOS / MOBILE LAYOUT ================= -->
-        <div id="layout-mobile" class="hidden flex-col w-full h-full gap-2">
-            
-            <!-- Mobile Normal View (Video Top, Launchpad Bottom) -->
-            <div id="mobile-normal-view" class="flex flex-col w-full h-full gap-2">
-                
-                <!-- TOP: Satellite Video (Optimum Height) -->
-                <div class="relative bg-black rounded-xl border border-slate-800 flex-shrink-0 flex items-center justify-center overflow-hidden shadow-lg" style="height: 42%;">
-                    <div class="absolute top-2 left-2 z-10 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-emerald-400 font-medium border border-emerald-500/20 flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Himawari Satellite
-                    </div>
-                    <video id="mobile-video" class="w-full h-full object-contain" autoplay loop muted playsinline onerror="handleMobileVideoError()"></video>
+        <!-- ================= 2. iOS / MOBILE LAYOUT (Launchpad Menu) ================= -->
+        <div id="layout-mobile" class="hidden w-full h-full bg-slate-900 rounded-xl border border-slate-800 flex-col items-center p-4 sm:p-6 shadow-lg overflow-y-auto relative">
+            <div class="mb-6 flex flex-col items-center">
+                <div class="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center mb-3 border border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.2)]">
+                    <i class="fa-solid fa-mobile-screen text-sky-400 text-3xl"></i>
                 </div>
-
-                <!-- BOTTOM: Launchpad Grid -->
-                <div class="flex-1 bg-slate-900 rounded-xl border border-slate-800 p-3 sm:p-4 flex flex-col shadow-lg overflow-y-auto">
-                    
-                    <!-- Radar Animation Section -->
-                    <h3 class="text-xs font-semibold text-sky-400 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-circle-play"></i> เรดาร์เคลื่อนไหว</h3>
-                    <div class="grid grid-cols-2 gap-2 sm:gap-3 mb-4">
-                        <a href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-lg p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-slate-750 hover:border-sky-500/50">
-                            <i class="fa-solid fa-cloud-showers-heavy text-sky-400 text-lg"></i>
-                            <span class="text-xs text-slate-200 font-medium">หนองแขม</span>
-                        </a>
-                        <a href="https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-lg p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-slate-750 hover:border-sky-500/50">
-                            <i class="fa-solid fa-cloud-rain text-sky-400 text-lg"></i>
-                            <span class="text-xs text-slate-200 font-medium">หนองจอก</span>
-                        </a>
-                    </div>
-
-                    <!-- High Res Section -->
-                    <h3 class="text-xs font-semibold text-indigo-400 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-crosshairs"></i> High Res</h3>
-                    <div class="grid grid-cols-2 gap-2 sm:gap-3">
-                        <a href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-lg p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-slate-750 hover:border-indigo-500/50">
-                            <i class="fa-solid fa-map-location-dot text-indigo-400 text-lg"></i>
-                            <span class="text-xs text-slate-200 font-medium">BKK Radar</span>
-                        </a>
-                        <a href="https://weather.tmd.go.th/svp240loop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-lg p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-slate-750 hover:border-indigo-500/50">
-                            <i class="fa-solid fa-layer-group text-indigo-400 text-lg"></i>
-                            <span class="text-xs text-slate-200 font-medium">SVP240</span>
-                        </a>
-                    </div>
-                </div>
+                <h2 class="text-sm font-semibold text-slate-200">iOS Launchpad Mode</h2>
+                <p class="text-[11px] text-slate-400 text-center max-w-[280px] mt-1">เลือกเปิดหน้าจอที่คุณต้องการ</p>
             </div>
 
-            <!-- Mobile Fallback View (Full Page Menu) -->
-            <div id="mobile-fallback-view" class="hidden w-full h-full bg-slate-900 rounded-xl border border-slate-800 flex-col items-center justify-center p-6 shadow-lg overflow-y-auto relative">
-                <div class="absolute top-4 right-4 text-[10px] text-slate-500 bg-slate-800 px-2 py-1 rounded">Fallback Mode Active</div>
+            <div class="w-full max-w-sm flex flex-col gap-4">
                 
-                <i class="fa-brands fa-apple text-slate-600 text-4xl mb-2"></i>
-                <h2 class="text-sm font-semibold text-slate-200 mb-1">Smart Launchpad</h2>
-                <p class="text-[11px] text-slate-400 text-center mb-6 max-w-[280px]">ระบบบล็อกวิดีโอเนื่องจากความปลอดภัย (HTTPS) สลับการแสดงผลเป็นเมนูเต็มจอ</p>
-
-                <div class="w-full max-w-sm flex flex-col gap-3">
-                    <!-- Satellite Button (Priority) -->
-                    <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="launch-btn w-full bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4 flex items-center gap-4 hover:bg-emerald-600/30">
+                <!-- Satellite Button (Priority) -->
+                <button onclick="openSatelliteModal()" class="launch-btn w-full bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4 flex items-center justify-between hover:bg-emerald-600/30">
+                    <div class="flex items-center gap-4">
                         <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><i class="fa-solid fa-globe text-emerald-400 text-lg"></i></div>
                         <div class="text-left">
                             <h3 class="text-emerald-400 text-sm font-semibold">ดาวเทียม Himawari</h3>
-                            <p class="text-[10px] text-slate-400">ภาพวิดีโอสแกนกลุ่มเมฆ (TMD)</p>
+                            <p class="text-[10px] text-slate-400">ภาพสแกนกลุ่มเมฆ (In-App Player)</p>
                         </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-emerald-500/50"></i>
+                </button>
+
+                <div class="h-px w-full bg-slate-800"></div>
+
+                <!-- Radar Animation -->
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-sky-500/50">
+                        <i class="fa-solid fa-cloud-showers-heavy text-sky-400"></i><span class="text-xs text-slate-200">หนองแขม (NK)</span>
                     </a>
+                    <a href="https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-sky-500/50">
+                        <i class="fa-solid fa-cloud-rain text-sky-400"></i><span class="text-xs text-slate-200">หนองจอก (NJ)</span>
+                    </a>
+                </div>
 
-                    <!-- Radar Animation -->
-                    <div class="grid grid-cols-2 gap-3 mt-2">
-                        <a href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-sky-500/50">
-                            <i class="fa-solid fa-cloud-showers-heavy text-sky-400"></i><span class="text-xs text-slate-200">หนองแขม</span>
-                        </a>
-                        <a href="https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-sky-500/50">
-                            <i class="fa-solid fa-cloud-rain text-sky-400"></i><span class="text-xs text-slate-200">หนองจอก</span>
-                        </a>
-                    </div>
-
-                    <!-- High Res -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <a href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
-                            <i class="fa-solid fa-map-location-dot text-indigo-400"></i><span class="text-xs text-slate-200">BKK Radar</span>
-                        </a>
-                        <a href="https://weather.tmd.go.th/svp240loop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
-                            <i class="fa-solid fa-layer-group text-indigo-400"></i><span class="text-xs text-slate-200">SVP240</span>
-                        </a>
-                    </div>
+                <!-- High Res -->
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
+                        <i class="fa-solid fa-map-location-dot text-indigo-400"></i><span class="text-xs text-slate-200">BKK High Res</span>
+                    </a>
+                    <a href="https://weather.tmd.go.th/svp240loop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
+                        <i class="fa-solid fa-layer-group text-indigo-400"></i><span class="text-xs text-slate-200">SVP 240</span>
+                    </a>
                 </div>
             </div>
-
         </div>
 
     </main>
@@ -338,6 +288,54 @@
         </div>
     </footer>
 
+    <!-- ================= 3. FULLSCREEN MODAL สำหรับดาวเทียม ================= -->
+    <!-- กรอบนี้จำลองการเปิด "หน้าใหม่" (New Page) ซ้อนทับหน้าหลัก พร้อมปุ่ม Close -->
+    <div id="satellite-modal" class="fixed inset-0 z-[100] bg-black hidden flex-col transition-opacity duration-300 opacity-0">
+        <!-- Top Navigation Bar -->
+        <div class="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-3 md:px-5 z-10 shadow-lg">
+            <div class="flex items-center gap-2 md:gap-3 text-emerald-400">
+                <div class="p-1.5 md:p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <div>
+                    <h2 class="font-semibold text-xs md:text-sm text-slate-100">ดาวเทียม Himawari (TMD)</h2>
+                    <p class="text-[10px] text-slate-400 hidden sm:block">สแกนกลุ่มเมฆล่าสุด</p>
+                </div>
+            </div>
+            
+            <!-- ปุ่ม [Close] สีแดงเด่นชัด -->
+            <button onclick="closeSatelliteModal()" class="px-3 md:px-4 py-1.5 md:py-2 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white rounded-lg text-xs font-bold flex items-center gap-2 transition-transform active:scale-95 shadow-md shadow-red-900/40">
+                <i class="fa-solid fa-xmark text-sm"></i>
+                <span class="hidden sm:inline">Close</span>
+                <span>(กลับหน้าหลัก)</span>
+            </button>
+        </div>
+
+        <!-- Video Content -->
+        <div class="flex-1 relative flex flex-col items-center justify-center p-2">
+            <!-- Loader -->
+            <div id="sat-loader" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black z-0">
+                <div class="spinner border-emerald-500/20 border-t-emerald-500"></div>
+                <p class="text-xs text-slate-400">กำลังโหลดภาพดาวเทียม...</p>
+            </div>
+            
+            <!-- Player -->
+            <video id="sat-video" class="w-full h-full object-contain relative z-10" autoplay loop muted playsinline 
+                   onerror="handleSatVideoError()" onloadeddata="hideSatLoader()"></video>
+            
+            <!-- Fallback Error (หากโดนบล็อก HTTP Mixed Content) -->
+            <div id="sat-error" class="hidden relative z-20 flex-col items-center justify-center text-center p-6 bg-slate-900/80 rounded-xl border border-slate-700 max-w-sm">
+                <i class="fa-solid fa-shield-halved text-amber-500 text-4xl mb-3"></i>
+                <h3 class="text-slate-200 font-semibold mb-2">เบราว์เซอร์บล็อกการแสดงผล</h3>
+                <p class="text-slate-400 text-xs mb-4">เพื่อความปลอดภัย ระบบป้องกันการโหลดไฟล์วิดีโอ (HTTP) ในหน้านี้ กรุณาเปิดดูที่แท็บเบราว์เซอร์ใหม่โดยตรง</p>
+                <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-emerald-900/50">
+                    เปิดในแท็บใหม่ (New Tab)
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- ================= END MODAL ================= -->
+
     <script>
         const REFRESH_SECONDS = 180;
         let countdown = REFRESH_SECONDS;
@@ -345,40 +343,28 @@
         let rightScaleUserOffset = 0;
         let isMobileDevice = false;
 
-        // URLs Configuration
         const URLS = {
             anim: { nk: "https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx", nj: "https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" },
             hires: { bkk: "https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx", svp: "https://weather.tmd.go.th/svp240loop.php" },
-            // ลองใช้ https ก่อนเพื่อสู้กับ Mixed Content, ถ้าพังจะ fallback เอง
-            sat: "https://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" 
+            sat: "http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" 
         };
 
         let deskLeftType = 'nk';
         let deskRightType = 'bkk';
 
         function detectDevice() {
-            // จับ Mobile/Tablet ทั้งหมด (iOS & Android) เพื่อ UI ที่เหมาะสมบนจอเล็ก
             const isMob = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document) || window.innerWidth < 768;
-            
-            document.getElementById('os-status-text').textContent = isMob ? "โหมดการแสดงผล: Mobile / iOS" : "โหมดการแสดงผล: Desktop";
+            document.getElementById('os-status-text').textContent = isMob ? "โหมดการแสดงผล: Mobile / iOS Launchpad" : "โหมดการแสดงผล: Desktop";
             return isMob;
         }
 
-        // --- Core Loading ---
         function executeLoad() {
             const timestamp = new Date().getTime();
             
             if (isMobileDevice) {
-                // Mobile Mode
                 document.getElementById('layout-desktop').style.display = 'none';
                 document.getElementById('layout-mobile').style.display = 'flex';
-                
-                const mVideo = document.getElementById('mobile-video');
-                mVideo.src = `${URLS.sat}?t=${timestamp}`;
-                mVideo.load();
-                mVideo.play().catch(e => console.log("Autoplay prevented:", e));
             } else {
-                // Desktop Mode
                 document.getElementById('layout-mobile').style.display = 'none';
                 document.getElementById('layout-desktop').style.display = 'grid';
                 document.getElementById('desktop-zoom-controls').style.display = 'flex';
@@ -389,31 +375,14 @@
                 document.getElementById('iframe-desk-left').src = `${URLS.anim[deskLeftType]}?t=${timestamp}`;
                 document.getElementById('iframe-desk-right').src = `${URLS.hires[deskRightType]}?t=${timestamp}`;
                 
-                const dVideo = document.getElementById('desk-video');
-                dVideo.src = `${URLS.sat}?t=${timestamp}`;
-                dVideo.load();
-                dVideo.play().catch(e => console.log("Autoplay prevented:", e));
-
-                // Reset Error states
-                document.getElementById('desk-video').style.display = 'block';
-                document.getElementById('desk-video-error').style.display = 'none';
-
                 applyDynamicTransforms();
             }
-        }
 
-        // --- Video Error Handling (Mixed Content Fallback) ---
-        function handleDeskVideoError() {
-            console.warn("Desktop Video failed to load. Likely Mixed Content.");
-            document.getElementById('desk-video').style.display = 'none';
-            document.getElementById('desk-video-error').style.display = 'flex';
-        }
-
-        function handleMobileVideoError() {
-            console.warn("Mobile/iOS Video failed to load. Switching to Full Page Fallback.");
-            // ซ่อนหน้า Normal, เปิดหน้า Full Page Launchpad
-            document.getElementById('mobile-normal-view').style.display = 'none';
-            document.getElementById('mobile-fallback-view').style.display = 'flex';
+            // ถ้าระบบดาวเทียมเปิดอยู่ ให้รีเฟรชภาพดาวเทียมด้วย
+            const satModal = document.getElementById('satellite-modal');
+            if (satModal.style.display === 'flex') {
+                reloadSatelliteVideo(timestamp);
+            }
         }
 
         // --- Iframe Transform Engine (Desktop) ---
@@ -427,7 +396,6 @@
 
             if (!boxLeft || !boxRight || !scalerLeft || !scalerRight) return;
 
-            // Left
             scalerLeft.style.width = '1000px';
             scalerLeft.style.height = '900px';
             const leftW = boxLeft.clientWidth;
@@ -435,7 +403,6 @@
             let leftScale = Math.min(leftW / 920, leftH / 850) * 1.15;
             scalerLeft.style.transform = `scale(${leftScale}) translate(0px, -90px)`;
 
-            // Right Top (High Res) - Needs to be smaller because container is half height
             const rightW = boxRight.clientWidth;
             const rightH = boxRight.clientHeight;
             let baseRightScale, rightYOffset;
@@ -443,12 +410,12 @@
             if (deskRightType === 'bkk') {
                 scalerRight.style.width = '1850px';
                 scalerRight.style.height = '1650px';
-                baseRightScale = Math.min(rightW / 1850, rightH / 1650) * 1.0;
-                rightYOffset = -180; // Shift up a bit more for half-height
+                baseRightScale = Math.min(rightW / 1850, rightH / 1650);
+                rightYOffset = -120;
             } else {
                 scalerRight.style.width = '850px';
                 scalerRight.style.height = '850px';
-                baseRightScale = Math.min(rightW / 850, rightH / 850) * 0.9;
+                baseRightScale = Math.min(rightW / 850, rightH / 850);
                 rightYOffset = 20;
             }
 
@@ -459,11 +426,75 @@
         function adjustScale(delta) { rightScaleUserOffset += delta; applyDynamicTransforms(); }
         function resetScale() { rightScaleUserOffset = 0; applyDynamicTransforms(); }
 
-        // --- Radio Handlers ---
-        function changeDeskLeft(type) { deskLeftType = type; executeLoad(); }
-        function changeDeskRight(type) { deskRightType = type; rightScaleUserOffset = 0; executeLoad(); }
+        function changeDeskLeft(type) { 
+            deskLeftType = type; 
+            document.getElementById('loader-desk-left').style.display = 'flex';
+            executeLoad(); 
+        }
+        function changeDeskRight(type) { 
+            deskRightType = type; 
+            rightScaleUserOffset = 0; 
+            document.getElementById('loader-desk-right').style.display = 'flex';
+            executeLoad(); 
+        }
 
-        // --- Timer ---
+        // --- Satellite Modal Logic ---
+        function openSatelliteModal() {
+            const modal = document.getElementById('satellite-modal');
+            modal.style.display = 'flex';
+            // Trigger animation
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            
+            document.getElementById('sat-loader').style.display = 'flex';
+            document.getElementById('sat-error').style.display = 'none';
+            
+            const vid = document.getElementById('sat-video');
+            vid.style.display = 'block';
+            reloadSatelliteVideo(new Date().getTime());
+        }
+
+        function closeSatelliteModal() {
+            const modal = document.getElementById('satellite-modal');
+            modal.classList.add('opacity-0'); // Fade out
+            
+            const vid = document.getElementById('sat-video');
+            vid.pause();
+            vid.src = "";
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300); // รอให้ Fade out เสร็จค่อยซ่อน
+        }
+
+        function reloadSatelliteVideo(timestamp) {
+            const vid = document.getElementById('sat-video');
+            vid.src = `${URLS.sat}?t=${timestamp}`;
+            vid.load();
+            vid.play().catch(e => {
+                console.log("Autoplay blocked or network error:", e);
+                // ไม่ต้องบังคับแจ้ง error ตรงนี้ ให้รอ event onerror ทำงานเอง
+            });
+        }
+
+        function hideSatLoader() {
+            document.getElementById('sat-loader').style.display = 'none';
+        }
+
+        function handleSatVideoError() {
+            document.getElementById('sat-loader').style.display = 'none';
+            document.getElementById('sat-video').style.display = 'none';
+            document.getElementById('sat-error').style.display = 'flex'; // ขึ้นปุ่มเปิด Browser แบบ External
+        }
+
+        // --- Timer and Utility ---
+        function hideLoader(id) {
+            const el = document.getElementById(id);
+            if(el) {
+                el.style.opacity = '0';
+                setTimeout(() => el.style.display = 'none', 300);
+            }
+        }
+
         function updateTimerUI() {
             const m = Math.floor(countdown / 60);
             const s = countdown % 60;
@@ -488,6 +519,13 @@
             const icon = document.getElementById('refresh-icon');
             if (icon) icon.classList.add('fa-spin');
             countdown = REFRESH_SECONDS;
+            
+            if(!isMobileDevice) {
+                document.getElementById('loader-desk-left').style.display = 'flex';
+                document.getElementById('loader-desk-right').style.display = 'flex';
+                document.getElementById('loader-desk-left').style.opacity = '1';
+                document.getElementById('loader-desk-right').style.opacity = '1';
+            }
             executeLoad();
             updateTimestamp();
             setTimeout(() => { if (icon) icon.classList.remove('fa-spin'); }, 800);
@@ -497,7 +535,6 @@
             document.getElementById('last-updated-time').textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 
-        // --- Initialization ---
         window.addEventListener('DOMContentLoaded', () => {
             isMobileDevice = detectDevice();
             updateTimestamp();
@@ -509,7 +546,6 @@
         window.addEventListener('resize', () => {
             const wasMobile = isMobileDevice;
             isMobileDevice = detectDevice();
-            // ถ้าย่อ/ขยายจอจนข้าม Breakpoint ให้สลับ UI อัตโนมัติ
             if(wasMobile !== isMobileDevice) executeLoad(); 
             else applyDynamicTransforms();
         });
