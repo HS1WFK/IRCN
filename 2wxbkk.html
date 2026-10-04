@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bangkok BMA Radar Live Monitor - v.1.0.9</title>
+    <title>Bangkok BMA Radar Live Monitor - v.1.1.0</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -75,7 +75,7 @@
         .radar-radio input[type="radio"] { display: none; }
         .radar-radio label {
             cursor: pointer;
-            padding: 2px 8px;
+            padding: 2px 6px; /* ปรับลด padding เพื่อให้ 5 ปุ่มเรียงกันพอดีบน Desktop */
             border-radius: 4px;
             font-size: 11px;
             font-weight: 600;
@@ -83,6 +83,7 @@
             background-color: rgba(30, 41, 59, 0.8);
             border: 1px solid rgba(51, 65, 85, 0.8);
             color: #94a3b8;
+            white-space: nowrap;
         }
         .radar-radio input[type="radio"]:checked + label {
             background-color: #0284c7;
@@ -123,9 +124,9 @@
             </div>
             <div>
                 <h1 class="text-xs md:text-sm font-semibold text-slate-100 flex items-center gap-2">
-                    <span class="truncate max-w-[150px] sm:max-w-none">ศูนย์เรดาร์ กทม.</span>
+                    <span class="truncate max-w-[120px] sm:max-w-none">ศูนย์เรดาร์ กทม.</span>
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] md:text-xs font-mono bg-slate-800 text-slate-400 border border-slate-700 cursor-default">
-                        v.1.0.9
+                        v.1.1.0
                     </span>
                 </h1>
                 <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ตรวจสอบระบบปฏิบัติการ...</p>
@@ -191,24 +192,28 @@
 
             <!-- Right: High Res + Satellite Button -->
             <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
-                <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
+                <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-2 sm:px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
                     <div class="flex items-center gap-2 text-indigo-400 truncate">
-                        <i class="fa-solid fa-crosshairs"></i>
-                        <span class="text-slate-200">High Res Fit</span>
-                        <div class="flex items-center gap-1 ml-2">
+                        <i class="fa-solid fa-crosshairs hidden lg:inline-block"></i>
+                        <span class="text-slate-200 hidden xl:inline-block">High Res Fit</span>
+                        <div class="flex items-center gap-1 xl:ml-2">
+                            <!-- เพิ่ม 3 ปุ่มใหม่ (รวม 5 ปุ่ม) -->
                             <div class="radar-radio"><input type="radio" id="d-right-bkk" name="d-right" value="bkk" checked onchange="changeDeskRight('bkk')"><label for="d-right-bkk">BKK</label></div>
-                            <div class="radar-radio"><input type="radio" id="d-right-svp" name="d-right" value="svp" onchange="changeDeskRight('svp')"><label for="d-right-svp">SVP240</label></div>
+                            <div class="radar-radio"><input type="radio" id="d-right-svp" name="d-right" value="svp" onchange="changeDeskRight('svp')"><label for="d-right-svp">SVP</label></div>
+                            <div class="radar-radio"><input type="radio" id="d-right-chn" name="d-right" value="chn" onchange="changeDeskRight('chn')"><label for="d-right-chn">CHN</label></div>
+                            <div class="radar-radio"><input type="radio" id="d-right-skm" name="d-right" value="skm" onchange="changeDeskRight('skm')"><label for="d-right-skm">SKM</label></div>
+                            <div class="radar-radio"><input type="radio" id="d-right-ryg" name="d-right" value="ryg" onchange="changeDeskRight('ryg')"><label for="d-right-ryg">RYG</label></div>
                         </div>
                     </div>
                     
-                    <div class="flex items-center gap-2 shrink-0">
+                    <div class="flex items-center gap-1 sm:gap-2 shrink-0 pl-2">
                         <!-- ปุ่มเปิดดาวเทียมแท็บใหม่ (Desktop) -->
-                        <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30 text-emerald-400 rounded flex items-center gap-1.5 transition-colors text-[10px] sm:text-[11px] launch-btn shadow-sm">
+                        <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="px-2 py-1 bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30 text-emerald-400 rounded flex items-center gap-1.5 transition-colors text-[10px] sm:text-[11px] launch-btn shadow-sm whitespace-nowrap">
                             <i class="fa-solid fa-satellite"></i>
-                            <span class="font-medium hidden sm:inline">ดาวเทียม</span>
+                            <span class="font-medium hidden md:inline">ดาวเทียม</span>
                         </a>
                         
-                        <a id="link-desk-right" href="#" target="_blank" class="text-slate-400 hover:text-indigo-300 ml-1 text-[11px]"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                        <a id="link-desk-right" href="#" target="_blank" class="text-slate-400 hover:text-indigo-300 text-[11px]"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                     </div>
                 </div>
                 <div id="box-desk-right" class="radar-box flex-1">
@@ -226,49 +231,65 @@
 
         <!-- ================= 2. iOS / MOBILE LAYOUT (Launchpad Menu) ================= -->
         <div id="layout-mobile" class="hidden w-full h-full bg-slate-900 rounded-xl border border-slate-800 flex-col items-center p-4 sm:p-6 shadow-lg overflow-y-auto relative">
-            <div class="mb-6 flex flex-col items-center">
-                <div class="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center mb-3 border border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.2)]">
-                    <i class="fa-solid fa-mobile-screen text-sky-400 text-3xl"></i>
+            <div class="mb-5 flex flex-col items-center shrink-0">
+                <div class="w-14 h-14 rounded-full bg-sky-500/10 flex items-center justify-center mb-3 border border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.2)]">
+                    <i class="fa-solid fa-mobile-screen text-sky-400 text-2xl"></i>
                 </div>
                 <h2 class="text-sm font-semibold text-slate-200">iOS Launchpad Mode</h2>
-                <p class="text-[11px] text-slate-400 text-center max-w-[280px] mt-1">เลือกเปิดหน้าจอที่คุณต้องการ</p>
+                <p class="text-[11px] text-slate-400 text-center max-w-[280px] mt-1">เลือกเปิดหน้าจอที่คุณต้องการ (แท็บใหม่)</p>
             </div>
 
-            <div class="w-full max-w-sm flex flex-col gap-4">
+            <div class="w-full max-w-sm flex flex-col gap-4 pb-4">
                 
                 <!-- Satellite Button (เปิดแท็บใหม่) -->
-                <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="launch-btn w-full bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4 flex items-center justify-between hover:bg-emerald-600/30">
+                <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="launch-btn w-full bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-3.5 flex items-center justify-between hover:bg-emerald-600/30 shrink-0">
                     <div class="flex items-center gap-4">
                         <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><i class="fa-solid fa-globe text-emerald-400 text-lg"></i></div>
                         <div class="text-left">
                             <h3 class="text-emerald-400 text-sm font-semibold">ดาวเทียม Himawari</h3>
-                            <p class="text-[10px] text-slate-400">เปิดภาพสแกนกลุ่มเมฆ (แท็บใหม่)</p>
+                            <p class="text-[10px] text-slate-400">ภาพสแกนกลุ่มเมฆล่าสุด</p>
                         </div>
                     </div>
                     <i class="fa-solid fa-arrow-up-right-from-square text-emerald-500/50"></i>
                 </a>
 
-                <div class="h-px w-full bg-slate-800"></div>
+                <div class="h-px w-full bg-slate-800 shrink-0"></div>
 
                 <!-- Radar Animation -->
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-sky-500/50">
-                        <i class="fa-solid fa-cloud-showers-heavy text-sky-400"></i><span class="text-xs text-slate-200">หนองแขม (NK)</span>
-                    </a>
-                    <a href="https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-sky-500/50">
-                        <i class="fa-solid fa-cloud-rain text-sky-400"></i><span class="text-xs text-slate-200">หนองจอก (NJ)</span>
-                    </a>
+                <div class="shrink-0">
+                    <h3 class="text-xs font-semibold text-sky-400 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-circle-play"></i> เรดาร์เคลื่อนไหว</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-sky-500/50">
+                            <i class="fa-solid fa-cloud-showers-heavy text-sky-400"></i><span class="text-xs text-slate-200">หนองแขม (NK)</span>
+                        </a>
+                        <a href="https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-sky-500/50">
+                            <i class="fa-solid fa-cloud-rain text-sky-400"></i><span class="text-xs text-slate-200">หนองจอก (NJ)</span>
+                        </a>
+                    </div>
                 </div>
 
-                <!-- High Res -->
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
-                        <i class="fa-solid fa-map-location-dot text-indigo-400"></i><span class="text-xs text-slate-200">BKK High Res</span>
-                    </a>
-                    <a href="https://weather.tmd.go.th/svp240loop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
-                        <i class="fa-solid fa-layer-group text-indigo-400"></i><span class="text-xs text-slate-200">SVP 240</span>
-                    </a>
+                <!-- High Res (มี 5 ปุ่ม จึงใช้ Grid 2 คอลัมน์ที่สวยงาม) -->
+                <div class="shrink-0">
+                    <h3 class="text-xs font-semibold text-indigo-400 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-crosshairs"></i> High Res Fit</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
+                            <i class="fa-solid fa-map-location-dot text-indigo-400"></i><span class="text-xs text-slate-200">BKK</span>
+                        </a>
+                        <a href="https://weather.tmd.go.th/svp240loop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
+                            <i class="fa-solid fa-layer-group text-indigo-400"></i><span class="text-xs text-slate-200">SVP</span>
+                        </a>
+                        <a href="https://weather.tmd.go.th/chnloop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
+                            <i class="fa-solid fa-layer-group text-indigo-400"></i><span class="text-xs text-slate-200">CHN</span>
+                        </a>
+                        <a href="https://weather.tmd.go.th/skm240loop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
+                            <i class="fa-solid fa-layer-group text-indigo-400"></i><span class="text-xs text-slate-200">SKM</span>
+                        </a>
+                        <a href="https://weather.tmd.go.th/rygloop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
+                            <i class="fa-solid fa-layer-group text-indigo-400"></i><span class="text-xs text-slate-200">RYG</span>
+                        </a>
+                    </div>
                 </div>
+                
             </div>
         </div>
 
@@ -295,9 +316,19 @@
         let rightScaleUserOffset = 0;
         let isMobileDevice = false;
 
+        // อัปเดต Object URLS ให้ครอบคลุมทุกจุด
         const URLS = {
-            anim: { nk: "https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx", nj: "https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" },
-            hires: { bkk: "https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx", svp: "https://weather.tmd.go.th/svp240loop.php" }
+            anim: { 
+                nk: "https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx", 
+                nj: "https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" 
+            },
+            hires: { 
+                bkk: "https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx", 
+                svp: "https://weather.tmd.go.th/svp240loop.php",
+                chn: "https://weather.tmd.go.th/chnloop.php",
+                skm: "https://weather.tmd.go.th/skm240loop.php",
+                ryg: "https://weather.tmd.go.th/rygloop.php"
+            }
         };
 
         let deskLeftType = 'nk';
@@ -352,6 +383,7 @@
             const rightH = boxRight.clientHeight;
             let baseRightScale, rightYOffset;
 
+            // ตรรกะรองรับทั้ง bkk และ tmd sites (svp, chn, skm, ryg)
             if (deskRightType === 'bkk') {
                 scalerRight.style.width = '1850px';
                 scalerRight.style.height = '1650px';
