@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full w-full overflow-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Bangkok BMA Radar Live Monitor - v.2.0.0</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Kanit', sans-serif;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100vh;
+            height: -webkit-fill-available;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            overflow: hidden !important;
+            background-color: #0b0f17;
+            color: #f8fafc;
+        }
+
+        .radar-box {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #0f172a;
+        }
+
+        .scaler-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .iframe-crop {
+            position: absolute;
+            transform-origin: center center;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: auto;
+            transform: translateZ(0);
+        }
+
+        .radar-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1px;
+            min-width: 100%;
+            height: 100%;
+            border: none;
+            background-color: #0f172a;
+            overflow: hidden;
+        }
+
+        .radar-radio input[type="radio"] { display: none; }
+        .radar-radio label {
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            background-color: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            color: #94a3b8;
+            white-space: nowrap;
+        }
+        .radar-radio input[type="radio"]:checked + label {
+            background-color: #0284c7;
+            border-color: #38bdf8;
+            color: #ffffff;
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #38bdf8;
+            width: 32px;
+            height: 32px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .launch-btn {
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        .launch-btn:active {
+            transform: scale(0.96);
+        }
+
+        .ios-radar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden">
+
+    <!-- Header -->
+    <header class="h-12 md:h-14 bg-slate-900/95 border-b border-slate-800 px-3 md:px-5 flex items-center justify-between z-30 shrink-0">
+        <div class="flex items-center space-x-2 md:space-x-3">
+            <div class="p-1.5 md:p-2 bg-sky-500/10 text-sky-400 rounded-lg border border-sky-500/20">
+                <i class="fa-solid fa-radar text-base md:text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-xs md:text-sm font-semibold text-slate-100 flex items-center gap-2">
+                    <span class="truncate max-w-[120px] sm:max-w-none">ศูนย์เรดาร์ กทม.</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] md:text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-default">
+                        v.2.0.0
+                    </span>
+                </h1>
+                <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ตรวจสอบระบบปฏิบัติการ...</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 md:gap-3">
+            <!-- Zoom Controls (Desktop Only) -->
+            <div id="desktop-zoom-controls" class="hidden items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 text-xs mr-2">
+                <button onclick="adjustScale(-0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 transition-colors"><i class="fa-solid fa-minus"></i></button>
+                <button onclick="resetScale()" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 font-mono text-[11px] transition-colors">Reset</button>
+                <button onclick="adjustScale(0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 transition-colors"><i class="fa-solid fa-plus"></i></button>
+            </div>
+
+            <!-- Timer -->
+            <div class="flex items-center gap-2 bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                <i class="fa-regular fa-clock text-sky-400 text-xs"></i>
+                <div class="text-[11px] md:text-xs font-mono flex items-center gap-1.5">
+                    <span id="countdown-timer" class="text-sky-400 font-bold">03:00</span>
+                </div>
+                <div class="w-8 md:w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden ml-1">
+                    <div id="progress-bar" class="h-full bg-sky-400 transition-all duration-1000 ease-linear w-full"></div>
+                </div>
+            </div>
+
+            <button id="refresh-btn" onclick="manualRefresh()" class="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium rounded-lg transition-colors">
+                <i id="refresh-icon" class="fa-solid fa-arrows-rotate text-xs"></i>
+                <span class="hidden sm:inline">รีเฟรช</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative overflow-hidden bg-slate-950 p-2">
+        
+        <div id="layout-container" class="grid grid-cols-1 md:grid-cols-2 gap-2 h-full w-full">
+            
+            <!-- Left Screen: Animation -->
+            <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
+                <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
+                    <div class="flex items-center gap-2 text-sky-400">
+                        <i class="fa-solid fa-circle-play"></i>
+                        <span class="text-slate-200">ภาพเคลื่อนไหว</span>
+                        <div class="flex items-center gap-1 ml-2">
+                            <div class="radar-radio"><input type="radio" id="radio-left-nk" name="left-rad" value="nk" checked onchange="changeLeftRadar('nk')"><label for="radio-left-nk">NK</label></div>
+                            <div class="radar-radio"><input type="radio" id="radio-left-nj" name="left-rad" value="nj" onchange="changeLeftRadar('nj')"><label for="radio-left-nj">NJ</label></div>
+                        </div>
+                    </div>
+                    <a id="link-left" href="#" target="_blank" class="text-slate-400 hover:text-sky-300"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                </div>
+                <div id="box-left" class="radar-box flex-1">
+                    <div id="loader-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
+                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูลผ่าน Proxy...</p>
+                    </div>
+                    <div id="content-left" class="w-full h-full flex items-center justify-center"></div>
+                </div>
+            </section>
+
+            <!-- Right Screen: High Res -->
+            <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
+                <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-2 sm:px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
+                    <div class="flex items-center gap-2 text-indigo-400 truncate">
+                        <i class="fa-solid fa-crosshairs hidden lg:inline-block"></i>
+                        <span class="text-slate-200 hidden xl:inline-block">High Res</span>
+                        <div class="flex items-center gap-1 xl:ml-2">
+                            <div class="radar-radio"><input type="radio" id="radio-right-bkk" name="right-rad" value="bkk" checked onchange="changeRightRadar('bkk')"><label for="radio-right-bkk">BKK</label></div>
+                            <div class="radar-radio"><input type="radio" id="radio-right-svp" name="right-rad" value="svp" onchange="changeRightRadar('svp')"><label for="radio-right-svp">SVP</label></div>
+                            <div class="radar-radio"><input type="radio" id="radio-right-chn" name="right-rad" value="chn" onchange="changeRightRadar('chn')"><label for="radio-right-chn">CHN</label></div>
+                            <div class="radar-radio"><input type="radio" id="radio-right-skm" name="right-rad" value="skm" onchange="changeRightRadar('skm')"><label for="radio-right-skm">SKM</label></div>
+                            <div class="radar-radio"><input type="radio" id="radio-right-ryg" name="right-rad" value="ryg" onchange="changeRightRadar('ryg')"><label for="radio-right-ryg">RYG</label></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-1 sm:gap-2 shrink-0 pl-2">
+                        <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="px-2 py-1 bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30 text-emerald-400 rounded flex items-center gap-1.5 transition-colors text-[10px] sm:text-[11px] launch-btn shadow-sm whitespace-nowrap">
+                            <i class="fa-solid fa-satellite"></i>
+                            <span class="font-medium hidden md:inline">ดาวเทียม</span>
+                        </a>
+                        <a id="link-right" href="#" target="_blank" class="text-slate-400 hover:text-indigo-300 text-[11px]"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
+                </div>
+                <div id="box-right" class="radar-box flex-1">
+                    <div id="loader-right" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
+                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูลผ่าน Proxy...</p>
+                    </div>
+                    <div id="content-right" class="w-full h-full flex items-center justify-center"></div>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="h-7 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between text-[10px] md:text-[11px] text-slate-400 shrink-0">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-arrows-rotate text-sky-400 text-[10px]"></i>
+            <span>รีเฟรชทุก 3 นาที</span>
+            <span class="text-slate-600 hidden sm:inline">|</span>
+            <span class="hidden sm:inline">อัปเดต: <span id="last-updated-time" class="text-slate-300 font-mono">-</span></span>
+        </div>
+        <div class="text-slate-400 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span>Cloudflare Workers Powered</span>
+        </div>
+    </footer>
+
+    <script>
+        // ✅ Cloudflare Worker Endpoint
+        const WORKER_PROXY = "https://solitary-queen-db74.hs1wfk.workers.dev/?url=";
+
+        const REFRESH_SECONDS = 180;
+        let countdown = REFRESH_SECONDS;
+        let timerId = null;
+        let rightScaleUserOffset = 0;
+        let isIOS = false;
+
+        const RAW_URLS = {
+            anim: { 
+                nk: "https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx", 
+                nj: "https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" 
+            },
+            hires: { 
+                bkk: "https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx", 
+                svp: "https://weather.tmd.go.th/svp240loop.php",
+                chn: "https://weather.tmd.go.th/chnloop.php",
+                skm: "https://weather.tmd.go.th/skm240loop.php",
+                ryg: "https://weather.tmd.go.th/rygloop.php"
+            }
+        };
+
+        let currentLeftType = 'nk';
+        let currentRightType = 'bkk';
+
+        function detectIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+        }
+
+        function executeLoad() {
+            const timestamp = new Date().getTime();
+            
+            document.getElementById('link-left').href = RAW_URLS.anim[currentLeftType];
+            document.getElementById('link-right').href = RAW_URLS.hires[currentRightType];
+
+            const leftTargetUrl = WORKER_PROXY + encodeURIComponent(RAW_URLS.anim[currentLeftType]) + `&t=${timestamp}`;
+            const rightTargetUrl = WORKER_PROXY + encodeURIComponent(RAW_URLS.hires[currentRightType]) + `&t=${timestamp}`;
+
+            const containerLeft = document.getElementById('content-left');
+            const containerRight = document.getElementById('content-right');
+
+            if (isIOS) {
+                containerLeft.innerHTML = `<img src="${leftTargetUrl}" class="ios-radar-img" onload="hideLoader('loader-left')" onerror="hideLoader('loader-left')">`;
+                containerRight.innerHTML = `<img src="${rightTargetUrl}" class="ios-radar-img" onload="hideLoader('loader-right')" onerror="hideLoader('loader-right')">`;
+            } else {
+                document.getElementById('desktop-zoom-controls').style.display = 'flex';
+                
+                containerLeft.innerHTML = `
+                    <div class="scaler-wrapper">
+                        <div id="scaler-desk-left" class="iframe-crop">
+                            <iframe id="iframe-desk-left" src="${leftTargetUrl}" class="radar-iframe" scrolling="no" onload="hideLoader('loader-left')"></iframe>
+                        </div>
+                    </div>`;
+                containerRight.innerHTML = `
+                    <div class="scaler-wrapper">
+                        <div id="scaler-desk-right" class="iframe-crop">
+                            <iframe id="iframe-desk-right" src="${rightTargetUrl}" class="radar-iframe" scrolling="no" onload="hideLoader('loader-right')"></iframe>
+                        </div>
+                    </div>`;
+                
+                setTimeout(applyDynamicTransforms, 100);
+            }
+        }
+
+        function applyDynamicTransforms() {
+            if (isIOS) return;
+
+            const boxLeft = document.getElementById('box-left');
+            const boxRight = document.getElementById('box-right');
+            const scalerLeft = document.getElementById('scaler-desk-left');
+            const scalerRight = document.getElementById('scaler-desk-right');
+
+            if (!boxLeft || !boxRight || !scalerLeft || !scalerRight) return;
+
+            scalerLeft.style.width = '1000px';
+            scalerLeft.style.height = '900px';
+            const leftW = boxLeft.clientWidth;
+            const leftH = boxLeft.clientHeight;
+            let leftScale = Math.min(leftW / 920, leftH / 850) * 1.15;
+            scalerLeft.style.transform = `scale(${leftScale}) translate(0px, -90px)`;
+
+            const rightW = boxRight.clientWidth;
+            const rightH = boxRight.clientHeight;
+            let baseRightScale, rightYOffset;
+
+            if (currentRightType === 'bkk') {
+                scalerRight.style.width = '1850px';
+                scalerRight.style.height = '1650px';
+                baseRightScale = Math.min(rightW / 1850, rightH / 1650);
+                rightYOffset = -120;
+            } else {
+                scalerRight.style.width = '850px';
+                scalerRight.style.height = '850px';
+                baseRightScale = Math.min(rightW / 850, rightH / 850);
+                rightYOffset = 20;
+            }
+
+            const finalRightScale = Math.max(0.15, baseRightScale + rightScaleUserOffset);
+            scalerRight.style.transform = `scale(${finalRightScale}) translate(0px, ${rightYOffset}px)`;
+        }
+
+        function adjustScale(delta) { rightScaleUserOffset += delta; applyDynamicTransforms(); }
+        function resetScale() { rightScaleUserOffset = 0; applyDynamicTransforms(); }
+
+        function changeLeftRadar(type) { 
+            currentLeftType = type; 
+            showLoader('loader-left');
+            executeLoad(); 
+        }
+        function changeRightRadar(type) { 
+            currentRightType = type; 
+            rightScaleUserOffset = 0; 
+            showLoader('loader-right');
+            executeLoad(); 
+        }
+
+        function hideLoader(id) {
+            const el = document.getElementById(id);
+            if(el) {
+                el.style.opacity = '0';
+                setTimeout(() => el.style.display = 'none', 300);
+            }
+        }
+        function showLoader(id) {
+            const el = document.getElementById(id);
+            if(el) {
+                el.style.display = 'flex';
+                el.style.opacity = '1';
+            }
+        }
+
+        function updateTimerUI() {
+            const m = Math.floor(countdown / 60);
+            const s = countdown % 60;
+            document.getElementById('countdown-timer').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            document.getElementById('progress-bar').style.width = `${(countdown / REFRESH_SECONDS) * 100}%`;
+        }
+
+        function startCountdown() {
+            clearInterval(timerId);
+            timerId = setInterval(() => {
+                countdown--;
+                updateTimerUI();
+                if (countdown <= 0) {
+                    countdown = REFRESH_SECONDS;
+                    executeLoad();
+                    updateTimestamp();
+                }
+            }, 1000);
+        }
+
+        function manualRefresh() {
+            const icon = document.getElementById('refresh-icon');
+            if (icon) icon.classList.add('fa-spin');
+            countdown = REFRESH_SECONDS;
+            showLoader('loader-left');
+            showLoader('loader-right');
+            executeLoad();
+            updateTimestamp();
+            setTimeout(() => { if (icon) icon.classList.remove('fa-spin'); }, 800);
+        }
+
+        function updateTimestamp() {
+            document.getElementById('last-updated-time').textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            isIOS = detectIOS();
+            document.getElementById('os-status-text').textContent = isIOS ? "โหมด: iOS (Cloudflare Proxy Enabled)" : "โหมด: Desktop (Cloudflare Proxy Enabled)";
+            updateTimestamp();
+            updateTimerUI();
+            startCountdown();
+            executeLoad();
+        });
+
+        window.addEventListener('resize', applyDynamicTransforms);
+    </script>
+</body>
+</html>
