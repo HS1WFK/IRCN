@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project 4 Streams - YouTube Edition v1.0.9</title>
+  <title>Project 4 Streams - YouTube Edition v1.1.0</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -105,6 +105,11 @@
     .btn.active {
       background-color: var(--accent-blue);
       color: white;
+    }
+
+    .btn.active-gold {
+      background-color: var(--accent-gold);
+      color: #000;
     }
 
     /* Main Container */
@@ -291,6 +296,20 @@
     .url-input:focus {
       border-color: var(--accent-blue);
     }
+
+    /* Timer Status Indicator UI */
+    .timer-badge {
+      font-size: 0.72rem;
+      font-family: monospace;
+      color: var(--accent-gold);
+      background: rgba(245, 158, 11, 0.15);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
   </style>
   <script src="https://www.youtube.com/iframe_api"></script>
 </head>
@@ -299,7 +318,7 @@
   <!-- Top Navigation -->
   <header>
     <div class="brand-title">
-      PROJECT 4 STREAMS <span class="brand-badge">YouTube 1.0.9</span>
+      PROJECT 4 STREAMS <span class="brand-badge">v1.1.0 (Timer Phase 1)</span>
     </div>
 
     <div class="controls-main">
@@ -314,6 +333,15 @@
         <button class="btn active" id="btn-grid" onclick="setLayout('grid')">2x2 Grid</button>
         <button class="btn" id="btn-focus" onclick="setLayout('focus')">Main + Sidebar</button>
       </div>
+
+      <!-- Phase 1: Hourly Timer Test Mode Switcher -->
+      <div class="btn-group">
+        <button class="btn active-gold" id="btn-timer-real" onclick="setTimerMode('real')">Hourly Timer (.00)</button>
+        <button class="btn" id="btn-timer-30s" onclick="setTimerMode('30s')">Test 30s</button>
+        <button class="btn" id="btn-timer-60s" onclick="setTimerMode('60s')">Test 60s</button>
+      </div>
+
+      <div class="timer-badge" id="timer-status">⏱ Mode: Real (.00)</div>
 
       <!-- Global Actions -->
       <button class="btn" onclick="muteAllCurrentPage()" style="border: 1px solid var(--border-color);">
@@ -534,6 +562,7 @@
       for (let i = 1; i <= 8; i++) {
         initPlayer(i);
       }
+      startHourlyTimer(); // Launch Phase 1 Timer System
     }
 
     // Populate Dropdowns with Grouping
@@ -741,6 +770,131 @@
       document.getElementById('btn-grid').classList.toggle('active', mode === 'grid');
       document.getElementById('btn-focus').classList.toggle('active', mode === 'focus');
     }
+
+    /* ==========================================================================
+       PHASE 1: HOURLY TIMER & WEB AUDIO SOUND ENGINE (v1.1.0 MODULE)
+       ========================================================================== */
+
+    let audioCtx = null;
+    let timerMode = 'real'; // 'real', '30s', '60s'
+    let timerInterval = null;
+    let lastTriggerKey = null;
+
+    // Web Audio API Engine for Generating Beep Sounds
+    function initAudioContext() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playBeep(freq = 880, type = 'sine', duration = 0.15, delay = 0) {
+      initAudioContext();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = type;
+      osc.frequency.value = freq;
+
+      const startTime = audioCtx.currentTime + delay;
+      gain.gain.setValueAtTime(0.3, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    }
+
+    function playTripleBeep() {
+      playBeep(880, 'sine', 0.12, 0);     // Beep 1
+      playBeep(880, 'sine', 0.12, 0.2);   // Beep 2
+      playBeep(1200, 'sine', 0.25, 0.4);  // Beep 3 (Higher Pitch Ending)
+    }
+
+    // Set Timer Mode (Real vs Test Loops)
+    function setTimerMode(mode) {
+      timerMode = mode;
+      document.getElementById('btn-timer-real').classList.toggle('active-gold', mode === 'real');
+      document.getElementById('btn-timer-30s').classList.toggle('active-gold', mode === '30s');
+      document.getElementById('btn-timer-60s').classList.toggle('active-gold', mode === '60s');
+
+      const statusEl = document.getElementById('timer-status');
+      if (mode === 'real') {
+        statusEl.textContent = '⏱ Mode: Real (.00)';
+      } else if (mode === '30s') {
+        statusEl.textContent = '🧪 Test Loop: 30s';
+      } else if (mode === '60s') {
+        statusEl.textContent = '🧪 Test Loop: 60s';
+      }
+
+      lastTriggerKey = null; // Reset Trigger Guard
+    }
+
+    // Main Timer Loop Checker
+    function startHourlyTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+
+      timerInterval = setInterval(() => {
+        const now = new Date();
+        const mins = now.getMinutes();
+        const secs = now.getSeconds();
+
+        if (timerMode === 'real') {
+          // Trigger exactly at XX:00:00
+          if (mins === 0 && secs === 0) {
+            const currentHourKey = `${now.getHours()}:${mins}`;
+            if (lastTriggerKey !== currentHourKey) {
+              lastTriggerKey = currentHourKey;
+              executeTopOfTheHourActions();
+            }
+          }
+        } else if (timerMode === '30s') {
+          // Trigger every 30 seconds (00s or 30s)
+          if (secs === 0 || secs === 30) {
+            const testKey = `${mins}:${secs}`;
+            if (lastTriggerKey !== testKey) {
+              lastTriggerKey = testKey;
+              executeTopOfTheHourActions();
+            }
+          }
+        } else if (timerMode === '60s') {
+          // Trigger every 60 seconds (00s)
+          if (secs === 0) {
+            const testKey = `${mins}:${secs}`;
+            if (lastTriggerKey !== testKey) {
+              lastTriggerKey = testKey;
+              executeTopOfTheHourActions();
+            }
+          }
+        }
+      }, 1000);
+    }
+
+    // Action Trigger Function for Top-of-the-Hour Event
+    function executeTopOfTheHourActions() {
+      console.log(`[Timer Event Triggered] Time: ${new Date().toLocaleTimeString()} Mode: ${timerMode}`);
+
+      // 1. Sound Beep Alert
+      playTripleBeep();
+
+      // 2. Switch back to Page 1 if currently on Page 2
+      if (currentPage !== 1) {
+        switchPage(1);
+      }
+
+      // 3. Unmute CH1 (Al Jazeera English) & Update UI
+      toggleSolo(1);
+    }
+
+    // Global Listener to Wake AudioContext on First Interaction
+    document.addEventListener('click', () => {
+      initAudioContext();
+    }, { once: true });
   </script>
 </body>
 </html>
