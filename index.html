@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Compact Header Meter V.1.4.9</title>
+  <title>Global News - Compact Header Meter V.1.6.0</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -49,45 +49,98 @@
       background: rgba(2, 4, 8, 0.88);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      padding-top: 16px;
-      padding-bottom: 12px;
-      padding-left: 12px;
-      padding-right: 12px;
-      margin-bottom: 16px;
+      padding-top: 19px;
+      padding-bottom: 14px;
+      padding-left: 14px;
+      padding-right: 14px;
+      margin-bottom: 20px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 0 0 8px 8px;
     }
 
     .header-container { text-align: left; padding-left: 6px; }
-    .callsign { font-size: 26px; font-weight: 700; color: #a0a0a0; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .title-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-    h1.page-title { font-size: 40px; font-weight: 700; color: #ffffff; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95); margin: 0; line-height: 1.1; }
+    
+    .callsign { font-size: 31px; font-weight: 700; color: #a0a0a0; letter-spacing: 0.5px; margin-bottom: 5px; }
+    .title-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+    
+    h1.page-title { 
+      font-size: 48px; 
+      font-weight: 700; 
+      color: #ffffff; 
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95); 
+      margin: 0; 
+      line-height: 1.1; 
+      white-space: nowrap;
+    }
     
     .utc-time-display {
-      font-size: 26px; font-weight: 600; color: #ffffff;
+      font-size: 31px; font-weight: 600; color: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95); white-space: nowrap;
     }
 
-    .station-info-row { display: flex; align-items: center; margin-bottom: 10px; min-height: 36px; visibility: hidden; width: 100%; }
-    .station-ticker-wrapper { display: flex; align-items: center; width: 100%; overflow: hidden; }
-    .station-fixed-title { font-size: 20px; font-weight: 700; color: #ff9800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); white-space: nowrap; margin-right: 8px; flex-shrink: 0; }
-    .station-ticker-container { flex-grow: 1; overflow: hidden; white-space: nowrap; position: relative; }
-    .station-ticker-text {
-      display: inline-block; font-size: 20px; font-weight: 600; color: #ff9800;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); white-space: nowrap;
-      animation: ticker-scroll-slow 45s linear infinite;
+    /* --- Station Info & Dedicated Full-Width Ticker Layout --- */
+    .station-info-container { display: flex; flex-direction: column; margin-bottom: 12px; min-height: 42px; visibility: hidden; width: 100%; }
+    
+    /* 1. จัดวางบรรทัดชื่อสถานีและ Label แสดงสถานะ RSS/Info ชิดขวาสุด */
+    .station-title-row { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: baseline; 
+      margin-bottom: 2px; 
+      width: 100%;
     }
+    .station-fixed-title { font-size: 26px; font-weight: 700; color: #ff9800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); white-space: nowrap; }
+    
+    .feed-status-tag {
+      font-size: 20px;
+      font-weight: 700;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    }
+    .feed-status-tag.color-info { color: #ff9800; }
+    .feed-status-tag.color-rss { color: #22c55e; }
+
+    /* บรรทัดข้อความวิ่ง ยืดเต็มความกว้างขอบหน้าจอ */
+    .station-ticker-full-row { width: 100%; overflow: hidden; white-space: nowrap; position: relative; margin-top: 2px; }
+    
+    .station-ticker-text {
+      display: inline-block; font-size: 23px; font-weight: 600;
+      white-space: nowrap;
+      animation: ticker-scroll-slow 50s linear infinite;
+    }
+
+    .station-ticker-text.color-info { color: #ff9800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); }
+    .station-ticker-text.color-rss { color: #22c55e; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); }
 
     @keyframes ticker-scroll-slow {
       0% { transform: translateX(0); }
       100% { transform: translateX(-50%); }
     }
 
+    /* --- Video Wrapper --- */
+    .video-wrapper {
+      width: 100%;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      display: none;
+      background: #000;
+      border: 1px solid rgba(28, 59, 28, 0.85);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+    }
+    .video-wrapper.show { display: block; }
+    
+    video#media-player {
+      display: block; width: 100%; height: auto;
+      aspect-ratio: 16 / 9; object-fit: contain;
+    }
+
     .scope-container {
-      position: relative; width: 100%; height: 50px; background-color: rgba(5, 11, 5, 0.92);
-      border: 1px solid rgba(28, 59, 28, 0.85); border-radius: 4px; overflow: hidden;
-      box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.7); margin-bottom: 6px;
+      position: relative; width: 100%; height: 72px; background-color: rgba(5, 11, 5, 0.92);
+      border: 1px solid rgba(28, 59, 28, 0.85); border-radius: 5px; overflow: hidden;
+      box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.7); margin-bottom: 8px;
     }
     .scope-grid {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -97,71 +150,145 @@
     }
     canvas#oscilloscope { display: block; width: 100%; height: 100%; }
 
-    .audio-content-stats { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: none; margin-top: 4px; padding-left: 4px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9); color: #a0a0a0; }
-    .stats-main-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    .channels-indicator { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
-    .buf-meter-container { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #8ab4ff; font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace; white-space: nowrap; width: 50%; }
-    .buf-bar-bg { flex-grow: 1; height: 10px; background-color: rgba(17, 17, 17, 0.95); border: 1px solid #555555; border-radius: 2px; overflow: hidden; }
+    .audio-content-stats { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: none; margin-top: 5px; padding-left: 5px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9); color: #a0a0a0; }
+    
+    .stats-main-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+    .channels-indicator { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; display: flex; align-items: center; }
+    
+    .video-btn {
+      font-size: 16px; font-weight: 700; padding: 2px 8px; margin-right: 10px;
+      border-radius: 4px; border: 1px solid #555555; color: #555555; background: transparent;
+      cursor: pointer; transition: all 0.2s ease; user-select: none;
+      letter-spacing: 0.5px; line-height: 1.2;
+    }
+    .video-btn.disabled-btn {
+      color: #555555 !important; border-color: #555555 !important;
+      background: transparent !important; box-shadow: none !important; cursor: not-allowed;
+    }
+    .video-btn.has-video {
+      color: #22c55e !important; border-color: #22c55e !important; cursor: pointer;
+    }
+    .video-btn.has-video.active {
+      background: rgba(34, 197, 94, 0.15) !important; box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+    }
+    .video-btn:active:not(.disabled-btn) { transform: scale(0.95); }
+
+    .buf-meter-container { 
+      display: flex; align-items: center; gap: 10px; 
+      font-size: 22px; font-weight: 700; color: #8ab4ff; 
+      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace; 
+      white-space: nowrap; width: 50%; 
+    }
+    
+    .buf-bar-bg { flex-grow: 1; height: 12px; background-color: rgba(17, 17, 17, 0.95); border: 1px solid #555555; border-radius: 2px; overflow: hidden; }
     .buf-bar-fill { width: 0%; height: 100%; background-color: #ef4444; transition: width 0.1s linear, background-color 0.2s ease; }
     .buf-bar-fill.green-status { background-color: #22c55e !important; }
     .buf-bar-fill.red-status { background-color: #ef4444 !important; }
 
     .connection-status-line {
-      margin-top: 3px; font-size: 16px; line-height: 1.2; font-weight: 600;
+      margin-top: 4px; font-size: 19px; line-height: 1.2; font-weight: 600;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
-      color: #8ab4ff; letter-spacing: 0.5px; display: flex; justify-content: space-between; width: 100%;
+      color: #8ab4ff; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; width: 100%;
     }
+    .conn-left-group { display: flex; align-items: center; gap: 8px; }
+    .conn-right-group { display: flex; align-items: center; gap: 10px; width: 50%; justify-content: flex-start; }
+
+    .led-indicator { 
+      width: 10px; height: 10px; border-radius: 50%; 
+      background-color: #000000; border: 1px solid #222222; flex-shrink: 0; 
+      transition: background-color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; 
+    }
+    .led-indicator.active {
+      background-color: #22c55e !important;
+      border-color: #22c55e !important;
+      box-shadow: 0 0 6px #22c55e !important;
+    }
+    .audio-text-indicator {
+      color: #555555; font-weight: 700;
+      transition: color 0.15s ease;
+    }
+    .audio-text-indicator.active {
+      color: #22c55e !important;
+    }
+
     .status-highlight-red { color: #ef4444; font-weight: 700; }
 
-    .time-vu-row { margin-top: 4px; display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
+    .time-vu-row { margin-top: 5px; display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
     
     .local-time-display {
-      font-size: 26px !important; font-weight: 700; color: #ff9800;
+      font-size: 31px !important; font-weight: 700; color: #ff9800;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); white-space: nowrap; line-height: 1.1;
     }
 
-    .vu-container-global { --bar-h: 12px; --label-h: 18px; display: flex; align-items: center; gap: 10px; width: 50%; }
-    .led-indicator { width: 8.8px; height: 8.8px; border-radius: 50%; background-color: #222222; flex-shrink: 0; align-self: flex-end; margin-bottom: calc((var(--bar-h) - 8.8px) / 2); transition: background-color 0.05s ease, box-shadow 0.05s ease; }
+    .vu-container-global { --bar-h: 14px; --label-h: 22px; display: flex; align-items: center; width: 50%; }
     .vu-meter-panel { flex-grow: 1; display: flex; flex-direction: column; gap: 1px; }
-    .vu-scale-labels { display: flex; justify-content: space-between; position: relative; height: var(--label-h); font-size: 15px; color: #e0e0e0; font-weight: 500; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95); }
+    .vu-scale-labels { display: flex; justify-content: space-between; position: relative; height: var(--label-h); font-size: 18px; color: #e0e0e0; font-weight: 500; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95); }
+    
     .scale-mark { position: absolute; transform: translateX(-50%); }
+    .scale-mark.minus-twenty { transform: translateX(0%); }
     .scale-mark.zero-db { color: #ffffff; font-weight: 700; }
+    .scale-mark.plus-four { transform: translateX(-100%); }
+
     .vu-bar-bg { position: relative; width: 100%; height: var(--bar-h); background-color: rgba(17, 17, 17, 0.95); border: 1px solid #555555; border-radius: 2px; overflow: hidden; }
     .vu-grid-line { position: absolute; top: 0; bottom: 0; width: 1px; background-color: #555555; z-index: 2; }
     .vu-grid-line.zero-line { background-color: #aaaaaa; }
-    .vu-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #22c55e 0%, #22c55e 78%, #ff9800 80%, #ef4444 100%); transition: width 0.04s ease-out; z-index: 1; }
+    .vu-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #22c55e 0%, #22c55e 70%, #ff9800 72%, #ef4444 100%); transition: width 0.04s ease-out; z-index: 1; }
 
     .stat-term { transition: color 0.15s ease; }
     .stat-term.active-red { color: #ef4444 !important; }
     .stat-term.disable-gray { color: #555555; }
 
-    .playlist-container { display: flex; flex-direction: column; gap: 16px; background: rgba(0, 0, 0, 0.65); padding: 18px 20px 24px 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(10px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8); }
-    .channel-item { display: flex; align-items: center; gap: 14px; cursor: pointer; user-select: none; width: 100%; padding: 6px 8px; border-radius: 4px; transition: background 0.15s ease; }
-    .channel-item:hover { background: rgba(255, 255, 255, 0.05); }
-    .radio-dot { width: 18px; height: 18px; border: 2px solid #777777; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: border-color 0.2s ease; }
-    .radio-dot::after { content: ""; width: 8px; height: 8px; background-color: #ff9800; border-radius: 50%; opacity: 0; transform: scale(0); transition: transform 0.2s ease, opacity 0.2s ease; }
-    .channel-item.active .radio-dot { border-color: #ff9800; }
-    .channel-item.active .radio-dot::after { opacity: 1; transform: scale(1); }
-    .channel-name { font-size: 20px; font-weight: 400; color: #d0d0d0; white-space: nowrap; transition: color 0.2s ease; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95); }
-    .channel-item.active .channel-name { color: #ff9800; font-weight: 700; }
-    .page-version-footer { text-align: center; font-size: 12px; color: #666666; margin-top: 18px; letter-spacing: 0.5px; }
-
-    audio, video { display: none; }
+    /* --- Playlist Button Grid --- */
+    .playlist-container { 
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; 
+      background: rgba(0, 0, 0, 0.65); padding: 24px; border-radius: 8px; 
+      border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(10px); 
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8); 
+    }
+    
+    .channel-item { 
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; user-select: none; width: 100%; padding: 16px 10px; 
+      min-height: 64px; border-radius: 8px; border: 2px solid #555555;
+      background: rgba(0, 0, 0, 0.4); transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; 
+    }
+    .channel-item:hover { background: rgba(255, 255, 255, 0.1); border-color: #777777; }
+    
+    .channel-item.active { 
+      background: #000000 !important; 
+      border-color: #ff9800 !important;
+      box-shadow: 0 0 10px rgba(255, 152, 0, 0.25);
+    }
+    .channel-name { font-size: 22px; font-weight: 600; color: #a0a0a0; text-align: center; line-height: 1.2; white-space: normal; word-break: break-word; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95); }
+    .channel-item.active .channel-name { 
+      color: #ff9800 !important; 
+      font-weight: 800; 
+      text-shadow: 0 0 4px rgba(255, 152, 0, 0.4);
+    }
+    
+    .page-version-footer { text-align: center; font-size: 14px; color: #666666; margin-top: 20px; letter-spacing: 0.5px; }
 
     @media (max-width: 480px) {
       body { padding: 0 12px 16px 12px; }
-      .sticky-header { padding-left: 8px; padding-right: 8px; }
-      .callsign { font-size: 16px; }
-      h1.page-title { font-size: 25px; }
-      .utc-time-display, .local-time-display, .station-fixed-title, .station-ticker-text, .channel-name { font-size: 16px !important; }
-      .channels-indicator { font-size: 14px; }
-      .buf-meter-container { font-size: 13px; width: 60%; }
-      .connection-status-line { font-size: 12px; }
-      .vu-container-global { --bar-h: 9px; --label-h: 14px; width: 50%; }
-      .vu-scale-labels { font-size: 11px; }
-      .playlist-container { padding: 14px 12px 18px 12px; }
-      .scope-container { height: 40px; }
+      .sticky-header { padding-left: 10px; padding-right: 10px; }
+      .callsign { font-size: 19px; }
+      h1.page-title { font-size: 28px; }
+      .utc-time-display, .local-time-display, .station-fixed-title, .station-ticker-text { font-size: 19px !important; }
+      .feed-status-tag { font-size: 16px; }
+      .channels-indicator { font-size: 17px; }
+      
+      .video-btn { font-size: 13px; padding: 2px 6px; margin-right: 6px; }
+      
+      .buf-meter-container { font-size: 16px; width: 52%; }
+      .connection-status-line { font-size: 14px; letter-spacing: 0px; }
+      .conn-right-group { width: 52%; }
+      .vu-container-global { --bar-h: 11px; --label-h: 17px; width: 52%; }
+      .vu-scale-labels { font-size: 13px; }
+      .scope-container { height: 58px; margin-bottom: 8px; }
+      .playlist-container { padding: 16px; gap: 12px; }
+      .channel-item { padding: 14px 6px; min-height: 58px; border-radius: 6px; }
+      .channel-name { font-size: 17px; }
     }
   </style>
 </head>
@@ -173,17 +300,25 @@
       <div class="callsign">HS1WFK</div>
 
       <div class="title-row">
-        <h1 class="page-title">International News</h1>
+        <h1 class="page-title">Global News</h1>
         <div class="utc-time-display" id="utc-clock">UTC --:--:--</div>
       </div>
 
-      <div class="station-info-row" id="station-info-row">
-        <div class="station-ticker-wrapper">
+      <!-- Station Title + Feed Status Tag + Dedicated Full-Width Ticker Row -->
+      <div class="station-info-container" id="station-info-row">
+        <div class="station-title-row">
           <div class="station-fixed-title" id="station-fixed-title"></div>
-          <div class="station-ticker-container">
-            <div class="station-ticker-text" id="station-ticker-text"></div>
-          </div>
+          <!-- Label ชิดขวาสุด -->
+          <div class="feed-status-tag color-info" id="feed-status-tag">Station Info:</div>
         </div>
+        <div class="station-ticker-full-row">
+          <div class="station-ticker-text color-info" id="station-ticker-text"></div>
+        </div>
+      </div>
+
+      <!-- VIDEO WRAPPER (ระหว่าง Station Info และ Scope) -->
+      <div class="video-wrapper" id="video-wrapper">
+        <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
       </div>
 
       <div class="scope-container">
@@ -194,14 +329,15 @@
       <div class="audio-content-stats" id="audio-content-stats">
         <div class="stats-main-row">
           <div class="channels-indicator">
-            CH:
+            <button id="video-toggle-btn" class="video-btn disabled-btn">VIDEO</button>
+            CH:&nbsp;
             <span id="stat-mono" class="stat-term disable-gray">Mono</span>
-            |
+            &nbsp;|&nbsp;
             <span id="stat-stereo" class="stat-term disable-gray">Stereo</span>
           </div>
 
           <div class="buf-meter-container">
-            <span>Buffer: <span id="buf-val" class="status-highlight-red">0.0</span>s</span>
+            <span>Buf: <span id="buf-val" class="status-highlight-red">0.0</span>s</span>
             <div class="buf-bar-bg">
               <div class="buf-bar-fill" id="buf-bar"></div>
             </div>
@@ -209,18 +345,21 @@
         </div>
 
         <div class="connection-status-line" id="conn-status">
-          <span>CONNECTED</span>
-          <span>|</span>
-          <span>Bitrate: <span class="status-highlight-red" id="conn-br">-- kbps</span></span>
-          <span>|</span>
-          <span>Data Received <span class="status-highlight-red" id="conn-rx">0.00 MB</span></span>
+          <div class="conn-left-group">
+            <span>CONNECTED</span>
+            <div class="led-indicator" id="global-led"></div>
+            <span class="audio-text-indicator" id="audio-text-tag">Audio</span>
+          </div>
+          <div class="conn-right-group">
+            <span id="wrap-br">Bitrate: <span class="status-highlight-red" id="conn-br">-- kbps</span> <span id="sep-br">|</span> </span>
+            <span>Data Received <span class="status-highlight-red" id="conn-rx">0.00 MB</span></span>
+          </div>
         </div>
 
         <div class="time-vu-row">
           <div class="local-time-display" id="local-clock">Time: --:--:--</div>
 
           <div class="vu-container-global">
-            <div class="led-indicator" id="global-led"></div>
             <div class="vu-meter-panel">
               <div class="vu-scale-labels" id="global-scale-labels"></div>
               <div class="vu-bar-bg">
@@ -236,32 +375,37 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.4.9</div>
-
-  <!-- Dual Engines: Video for HLS, Audio for Direct Stream -->
-  <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
+  <div class="page-version-footer">ver.1.6.0</div>
 
   <script>
     const channels = [
-      { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network.", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8" },
-      { name: "ABC Australia", location: "Sydney, Australia", utc: "UTC+10", tz: "Australia/Sydney", about: "Australia’s public broadcasting service.", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8" },
-      { name: "Arirang Korea", location: "Seoul, South Korea", utc: "UTC+9", tz: "Asia/Seoul", about: "South Korean English-language international broadcasting network.", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8" },
-      { name: "BBC News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "The operational business division of the British Broadcasting Corporation (BBC).", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8" },
-      { name: "CGTN", location: "Beijing, China", utc: "UTC+8", tz: "Asia/Shanghai", about: "China Global Television Network, the international division of CCTV.", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8" },
-      { name: "CNA", location: "Singapore", utc: "UTC+8", tz: "Asia/Singapore", about: "Channel NewsAsia, a Singaporean multinational news channel.", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8" },
-      { name: "NHK English", location: "Tokyo, Japan", utc: "UTC+9", tz: "Asia/Tokyo", about: "NHK World-Japan, the international broadcasting service of NHK.", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8" },
-      { name: "DW En", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "Deutsche Welle English, Germany's public international broadcaster.", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8" },
-      { name: "France 24 En", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The English-language arm of France's state-owned international news network.", url: "https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8" },
-      { name: "France 24 Fr", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The French-language domestic and international channel of France 24.", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8" },
-      { name: "GB News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "A British free-to-air news and opinion channel.", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8" },
-      { name: "Tagesschau24", location: "Hamburg, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "A German specialized news channel operated by ARD.", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8" },
-      { name: "TPTV", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Parliament Television.", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org" },
-      { name: "Classic FM", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "UK classic music radio stream based in Leicester Square, London.", url: "http://media-ice.musicradio.com/ClassicFMMP3", kbps: 128 },
-      { name: "Klassik-1", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "German classical music online radio station based in Berlin.", url: "http://icepool.silvacast.com/KLASSIK1.mp3", kbps: 128 },
-      { name: "บ้านธรรมะ", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Dhamma media and radio broadcasting operated by the Dhamma Study and Propagation Foundation.", url: "https://radio10.plathong.net/7238/;stream.mp3", kbps: 128 }
+      { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network.", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8", rss: "https://www.aljazeera.com/xml/rss/all.xml" },
+      { name: "ABC Australia", location: "Sydney, Australia", utc: "UTC+10", tz: "Australia/Sydney", about: "Australia’s public broadcasting service.", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8", rss: "https://www.abc.net.au/news/feed/51120/rss.xml" },
+      { name: "Arirang Korea", location: "Seoul, South Korea", utc: "UTC+9", tz: "Asia/Seoul", about: "South Korean English-language international broadcasting network.", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8", rss: "https://www.arirang.com/rss/news" },
+      { name: "BBC News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "The operational business division of the British Broadcasting Corporation (BBC).", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8", rss: "http://feeds.bbci.co.uk/news/rss.xml" },
+      { name: "CGTN", location: "Beijing, China", utc: "UTC+8", tz: "Asia/Shanghai", about: "China Global Television Network, the international division of CCTV.", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8", rss: "https://www.cgtn.com/subscribe/rss/p/1.xml" },
+      { name: "CNA", location: "Singapore", utc: "UTC+8", tz: "Asia/Singapore", about: "Channel NewsAsia, a Singaporean multinational news channel.", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8", rss: "https://www.channelnewsasia.com/api/v1/rss-outbound/rssnews/posts.xml" },
+      { name: "NHK English", location: "Tokyo, Japan", utc: "UTC+9", tz: "Asia/Tokyo", about: "NHK World-Japan, the international broadcasting service of NHK.", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8", rss: "https://www3.nhk.or.jp/nhkworld/en/news/backstories/rss/index.xml" },
+      { name: "DW En", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "Deutsche Welle English, Germany's public international broadcaster.", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8", rss: "https://rss.dw.com/rdf/rss-en-all" },
+      { name: "France 24 En", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The English-language arm of France's state-owned international news network.", url: "https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8", rss: "https://www.france24.com/en/rss" },
+      { name: "France 24 Fr", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The French-language domestic and international channel of France 24.", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8", rss: "https://www.france24.com/fr/rss" },
+      { name: "GB News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "A British free-to-air news and opinion channel.", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8", rss: "https://www.gbnews.com/feeds/news.rss" },
+      { name: "Tagesschau24", location: "Hamburg, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "A German specialized news channel operated by ARD.", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8", rss: "https://www.tagesschau.de/xml/rss2/" },
+      { name: "TPTV", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Parliament Television.", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org", rss: null },
+      { name: "Classic FM", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "UK classic music radio stream based in Leicester Square, London.", url: "http://media-ice.musicradio.com/ClassicFMMP3", kbps: 128, rss: null },
+      { name: "Klassik-1", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "German classical music online radio station based in Berlin.", url: "http://icepool.silvacast.com/KLASSIK1.mp3", kbps: 128, rss: null },
+      { name: "บ้านธรรมะ", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Dhamma media and radio broadcasting operated by the Dhamma Study and Propagation Foundation.", url: "https://radio10.plathong.net/7238/;stream.mp3", kbps: 128, rss: null }
     ];
 
-    const dbMarks = [ { db: "-20", pos: 0 }, { db: "-10", pos: 35 }, { db: "-5", pos: 60 }, { db: "0", pos: 80, isZero: true }, { db: "+2", pos: 90 }, { db: "+4", pos: 100 } ];
+    const dbMarks = [ 
+      { db: "-20", pos: 0, isMinusTwenty: true }, 
+      { db: "-10", pos: 30 }, 
+      { db: "-5", pos: 55 }, 
+      { db: "0", pos: 72, isZero: true }, 
+      { db: "+2", pos: 86 }, 
+      { db: "+4", pos: 100, isPlusFour: true } 
+    ];
+    
     const VU_REF_DBFS = -18;
     const SIGNAL_PEAK_MIN = 0.0005;
     const SCOPE_GAIN = 2.5;
@@ -283,6 +427,7 @@
     const localClockElem = document.getElementById('local-clock');
     const stationInfoRow = document.getElementById('station-info-row');
     const stationFixedTitle = document.getElementById('station-fixed-title');
+    const feedStatusTag = document.getElementById('feed-status-tag');
     const stationTickerText = document.getElementById('station-ticker-text');
     const statsPanel = document.getElementById('audio-content-stats');
     const statMono = document.getElementById('stat-mono');
@@ -291,11 +436,18 @@
     const bufBarElem = document.getElementById('buf-bar');
     const connBrElem = document.getElementById('conn-br');
     const connRxElem = document.getElementById('conn-rx');
+    const wrapBrElem = document.getElementById('wrap-br');
     const globalVuFill = document.getElementById('global-vu-fill');
     const globalLed = document.getElementById('global-led');
+    const audioTextTag = document.getElementById('audio-text-tag');
+
+    // UI Elements for Video Toggle
+    const videoToggleBtn = document.getElementById('video-toggle-btn');
+    const videoWrapper = document.getElementById('video-wrapper');
+    let isVideoToggledOn = false;
 
     // Dual Engine Vars
-    let player = videoEl; // active player pointer
+    let player = videoEl;
     let audioEl = null;
     let directSrc = null;
     let directAttempt = 0;
@@ -329,9 +481,96 @@
     let currentBitrate = 0;
     const segTimeB = new Uint8Array(2048);
 
+    let activeRssFetchId = 0;
+
+    // --- Video Toggle Management ---
+    videoToggleBtn.addEventListener('click', () => {
+      if (activeIndex === -1) return;
+      const ch = channels[activeIndex];
+      const isVideoSource = ch.url.includes('.m3u8');
+      
+      if (isVideoSource) {
+        isVideoToggledOn = !isVideoToggledOn;
+        updateVideoVisibility();
+      }
+    });
+
+    function updateVideoVisibility() {
+      if (activeIndex === -1) {
+        videoToggleBtn.className = 'video-btn disabled-btn';
+        videoWrapper.classList.remove('show');
+        return;
+      }
+      
+      const ch = channels[activeIndex];
+      const isVideoSource = ch.url.includes('.m3u8');
+      
+      if (isVideoSource) {
+        videoToggleBtn.className = 'video-btn has-video';
+        if (isVideoToggledOn) {
+          videoToggleBtn.classList.add('active');
+          videoWrapper.classList.add('show');
+        } else {
+          videoToggleBtn.classList.remove('active');
+          videoWrapper.classList.remove('show');
+        }
+      } else {
+        videoToggleBtn.className = 'video-btn disabled-btn';
+        videoWrapper.classList.remove('show');
+      }
+    }
+
+    // --- Dynamic Ticker & Status Tag Logic ---
+    async function updateTickerContent(ch) {
+      activeRssFetchId++;
+      const currentFetchId = activeRssFetchId;
+
+      const fallbackInfoText = `${ch.location} | ${ch.utc} | ${ch.about} \u00A0\u00A0•\u00A0\u00A0 `;
+
+      // ตั้งค่าเป็น Station Info (สีส้ม) ก่อน
+      feedStatusTag.innerText = "Station Info:";
+      feedStatusTag.className = "feed-status-tag color-info";
+      stationTickerText.className = "station-ticker-text color-info";
+      applyTickerAnimation(fallbackInfoText + fallbackInfoText, "50s");
+
+      if (!ch.rss) return;
+
+      try {
+        const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(ch.rss)}`;
+        const res = await fetch(proxyUrl);
+        const data = await res.json();
+
+        if (currentFetchId !== activeRssFetchId) return;
+
+        if (data && data.status === 'ok' && data.items && data.items.length > 0) {
+          const headlines = data.items.slice(0, 8).map(item => item.title.trim()).join(' \u00A0\u00A0•\u00A0\u00A0 ');
+          const rssText = `🔴 BREAKING NEWS: ${headlines} \u00A0\u00A0•\u00A0\u00A0 `;
+
+          // ปรับข้อความ Label ชิดขวา และข้อความวิ่งเป็น RSS Feed (สีเขียว)
+          feedStatusTag.innerText = "RSS Feed:";
+          feedStatusTag.className = "feed-status-tag color-rss";
+          stationTickerText.className = "station-ticker-text color-rss";
+          applyTickerAnimation(rssText + rssText, "85s");
+        }
+      } catch (err) {
+        console.log("RSS Fetch Notice (fallback to info):", err);
+      }
+    }
+
+    function applyTickerAnimation(text, durationStr) {
+      stationTickerText.innerText = text;
+      stationTickerText.style.animation = 'none';
+      stationTickerText.offsetHeight; 
+      stationTickerText.style.animation = `ticker-scroll-slow ${durationStr} linear infinite`;
+    }
+
     function initGlobalVuMeterUI() {
-      document.getElementById('global-scale-labels').innerHTML = dbMarks.map(m => `<span class="scale-mark ${m.isZero ? 'zero-db' : ''}" style="left: ${m.pos}%;">${m.db}</span>`).join('');
-      document.getElementById('global-grid-lines').innerHTML = dbMarks.map(m => `<div class="vu-grid-line ${m.isZero ? 'zero-line' : ''}" style="left: ${m.pos}%;"></div>`).join('');
+      document.getElementById('global-scale-labels').innerHTML = dbMarks.map(m => 
+        `<span class="scale-mark ${m.isMinusTwenty ? 'minus-twenty' : ''} ${m.isZero ? 'zero-db' : ''} ${m.isPlusFour ? 'plus-four' : ''}" style="left: ${m.pos}%;">${m.db}</span>`
+      ).join('');
+      document.getElementById('global-grid-lines').innerHTML = dbMarks.map(m => 
+        `<div class="vu-grid-line ${m.isZero ? 'zero-line' : ''}" style="left: ${m.pos}%;"></div>`
+      ).join('');
     }
     initGlobalVuMeterUI();
 
@@ -356,10 +595,42 @@
       const item = document.createElement('div');
       item.className = 'channel-item';
       item.dataset.index = index;
-      item.innerHTML = `<div class="radio-dot"></div><span class="channel-name">${channel.name}</span>`;
+      item.innerHTML = `<span class="channel-name">${channel.name}</span>`;
       item.addEventListener('click', () => toggleChannel(index));
       playlistContainer.appendChild(item);
     });
+
+    // --- Web Media Session Integration (Tesla Screen & Steering Wheel Support) ---
+    function updateTeslaMediaSession(channel) {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: channel.name,
+          artist: `${channel.location} (${channel.utc})`,
+          album: 'Global News Live'
+        });
+
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+          let nextIndex = (activeIndex + 1) % channels.length;
+          toggleChannel(nextIndex);
+        });
+
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+          let prevIndex = (activeIndex - 1 + channels.length) % channels.length;
+          toggleChannel(prevIndex);
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => { if (player && player.paused) player.play(); });
+        navigator.mediaSession.setActionHandler('pause', () => { if (player && !player.paused) player.pause(); });
+      }
+    }
+
+    function clearTeslaMediaSession() {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+      }
+    }
 
     function initAudioContext() {
       if (IS_IOS && meterMode !== 'analyser') return;
@@ -388,14 +659,15 @@
     function triggerUIPlay() {
       if (activeIndex !== -1) {
         const ch = channels[activeIndex];
-        stationFixedTitle.innerText = `${ch.name} :`;
-        const detailText = `${ch.location} | ${ch.utc} | ${ch.about} \u00A0\u00A0•\u00A0\u00A0 `;
-        stationTickerText.innerText = detailText + detailText;
-        stationTickerText.style.animation = 'none';
-        stationTickerText.offsetHeight; 
-        stationTickerText.style.animation = 'ticker-scroll-slow 45s linear infinite';
+        stationFixedTitle.innerText = ch.name;
+        
+        updateTickerContent(ch);
+
         stationInfoRow.style.visibility = 'visible';
         updateClocks();
+        
+        updateTeslaMediaSession(ch);
+        updateVideoVisibility();
       }
     }
 
@@ -478,13 +750,12 @@
       const sid = directAttempt;
       usingNative = true;
 
-      // สร้างลูปทดลองเชื่อมต่อเผื่อติดเรื่อง HTTPS / CORS
       const cands = [];
-      if (location.protocol === 'https:' && /^http:/i.test(url)) cands.push(url.replace(/^http:/i, 'https:')); // ลองอัปเกรดเป็น https ป้องกัน Mixed Content
+      if (location.protocol === 'https:' && /^http:/i.test(url)) cands.push(url.replace(/^http:/i, 'https:')); 
       cands.push(url);
       
       const list = [];
-      cands.forEach(u => { list.push({ u: u, cors: true }); list.push({ u: u, cors: false }); }); // ลองทั้งแบบต่อ CORS และไม่ CORS
+      cands.forEach(u => { list.push({ u: u, cors: true }); list.push({ u: u, cors: false }); });
 
       audioEl = new Audio();
       audioEl.setAttribute('playsinline', '');
@@ -495,9 +766,11 @@
         if (i >= list.length) {
           const ch = channels[activeIndex];
           if (ch) {
-            stationFixedTitle.innerText = ch.name + ' :';
-            stationTickerText.style.animation = 'none';
-            stationTickerText.innerText = 'Cannot open this stream (Mixed Content / Server offline) \u00A0\u00A0•\u00A0\u00A0 ';
+            stationFixedTitle.innerText = ch.name;
+            feedStatusTag.innerText = "Station Info:";
+            feedStatusTag.className = "feed-status-tag color-info";
+            stationTickerText.className = "station-ticker-text color-info";
+            applyTickerAnimation('Cannot open this stream (Mixed Content / Server offline) \u00A0\u00A0•\u00A0\u00A0 ', "30s");
             stationInfoRow.style.visibility = 'visible';
           }
           return;
@@ -515,7 +788,7 @@
         const onErr = () => { if (!done) { cleanup(); attemptAt(i + 1); } };
         const onOk = () => { if (!done) { cleanup(); if (sid === directAttempt) onDirectPlaying(cors); } };
 
-        tm = setTimeout(onErr, 10000); // ให้เวลาเชื่อมต่อสูงสุด 10 วินาที
+        tm = setTimeout(onErr, 10000);
         audioEl.addEventListener('error', onErr);
         audioEl.addEventListener('playing', onOk);
         audioEl.crossOrigin = cors ? 'anonymous' : null;
@@ -536,13 +809,12 @@
           meterMode = 'analyser';
         } catch (e) { meterMode = 'none'; }
       } else {
-        meterMode = 'none'; // Fallback เล่นเสียงได้แต่กราฟนิ่ง หากเซิร์ฟเวอร์บล็อก CORS
+        meterMode = 'none';
       }
       
-      videoEl.dispatchEvent(new Event('playing')); // ดึงให้ Ticker ทำงาน
+      videoEl.dispatchEvent(new Event('playing'));
       onPlayStarted();
       
-      // จำลอง Data Received & Bitrate ให้สตรีมตรง
       clearInterval(directRxTimer);
       directBufStart = null;
       directRxTimer = setInterval(() => {
@@ -551,8 +823,8 @@
           if (!b.length) return;
           if (directBufStart === null) directBufStart = b.start(0);
           const sec = Math.max(0, b.end(b.length - 1) - directBufStart);
-          const kbps = (channels[activeIndex] && channels[activeIndex].kbps) || 128;
-          totalRxBytes = sec * kbps * 125;
+          const kbps = (channels[activeIndex] && channels[activeIndex].kbps) || 0;
+          totalRxBytes = sec * (kbps || 128) * 125;
           currentBitrate = kbps;
         } catch (e) {}
       }, 500);
@@ -574,7 +846,11 @@
           hls.loadSource(url);
           hls.attachMedia(player);
           hls.on(Hls.Events.MANIFEST_PARSED, () => { if (LOWEST_QUALITY) hls.autoLevelCapping = 0; player.play().then(onPlayStarted).catch(e => console.log("Play error:", e)); });
-          hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { if (data.details && data.details.totalduration) currentBitrate = Math.round((data.details.totalduration > 0 ? (data.details.bandwidth || 128000) : 128000) / 1000); });
+          hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { 
+            if (data.details && data.details.totalduration) {
+              currentBitrate = Math.round((data.details.totalduration > 0 ? (data.details.bandwidth || 0) : 0) / 1000); 
+            }
+          });
           hls.on(Hls.Events.BUFFER_APPENDING, (event, data) => handleBufferAppending(sid, data));
         } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
           usingNative = true;
@@ -590,6 +866,7 @@
     function stopAudio(clearSrc = true) {
       sessionId++;
       directAttempt++;
+      activeRssFetchId++;
       clearInterval(directRxTimer);
 
       if (directSrc) { try { directSrc.disconnect(); } catch(e) {} directSrc = null; }
@@ -612,7 +889,12 @@
       stationInfoRow.style.visibility = 'hidden';
       if (statsPanel) statsPanel.style.display = 'none';
       statMono.className = 'stat-term disable-gray'; statStereo.className = 'stat-term disable-gray';
-      globalVuFill.style.width = '0%'; globalLed.style.backgroundColor = '#222222'; globalLed.style.boxShadow = 'none';
+      globalVuFill.style.width = '0%'; 
+      
+      globalLed.classList.remove('active');
+      audioTextTag.classList.remove('active');
+      clearTeslaMediaSession();
+      updateVideoVisibility();
     }
 
     // --- Drawing & Meters ---
@@ -621,7 +903,10 @@
       if (vu <= first) return 0; if (vu >= last) return 100;
       for (let i = 1; i < dbMarks.length; i++) {
         const d1 = parseFloat(dbMarks[i].db);
-        if (vu <= d1) { const d0 = parseFloat(dbMarks[i - 1].db), p0 = dbMarks[i - 1].pos, p1 = dbMarks[i].pos; return p0 + (vu - d0) / (d1 - d0) * (p1 - p0); }
+        if (vu <= d1) { 
+          const d0 = parseFloat(dbMarks[i - 1].db), p0 = dbMarks[i - 1].pos, p1 = dbMarks[i].pos; 
+          return p0 + (vu - d0) / (d1 - d0) * (p1 - p0); 
+        }
       }
       return 100;
     }
@@ -698,12 +983,24 @@
           if (bufPercent > 50) { bufBarElem.classList.add('green-status'); bufBarElem.classList.remove('red-status'); }
           else { bufBarElem.classList.add('red-status'); bufBarElem.classList.remove('green-status'); }
 
-          connBrElem.innerText = `${currentBitrate || 128} kbps`;
+          if (currentBitrate && currentBitrate > 0) {
+            connBrElem.innerText = `${currentBitrate} kbps`;
+            wrapBrElem.style.display = 'inline';
+          } else {
+            wrapBrElem.style.display = 'none';
+          }
+
           connRxElem.innerText = `${(totalRxBytes / (1024 * 1024)).toFixed(2)} MB`;
 
           globalVuFill.style.width = currentLevel.toFixed(1) + '%';
-          if (currentLevel > 10) { globalLed.style.backgroundColor = '#22c55e'; globalLed.style.boxShadow = '0 0 6px #22c55e'; }
-          else { globalLed.style.backgroundColor = '#222222'; globalLed.style.boxShadow = 'none'; }
+          
+          if (currentLevel > 10) { 
+            globalLed.classList.add('active');
+            audioTextTag.classList.add('active');
+          } else { 
+            globalLed.classList.remove('active');
+            audioTextTag.classList.remove('active');
+          }
 
           if (statsPanel) {
             statsPanel.style.display = 'block';
