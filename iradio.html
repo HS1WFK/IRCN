@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Compact Header Meter V.1.5.9</title>
+  <title>Global News - Compact Header Meter V.1.6.0</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -79,18 +79,20 @@
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95); white-space: nowrap;
     }
 
-    .station-info-row { display: flex; align-items: center; margin-bottom: 12px; min-height: 42px; visibility: hidden; width: 100%; }
-    .station-ticker-wrapper { display: flex; align-items: center; width: 100%; overflow: hidden; }
-    .station-fixed-title { font-size: 24px; font-weight: 700; color: #ff9800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); white-space: nowrap; margin-right: 10px; flex-shrink: 0; }
-    .station-ticker-container { flex-grow: 1; overflow: hidden; white-space: nowrap; position: relative; }
+    /* --- Station Info & Dedicated Full-Width Ticker Layout --- */
+    .station-info-container { display: flex; flex-direction: column; margin-bottom: 12px; min-height: 42px; visibility: hidden; width: 100%; }
+    .station-title-row { margin-bottom: 2px; }
+    .station-fixed-title { font-size: 26px; font-weight: 700; color: #ff9800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); white-space: nowrap; }
+    
+    /* บรรทัดข้อความวิ่ง ยืดเต็มความกว้างขอบหน้าจอ */
+    .station-ticker-full-row { width: 100%; overflow: hidden; white-space: nowrap; position: relative; margin-top: 2px; }
     
     .station-ticker-text {
-      display: inline-block; font-size: 24px; font-weight: 600;
+      display: inline-block; font-size: 23px; font-weight: 600;
       white-space: nowrap;
       animation: ticker-scroll-slow 50s linear infinite;
     }
 
-    /* สลับสี Ticker ระหว่างสีส้ม (Station Info) และ สีเขียว (RSS Feed) */
     .station-ticker-text.color-info { color: #ff9800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); }
     .station-ticker-text.color-rss { color: #22c55e; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); }
 
@@ -99,6 +101,7 @@
       100% { transform: translateX(-50%); }
     }
 
+    /* --- Video Wrapper --- */
     .video-wrapper {
       width: 100%;
       border-radius: 5px;
@@ -282,12 +285,13 @@
         <div class="utc-time-display" id="utc-clock">UTC --:--:--</div>
       </div>
 
-      <div class="station-info-row" id="station-info-row">
-        <div class="station-ticker-wrapper">
+      <!-- Station Title + Dedicated Full-Width Ticker Row -->
+      <div class="station-info-container" id="station-info-row">
+        <div class="station-title-row">
           <div class="station-fixed-title" id="station-fixed-title"></div>
-          <div class="station-ticker-container">
-            <div class="station-ticker-text color-info" id="station-ticker-text"></div>
-          </div>
+        </div>
+        <div class="station-ticker-full-row">
+          <div class="station-ticker-text color-info" id="station-ticker-text"></div>
         </div>
       </div>
 
@@ -350,10 +354,9 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.5.9</div>
+  <div class="page-version-footer">ver.1.6.0</div>
 
   <script>
-    /* 1. ค้นหาและระบุลิงก์ RSS Feed ตรงตามรายชื่อสถานี */
     const channels = [
       { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network.", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8", rss: "https://www.aljazeera.com/xml/rss/all.xml" },
       { name: "ABC Australia", location: "Sydney, Australia", utc: "UTC+10", tz: "Australia/Sydney", about: "Australia’s public broadcasting service.", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8", rss: "https://www.abc.net.au/news/feed/51120/rss.xml" },
@@ -495,36 +498,29 @@
       }
     }
 
-    // --- 2. Dynamic Ticker Logic (RSS Feed vs Station Info) ---
+    // --- Dynamic Ticker Logic (Full-Width Row) ---
     async function updateTickerContent(ch) {
       activeRssFetchId++;
       const currentFetchId = activeRssFetchId;
 
-      // กำหนดข้อความพื้นฐาน (Station Info) ไว้ล่วงหน้า
       const fallbackInfoText = `${ch.location} | ${ch.utc} | ${ch.about} \u00A0\u00A0•\u00A0\u00A0 `;
 
-      // แสดง Station Info สีส้ม เป็นค่าเริ่มต้นก่อน
       stationTickerText.className = "station-ticker-text color-info";
       applyTickerAnimation(fallbackInfoText + fallbackInfoText, "50s");
 
-      // หากสถานีนั้นไม่มี RSS Feed ให้แสดง Station Info สีส้ม ต่อไป
       if (!ch.rss) return;
 
       try {
-        // ดึง RSS Feed ผ่าน CORS Proxy (rss2json API)
         const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(ch.rss)}`;
         const res = await fetch(proxyUrl);
         const data = await res.json();
 
-        // ตรวจสอบความถูกต้องของข้อมูล
-        if (currentFetchId !== activeRssFetchId) return; // หากเปลี่ยนสถานีไปแล้ว ให้ยกเลิก
+        if (currentFetchId !== activeRssFetchId) return;
 
         if (data && data.status === 'ok' && data.items && data.items.length > 0) {
-          // ดึงหัวข้อข่าวล่าสุด 8 ข่าวมาต่อกัน
           const headlines = data.items.slice(0, 8).map(item => item.title.trim()).join(' \u00A0\u00A0•\u00A0\u00A0 ');
           const rssText = `🔴 BREAKING NEWS: ${headlines} \u00A0\u00A0•\u00A0\u00A0 `;
 
-          // ปรับสี Ticker เป็น "สีเขียวสด" สำหรับ RSS Feed ข่าวสาร real-time
           stationTickerText.className = "station-ticker-text color-rss";
           applyTickerAnimation(rssText + rssText, "85s");
         }
@@ -536,7 +532,7 @@
     function applyTickerAnimation(text, durationStr) {
       stationTickerText.innerText = text;
       stationTickerText.style.animation = 'none';
-      stationTickerText.offsetHeight; // trigger reflow
+      stationTickerText.offsetHeight; 
       stationTickerText.style.animation = `ticker-scroll-slow ${durationStr} linear infinite`;
     }
 
@@ -635,9 +631,8 @@
     function triggerUIPlay() {
       if (activeIndex !== -1) {
         const ch = channels[activeIndex];
-        stationFixedTitle.innerText = `${ch.name} :`;
+        stationFixedTitle.innerText = ch.name;
         
-        // เรียกใช้อัลกอริทึมจัดการ Ticker (สลับสีส้ม/สีเขียว ตามข้อมูล RSS)
         updateTickerContent(ch);
 
         stationInfoRow.style.visibility = 'visible';
@@ -743,7 +738,7 @@
         if (i >= list.length) {
           const ch = channels[activeIndex];
           if (ch) {
-            stationFixedTitle.innerText = ch.name + ' :';
+            stationFixedTitle.innerText = ch.name;
             stationTickerText.className = "station-ticker-text color-info";
             applyTickerAnimation('Cannot open this stream (Mixed Content / Server offline) \u00A0\u00A0•\u00A0\u00A0 ', "30s");
             stationInfoRow.style.visibility = 'visible';
