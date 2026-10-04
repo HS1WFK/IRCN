@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Compact Header Meter V.1.5.3</title>
+  <title>Global News - Compact Header Meter V.1.5.4</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -112,7 +112,6 @@
     .stats-main-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
     .channels-indicator { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; }
     
-    /* 1. ขยายขอบขวาของ Buffer Bar ให้ยาวเท่ากับแนวขวาของ MB */
     .buf-meter-container { 
       display: flex; align-items: center; gap: 10px; 
       font-size: 22px; font-weight: 700; color: #8ab4ff; 
@@ -125,7 +124,6 @@
     .buf-bar-fill.green-status { background-color: #22c55e !important; }
     .buf-bar-fill.red-status { background-color: #ef4444 !important; }
 
-    /* 4. ย้าย LED เข้าไปรวมกับ CONNECTED และสร้างข้อความ Audio */
     .connection-status-line {
       margin-top: 4px; font-size: 19px; line-height: 1.2; font-weight: 600;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
@@ -134,13 +132,15 @@
     .conn-left-group { display: flex; align-items: center; gap: 8px; }
     .conn-right-group { display: flex; align-items: center; gap: 10px; width: 50%; justify-content: flex-start; }
 
+    /* LED ดับเป็นสีดำสนิท (#000000) เมื่อไม่มีเสียง */
     .led-indicator { 
       width: 10px; height: 10px; border-radius: 50%; 
-      background-color: #555555; flex-shrink: 0; 
-      transition: background-color 0.15s ease, box-shadow 0.15s ease; 
+      background-color: #000000; border: 1px solid #222222; flex-shrink: 0; 
+      transition: background-color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; 
     }
     .led-indicator.active {
       background-color: #22c55e !important;
+      border-color: #22c55e !important;
       box-shadow: 0 0 6px #22c55e !important;
     }
     .audio-text-indicator {
@@ -161,13 +161,15 @@
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); white-space: nowrap; line-height: 1.1;
     }
 
-    /* 2. ปรับขนาดของ VU Meter ให้ขอบซ้ายตรงกับ Buf (-20) และขอบขวาตรงกับ Buffer Bar & MB */
     .vu-container-global { --bar-h: 14px; --label-h: 22px; display: flex; align-items: center; width: 50%; }
     .vu-meter-panel { flex-grow: 1; display: flex; flex-direction: column; gap: 1px; }
     .vu-scale-labels { display: flex; justify-content: space-between; position: relative; height: var(--label-h); font-size: 18px; color: #e0e0e0; font-weight: 500; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95); }
+    
+    /* จัดการ Alignment สเกลตัวเลข VU Meter ไม่ให้ยื่นหรือทับกัน */
     .scale-mark { position: absolute; transform: translateX(-50%); }
+    .scale-mark.minus-twenty { transform: translateX(0%); } /* ขยับเครื่องหมาย '-' ให้ชิดซ้ายตรงกับ Data Received */
     .scale-mark.zero-db { color: #ffffff; font-weight: 700; }
-    .scale-mark.plus-four { transform: translateX(-100%); } /* ให้ +4 dB อยู่ชิดขอบขวาสุด */
+    .scale-mark.plus-four { transform: translateX(-100%); } /* ให้ +4 อยู่ชิดขอบขวาสุด ไม่เกยกับ +2 */
 
     .vu-bar-bg { position: relative; width: 100%; height: var(--bar-h); background-color: rgba(17, 17, 17, 0.95); border: 1px solid #555555; border-radius: 2px; overflow: hidden; }
     .vu-grid-line { position: absolute; top: 0; bottom: 0; width: 1px; background-color: #555555; z-index: 2; }
@@ -296,7 +298,6 @@
             <span id="stat-stereo" class="stat-term disable-gray">Stereo</span>
           </div>
 
-          <!-- 1. Buf: ขยับซ้ายตรงกับ -20 และขยาย Bar ไปชิดขอบขวาเท่า MB -->
           <div class="buf-meter-container">
             <span>Buf: <span id="buf-val" class="status-highlight-red">0.0</span>s</span>
             <div class="buf-bar-bg">
@@ -305,7 +306,6 @@
           </div>
         </div>
 
-        <!-- 3 & 4. CONNECTED + จุด LED + Audio เขียว / ซ่อนเส้นแบ่ง | เดิม / Data Received ขยับซ้ายตรง Buf -->
         <div class="connection-status-line" id="conn-status">
           <div class="conn-left-group">
             <span>CONNECTED</span>
@@ -321,7 +321,6 @@
         <div class="time-vu-row">
           <div class="local-time-display" id="local-clock">Time: --:--:--</div>
 
-          <!-- 2. VU Meter เพิ่ม dB ต่อหลัง +4 และขยายความกว้างขอบซ้ายขวาให้ตรงกับ Buf และ Bar -->
           <div class="vu-container-global">
             <div class="vu-meter-panel">
               <div class="vu-scale-labels" id="global-scale-labels"></div>
@@ -338,7 +337,7 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.5.3</div>
+  <div class="page-version-footer">ver.1.5.4</div>
 
   <!-- Dual Engines: Video for HLS, Audio for Direct Stream -->
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
@@ -363,14 +362,14 @@
       { name: "บ้านธรรมะ", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Dhamma media and radio broadcasting operated by the Dhamma Study and Propagation Foundation.", url: "https://radio10.plathong.net/7238/;stream.mp3", kbps: 128 }
     ];
 
-    /* 2. เติม "dB" ต่อจาก +4 */
+    /* ปรับแต่งการตั้งสเกล: ตัด dB ออก และใส่คลาสตำแหน่งเพื่อไม่ให้ยื่น/ทับกัน */
     const dbMarks = [ 
-      { db: "-20", pos: 0 }, 
+      { db: "-20", pos: 0, isMinusTwenty: true }, 
       { db: "-10", pos: 35 }, 
       { db: "-5", pos: 60 }, 
       { db: "0", pos: 80, isZero: true }, 
       { db: "+2", pos: 90 }, 
-      { db: "+4 dB", pos: 100, isPlusFour: true } 
+      { db: "+4", pos: 100, isPlusFour: true } 
     ];
     
     const VU_REF_DBFS = -18;
@@ -444,7 +443,7 @@
 
     function initGlobalVuMeterUI() {
       document.getElementById('global-scale-labels').innerHTML = dbMarks.map(m => 
-        `<span class="scale-mark ${m.isZero ? 'zero-db' : ''} ${m.isPlusFour ? 'plus-four' : ''}" style="left: ${m.pos}%;">${m.db}</span>`
+        `<span class="scale-mark ${m.isMinusTwenty ? 'minus-twenty' : ''} ${m.isZero ? 'zero-db' : ''} ${m.isPlusFour ? 'plus-four' : ''}" style="left: ${m.pos}%;">${m.db}</span>`
       ).join('');
       document.getElementById('global-grid-lines').innerHTML = dbMarks.map(m => 
         `<div class="vu-grid-line ${m.isZero ? 'zero-line' : ''}" style="left: ${m.pos}%;"></div>`
@@ -733,7 +732,7 @@
       statMono.className = 'stat-term disable-gray'; statStereo.className = 'stat-term disable-gray';
       globalVuFill.style.width = '0%'; 
       
-      // ดับไฟ LED และปรับคำว่า Audio เป็นสีเทาเข้ม
+      // ไฟ LED ดับสนิท (ดำ) และ Audio ปรับเป็นสีเทา
       globalLed.classList.remove('active');
       audioTextTag.classList.remove('active');
     }
@@ -832,7 +831,7 @@
 
           globalVuFill.style.width = currentLevel.toFixed(1) + '%';
           
-          /* 4. เปิดไฟ LED สีเขียวสว่าง และเปลี่ยน Audio เป็นสีเขียวเมื่อมีสัญญาณเสียง */
+          /* สลับไฟ LED เขียว และคำว่า Audio เขียวสด เมื่อมีเสียง */
           if (currentLevel > 10) { 
             globalLed.classList.add('active');
             audioTextTag.classList.add('active');
