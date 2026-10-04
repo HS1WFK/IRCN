@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project 4 Streams - YouTube Edition v1.1.0</title>
+  <title>Project 4 Streams - YouTube Edition v1.1.1</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -318,7 +318,7 @@
   <!-- Top Navigation -->
   <header>
     <div class="brand-title">
-      PROJECT 4 STREAMS <span class="brand-badge">v1.1.0 (Timer Phase 1)</span>
+      PROJECT 4 STREAMS <span class="brand-badge">v1.1.1 (Countdown Timer)</span>
     </div>
 
     <div class="controls-main">
@@ -334,11 +334,10 @@
         <button class="btn" id="btn-focus" onclick="setLayout('focus')">Main + Sidebar</button>
       </div>
 
-      <!-- Phase 1: Hourly Timer Test Mode Switcher -->
+      <!-- Phase 1: Hourly Timer & 30s Countdown Test Switcher -->
       <div class="btn-group">
         <button class="btn active-gold" id="btn-timer-real" onclick="setTimerMode('real')">Hourly Timer (.00)</button>
         <button class="btn" id="btn-timer-30s" onclick="setTimerMode('30s')">Test 30s</button>
-        <button class="btn" id="btn-timer-60s" onclick="setTimerMode('60s')">Test 60s</button>
       </div>
 
       <div class="timer-badge" id="timer-status">⏱ Mode: Real (.00)</div>
@@ -772,12 +771,13 @@
     }
 
     /* ==========================================================================
-       PHASE 1: HOURLY TIMER & WEB AUDIO SOUND ENGINE (v1.1.0 MODULE)
+       PHASE 1: HOURLY TIMER & COUNTDOWN TEST LOOP MODULE (v1.1.1)
        ========================================================================== */
 
     let audioCtx = null;
-    let timerMode = 'real'; // 'real', '30s', '60s'
+    let timerMode = 'real'; // 'real', '30s'
     let timerInterval = null;
+    let countdownSeconds = 30; // 30-second loop counter
     let lastTriggerKey = null;
 
     // Web Audio API Engine for Generating Beep Sounds
@@ -816,20 +816,23 @@
       playBeep(1200, 'sine', 0.25, 0.4);  // Beep 3 (Higher Pitch Ending)
     }
 
-    // Set Timer Mode (Real vs Test Loops)
+    // Set Timer Mode (Real vs 30s Countdown Test)
     function setTimerMode(mode) {
       timerMode = mode;
-      document.getElementById('btn-timer-real').classList.toggle('active-gold', mode === 'real');
-      document.getElementById('btn-timer-30s').classList.toggle('active-gold', mode === '30s');
-      document.getElementById('btn-timer-60s').classList.toggle('active-gold', mode === '60s');
-
+      const btnReal = document.getElementById('btn-timer-real');
+      const btn30s = document.getElementById('btn-timer-30s');
       const statusEl = document.getElementById('timer-status');
+
+      btnReal.classList.toggle('active-gold', mode === 'real');
+      btn30s.classList.toggle('active-gold', mode === '30s');
+
       if (mode === 'real') {
+        btn30s.textContent = 'Test 30s';
         statusEl.textContent = '⏱ Mode: Real (.00)';
       } else if (mode === '30s') {
-        statusEl.textContent = '🧪 Test Loop: 30s';
-      } else if (mode === '60s') {
-        statusEl.textContent = '🧪 Test Loop: 60s';
+        countdownSeconds = 30; // Reset countdown counter to 30
+        btn30s.textContent = `⏳ Test (30s)`;
+        statusEl.textContent = '🧪 Test Loop: 30s Countdown';
       }
 
       lastTriggerKey = null; // Reset Trigger Guard
@@ -854,22 +857,17 @@
             }
           }
         } else if (timerMode === '30s') {
-          // Trigger every 30 seconds (00s or 30s)
-          if (secs === 0 || secs === 30) {
-            const testKey = `${mins}:${secs}`;
-            if (lastTriggerKey !== testKey) {
-              lastTriggerKey = testKey;
-              executeTopOfTheHourActions();
-            }
-          }
-        } else if (timerMode === '60s') {
-          // Trigger every 60 seconds (00s)
-          if (secs === 0) {
-            const testKey = `${mins}:${secs}`;
-            if (lastTriggerKey !== testKey) {
-              lastTriggerKey = testKey;
-              executeTopOfTheHourActions();
-            }
+          // Decrement Countdown Counter every 1 second
+          countdownSeconds--;
+
+          const btn30s = document.getElementById('btn-timer-30s');
+          const formattedSec = countdownSeconds < 10 ? `0${countdownSeconds}` : countdownSeconds;
+          btn30s.textContent = `⏳ Test (${formattedSec}s)`;
+
+          // Trigger Action when Countdown reaches 0
+          if (countdownSeconds <= 0) {
+            executeTopOfTheHourActions();
+            countdownSeconds = 30; // Reset countdown loop back to 30s
           }
         }
       }, 1000);
