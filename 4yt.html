@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project 4 Streams - YouTube Edition v1.3.0</title>
+  <title>Project 4 Streams - YouTube Edition v1.3.1</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -118,7 +118,7 @@
       padding: 0.4rem 0.8rem;
       border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.2);
-      min-width: 175px;
+      min-width: 185px;
       text-align: center;
       font-family: inherit;
     }
@@ -126,6 +126,20 @@
     .btn-thaipbs:hover {
       background-color: #ea580c;
       color: #ffffff;
+    }
+
+    /* Blinking animation specifically for (Live Now!) text */
+    .live-blink {
+      animation: text-blink-animation 1.2s infinite ease-in-out;
+      font-weight: 700;
+      color: #ffffff;
+      margin-left: 0.2rem;
+    }
+
+    @keyframes text-blink-animation {
+      0% { opacity: 1; }
+      50% { opacity: 0.15; }
+      100% { opacity: 1; }
     }
 
     /* Main Container */
@@ -416,11 +430,11 @@
   <!-- Top Navigation -->
   <header>
     <div class="brand-title">
-      PROJECT 4 STREAMS <span class="brand-badge">v1.3.0</span>
+      PROJECT 4 STREAMS <span class="brand-badge">v1.3.1</span>
     </div>
 
     <div class="controls-main">
-      <!-- ThaiPBS Custom Button with Dynamic Schedule Countdown -->
+      <!-- ThaiPBS Custom Button with Dynamic Schedule Countdown & Selective Blinking Text -->
       <button class="btn btn-thaipbs" id="btn-thaipbs-live" onclick="openThaiPBSLive(true)">
         ThaiPBS
       </button>
@@ -885,7 +899,7 @@
     }
 
     /* ==========================================================================
-       PHASE 2: THAIPBS OFFICIAL BROADCAST SCHEDULE REGISTRY & COUNTDOWN (v1.3.0)
+       PHASE 2: THAIPBS OFFICIAL BROADCAST SCHEDULE REGISTRY & COUNTDOWN (v1.3.1)
        ========================================================================== */
 
     // ThaiPBS Official News Broadcast Schedule
@@ -1016,8 +1030,8 @@
         const btnThaiPBS = document.getElementById('btn-thaipbs-live');
 
         if (activeSlot) {
-          // Currently in a news broadcast window
-          btnThaiPBS.textContent = 'ThaiPBS (Live Now)';
+          // Currently in a news broadcast window -> Selective Blinking Text
+          btnThaiPBS.innerHTML = `ThaiPBS <span class="live-blink">(Live Now!)</span>`;
 
           // Trigger popup once when starting slot if not already open
           const slotKey = `${now.toDateString()}_${activeSlot.start}`;
@@ -1038,9 +1052,9 @@
           const formattedSec = secs < 10 ? `0${secs}` : secs;
 
           if (hrs > 0) {
-            btnThaiPBS.textContent = `ThaiPBS (${hrs}h ${formattedMin}m)`;
+            btnThaiPBS.textContent = `ThaiPBS (in ${hrs}h ${formattedMin}m)`;
           } else {
-            btnThaiPBS.textContent = `ThaiPBS (${formattedMin}:${formattedSec})`;
+            btnThaiPBS.textContent = `ThaiPBS (in ${formattedMin}:${formattedSec})`;
           }
         }
       }, 1000);
