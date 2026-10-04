@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project 4 Streams - YouTube Edition v1.2.1</title>
+  <title>Project 4 Streams - YouTube Edition v1.2.2</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -118,7 +118,7 @@
       padding: 0.4rem 0.8rem;
       border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.2);
-      min-width: 145px; /* Same dimension width alignment */
+      min-width: 145px;
       text-align: center;
       font-family: inherit;
     }
@@ -337,7 +337,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(11, 15, 25, 0.92);
+      background-color: rgba(11, 15, 25, 0.94);
       backdrop-filter: blur(8px);
       z-index: 500;
       flex-direction: column;
@@ -365,6 +365,26 @@
       line-height: 1.5;
     }
 
+    .btn-action-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-launch-fallback {
+      background-color: var(--accent-thaipbs);
+      color: #ffffff;
+      font-size: 1rem;
+      padding: 0.7rem 1.4rem;
+      font-weight: 700;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+      animation: pulse-orange 1.5s infinite;
+    }
+
     .btn-resume {
       background-color: var(--accent-green);
       color: #ffffff;
@@ -382,6 +402,12 @@
       background-color: #059669;
       transform: translateY(-2px);
     }
+
+    @keyframes pulse-orange {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
+      70% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+    }
   </style>
   <script src="https://www.youtube.com/iframe_api"></script>
 </head>
@@ -390,12 +416,12 @@
   <!-- Top Navigation -->
   <header>
     <div class="brand-title">
-      PROJECT 4 STREAMS <span class="brand-badge">v1.2.1</span>
+      PROJECT 4 STREAMS <span class="brand-badge">v1.2.2</span>
     </div>
 
     <div class="controls-main">
       <!-- ThaiPBS Custom Button with Integrated 30s Test Countdown -->
-      <button class="btn btn-thaipbs" id="btn-thaipbs-live" onclick="openThaiPBSLive()">
+      <button class="btn btn-thaipbs" id="btn-thaipbs-live" onclick="openThaiPBSLive(true)">
         ThaiPBS (30s)
       </button>
 
@@ -425,14 +451,20 @@
   <main>
     <!-- Phase 2: ThaiPBS Standby Control Overlay -->
     <div class="thaipbs-mode-overlay" id="thaipbs-overlay">
-      <div class="overlay-title">📺 ThaiPBS Live Mode Active</div>
-      <div class="overlay-desc">
-        4-Streams have been paused to minimize bandwidth & system resource usage.<br>
-        ThaiPBS Live stream is playing in a popup window.
+      <div class="overlay-title">📺 ThaiPBS Live News Mode</div>
+      <div class="overlay-desc" id="overlay-desc-text">
+        4-Streams have been paused to minimize bandwidth & system resource usage.
       </div>
-      <button class="btn-resume" onclick="closeThaiPBSAndResume()">
-        ⏹ Close ThaiPBS & Resume 4-Streams
-      </button>
+
+      <div class="btn-action-group">
+        <!-- Direct User Click Button to Bypass Browser Popup Blocker -->
+        <button class="btn-launch-fallback" id="btn-manual-popup" onclick="openThaiPBSLive(true)" style="display: none;">
+          ▶️ Click to Open ThaiPBS Live Window
+        </button>
+        <button class="btn-resume" onclick="closeThaiPBSAndResume()">
+          ⏹ Close ThaiPBS & Resume 4-Streams
+        </button>
+      </div>
     </div>
 
     <!-- PAGE 1 -->
@@ -854,7 +886,7 @@
     }
 
     /* ==========================================================================
-       PHASE 2: THAIPBS LIVE POPUP & RESOURCE MANAGEMENT ENGINE (v1.2.1)
+       PHASE 2: THAIPBS LIVE POPUP & POPUP BLOCKER PROTECTION ENGINE (v1.2.2)
        ========================================================================== */
 
     let thaipbsCountdownSec = 30;
@@ -880,44 +912,54 @@
       }
     }
 
-    // Open ThaiPBS Live Window & Pause 4-Streams
-    function openThaiPBSLive() {
-      // Pause/Clear Test Countdown Timer
+    // Open ThaiPBS Live Window & Handle Browser Popup Blocker
+    function openThaiPBSLive(isUserClick = false) {
       if (thaipbsTestInterval) clearInterval(thaipbsTestInterval);
       document.getElementById('btn-thaipbs-live').textContent = 'ThaiPBS';
 
-      // 1. Stop all 8 YouTube Streams to free resources
+      // 1. Stop 4-Streams to release resources
       stopAllStreamsToSaveResources();
 
-      // 2. Open ThaiPBS Live Web Page in a Popup Window
+      // 2. Play Audio Alert
+      playTripleBeep();
+
+      // 3. Attempt Popup Launch
       thaipbsWindowRef = window.open(
         'https://www.thaipbs.or.th/live',
         'ThaiPBSLiveWindow',
         'width=1280,height=720,scrollbars=yes,resizable=yes'
       );
 
-      // 3. Show Dashboard Control Overlay
+      // 4. Check if Popup was Blocked by Browser Security Policy
+      const manualBtn = document.getElementById('btn-manual-popup');
+      const descText = document.getElementById('overlay-desc-text');
+
+      if (!thaipbsWindowRef || thaipbsWindowRef.closed || typeof thaipbsWindowRef.closed === 'undefined') {
+        // Blocked by Popup Blocker -> Show Fallback Direct Click Button
+        manualBtn.style.display = 'inline-block';
+        descText.innerHTML = `⚠️ <b>ThaiPBS News Time!</b> Browser blocked automatic popup.<br>Click the orange button below to launch ThaiPBS Live.`;
+      } else {
+        // Successfully Opened Popup Window
+        manualBtn.style.display = 'none';
+        descText.innerHTML = `4-Streams have been paused to minimize bandwidth & system resource usage.<br>ThaiPBS Live stream is playing in a popup window.`;
+      }
+
+      // 5. Display Control Overlay
       document.getElementById('thaipbs-overlay').classList.add('active');
     }
 
     // Close ThaiPBS Window & Resume 4-Streams
     function closeThaiPBSAndResume() {
-      // 1. Close Popup Window if opened
       if (thaipbsWindowRef && !thaipbsWindowRef.closed) {
         thaipbsWindowRef.close();
       }
 
-      // 2. Hide Standby Overlay
       document.getElementById('thaipbs-overlay').classList.remove('active');
-
-      // 3. Resume YouTube Streams
       resumeAllStreams();
 
-      // 4. Default to Page 1 and Unmute CH1 (Al Jazeera)
       switchPage(1);
       toggleSolo(1);
 
-      // 5. Restart 30s ThaiPBS Test Timer
       startThaiPBSTestTimer();
     }
 
@@ -935,10 +977,9 @@
         if (thaipbsCountdownSec > 0) {
           btnThaiPBS.textContent = `ThaiPBS (${thaipbsCountdownSec}s)`;
         } else {
-          // Timer reached 0: Trigger ThaiPBS Live Popup automatically
           clearInterval(thaipbsTestInterval);
           btnThaiPBS.textContent = 'ThaiPBS';
-          openThaiPBSLive();
+          openThaiPBSLive(false); // Trigger Popup Event
         }
       }, 1000);
     }
