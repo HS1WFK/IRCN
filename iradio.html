@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Compact Header Meter V.1.5.6</title>
+  <title>Global News - Compact Header Meter V.1.5.7</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -94,6 +94,24 @@
       100% { transform: translateX(-50%); }
     }
 
+    /* --- Video Toggle Container --- */
+    .video-wrapper {
+      width: 100%;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      display: none; /* ซ่อนโดยค่าเริ่มต้น */
+      background: #000;
+      border: 1px solid rgba(28, 59, 28, 0.85);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+    }
+    .video-wrapper.show { display: block; }
+    
+    video#media-player {
+      display: block; width: 100%; height: auto;
+      aspect-ratio: 16 / 9; object-fit: contain;
+    }
+
     .scope-container {
       position: relative; width: 100%; height: 72px; background-color: rgba(5, 11, 5, 0.92);
       border: 1px solid rgba(28, 59, 28, 0.85); border-radius: 5px; overflow: hidden;
@@ -110,8 +128,19 @@
     .audio-content-stats { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: none; margin-top: 5px; padding-left: 5px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9); color: #a0a0a0; }
     
     .stats-main-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
-    .channels-indicator { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; }
+    .channels-indicator { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; display: flex; align-items: center; }
     
+    /* --- Video Button --- */
+    .video-btn {
+      font-size: 16px; font-weight: 700; padding: 2px 8px; margin-left: 12px;
+      border-radius: 4px; border: 1px solid #555555; color: #555555;
+      cursor: pointer; transition: all 0.2s ease; user-select: none;
+      letter-spacing: 0.5px; line-height: 1.2;
+    }
+    .video-btn:active { transform: scale(0.95); }
+    .video-btn.active { color: #22c55e; border-color: #22c55e; background: rgba(34, 197, 94, 0.1); box-shadow: 0 0 6px rgba(34, 197, 94, 0.3); }
+    .video-btn.hidden { display: none; }
+
     .buf-meter-container { 
       display: flex; align-items: center; gap: 10px; 
       font-size: 22px; font-weight: 700; color: #8ab4ff; 
@@ -178,83 +207,42 @@
     .stat-term.active-red { color: #ef4444 !important; }
     .stat-term.disable-gray { color: #555555; }
 
-    /* --- Playlist Button Grid --- */
     .playlist-container { 
-      display: grid; 
-      grid-template-columns: repeat(2, 1fr); 
-      gap: 16px; 
-      background: rgba(0, 0, 0, 0.65); 
-      padding: 24px; 
-      border-radius: 8px; 
-      border: 1px solid rgba(255, 255, 255, 0.12); 
-      backdrop-filter: blur(10px); 
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; 
+      background: rgba(0, 0, 0, 0.65); padding: 24px; border-radius: 8px; 
+      border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(10px); 
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8); 
     }
     
     .channel-item { 
-      display: flex; 
-      align-items: center; 
-      justify-content: center;
-      cursor: pointer; 
-      user-select: none; 
-      width: 100%; 
-      padding: 16px 10px; 
-      min-height: 64px;
-      border-radius: 8px; 
-      border: 2px solid #555555;
-      background: rgba(0, 0, 0, 0.4);
-      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; 
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; user-select: none; width: 100%; padding: 16px 10px; 
+      min-height: 64px; border-radius: 8px; border: 2px solid #555555;
+      background: rgba(0, 0, 0, 0.4); transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; 
     }
-    
-    .channel-item:hover { 
-      background: rgba(255, 255, 255, 0.1); 
-      border-color: #777777;
-    }
-    
-    .channel-item.active { 
-      background: #ff9800; 
-      border-color: #ff9800;
-    }
-    
-    .channel-name { 
-      font-size: 22px; 
-      font-weight: 600; 
-      color: #a0a0a0; 
-      text-align: center;
-      line-height: 1.2;
-      white-space: normal;
-      word-break: break-word;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95); 
-    }
-    
-    .channel-item.active .channel-name { 
-      color: #050a12; 
-      font-weight: 800; 
-      text-shadow: none;
-    }
+    .channel-item:hover { background: rgba(255, 255, 255, 0.1); border-color: #777777; }
+    .channel-item.active { background: #ff9800; border-color: #ff9800; }
+    .channel-name { font-size: 22px; font-weight: 600; color: #a0a0a0; text-align: center; line-height: 1.2; white-space: normal; word-break: break-word; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95); }
+    .channel-item.active .channel-name { color: #050a12; font-weight: 800; text-shadow: none; }
     
     .page-version-footer { text-align: center; font-size: 14px; color: #666666; margin-top: 20px; letter-spacing: 0.5px; }
-
-    audio, video { display: none; }
 
     @media (max-width: 480px) {
       body { padding: 0 12px 16px 12px; }
       .sticky-header { padding-left: 10px; padding-right: 10px; }
       .callsign { font-size: 19px; }
       h1.page-title { font-size: 28px; }
-      
       .utc-time-display, .local-time-display, .station-fixed-title, .station-ticker-text { font-size: 19px !important; }
-      
       .channels-indicator { font-size: 17px; }
+      
+      .video-btn { font-size: 13px; padding: 2px 6px; margin-left: 8px; }
+      
       .buf-meter-container { font-size: 16px; width: 52%; }
       .connection-status-line { font-size: 14px; letter-spacing: 0px; }
       .conn-right-group { width: 52%; }
-      
       .vu-container-global { --bar-h: 11px; --label-h: 17px; width: 52%; }
       .vu-scale-labels { font-size: 13px; }
-      
       .scope-container { height: 58px; margin-bottom: 8px; }
-      
       .playlist-container { padding: 16px; gap: 12px; }
       .channel-item { padding: 14px 6px; min-height: 58px; border-radius: 6px; }
       .channel-name { font-size: 17px; }
@@ -282,6 +270,11 @@
         </div>
       </div>
 
+      <!-- VIDEO WRAPPER (อยู่ระหว่าง Station Info และ Scope) -->
+      <div class="video-wrapper" id="video-wrapper">
+        <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
+      </div>
+
       <div class="scope-container">
         <div class="scope-grid"></div>
         <canvas id="oscilloscope"></canvas>
@@ -290,10 +283,12 @@
       <div class="audio-content-stats" id="audio-content-stats">
         <div class="stats-main-row">
           <div class="channels-indicator">
-            CH:
+            CH:&nbsp;
             <span id="stat-mono" class="stat-term disable-gray">Mono</span>
-            |
+            &nbsp;|&nbsp;
             <span id="stat-stereo" class="stat-term disable-gray">Stereo</span>
+            <!-- ปุ่ม VIDEO TOGGLE -->
+            <span id="video-toggle-btn" class="video-btn hidden">VIDEO</span>
           </div>
 
           <div class="buf-meter-container">
@@ -335,10 +330,7 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.5.6</div>
-
-  <!-- Dual Engines: Video for HLS, Audio for Direct Stream -->
-  <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
+  <div class="page-version-footer">ver.1.5.7</div>
 
   <script>
     const channels = [
@@ -403,6 +395,11 @@
     const globalLed = document.getElementById('global-led');
     const audioTextTag = document.getElementById('audio-text-tag');
 
+    // UI Elements for Video Toggle
+    const videoToggleBtn = document.getElementById('video-toggle-btn');
+    const videoWrapper = document.getElementById('video-wrapper');
+    let isVideoToggledOn = false;
+
     // Dual Engine Vars
     let player = videoEl;
     let audioEl = null;
@@ -437,6 +434,38 @@
     let totalRxBytes = 0;
     let currentBitrate = 0;
     const segTimeB = new Uint8Array(2048);
+
+    // --- Video Visibility Manager ---
+    videoToggleBtn.addEventListener('click', () => {
+      isVideoToggledOn = !isVideoToggledOn;
+      updateVideoVisibility();
+    });
+
+    function updateVideoVisibility() {
+      if (activeIndex === -1) {
+        videoToggleBtn.classList.add('hidden');
+        videoWrapper.classList.remove('show');
+        return;
+      }
+      
+      const ch = channels[activeIndex];
+      const isVideoSource = ch.url.includes('.m3u8');
+      
+      if (isVideoSource) {
+        videoToggleBtn.classList.remove('hidden');
+        if (isVideoToggledOn) {
+          videoToggleBtn.classList.add('active');
+          videoWrapper.classList.add('show');
+        } else {
+          videoToggleBtn.classList.remove('active');
+          videoWrapper.classList.remove('show');
+        }
+      } else {
+        // หากไม่ใช่ Video ให้ซ่อนปุ่ม
+        videoToggleBtn.classList.add('hidden');
+        videoWrapper.classList.remove('show');
+      }
+    }
 
     function initGlobalVuMeterUI() {
       document.getElementById('global-scale-labels').innerHTML = dbMarks.map(m => 
@@ -483,7 +512,6 @@
           album: 'Global News Live'
         });
 
-        // สั่งงานด้วยปุ่มพวงมาลัย Tesla ( Next / Previous )
         navigator.mediaSession.setActionHandler('nexttrack', () => {
           let nextIndex = (activeIndex + 1) % channels.length;
           toggleChannel(nextIndex);
@@ -494,13 +522,8 @@
           toggleChannel(prevIndex);
         });
 
-        navigator.mediaSession.setActionHandler('play', () => {
-          if (player && player.paused) player.play();
-        });
-
-        navigator.mediaSession.setActionHandler('pause', () => {
-          if (player && !player.paused) player.pause();
-        });
+        navigator.mediaSession.setActionHandler('play', () => { if (player && player.paused) player.play(); });
+        navigator.mediaSession.setActionHandler('pause', () => { if (player && !player.paused) player.pause(); });
       }
     }
 
@@ -548,8 +571,8 @@
         stationInfoRow.style.visibility = 'visible';
         updateClocks();
         
-        // อัปเดตข้อมูลขึ้นจอ Tesla
         updateTeslaMediaSession(ch);
+        updateVideoVisibility(); // ตรวจสอบและแสดงปุ่ม VIDEO อัตโนมัติ
       }
     }
 
@@ -773,6 +796,7 @@
       globalLed.classList.remove('active');
       audioTextTag.classList.remove('active');
       clearTeslaMediaSession();
+      updateVideoVisibility(); // ซ่อนปุ่ม VIDEO ตอนกดหยุด
     }
 
     // --- Drawing & Meters ---
