@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bangkok BMA Radar Live Monitor - v.2.0.1</title>
+    <title>Bangkok BMA Radar Live Monitor - v.2.0.2</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -130,10 +130,10 @@
                 <h1 class="text-xs md:text-sm font-semibold text-slate-100 flex items-center gap-2">
                     <span class="truncate max-w-[120px] sm:max-w-none">ศูนย์เรดาร์ กทม.</span>
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] md:text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-default">
-                        v.2.0.1
+                        v.2.0.2
                     </span>
                 </h1>
-                <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">กำลังเชื่อมต่อผ่าน Cloudflare Worker...</p>
+                <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ตรวจสอบระบบปฏิบัติการ...</p>
             </div>
         </div>
 
@@ -183,7 +183,7 @@
                 </div>
                 <div id="box-left" class="radar-box flex-1">
                     <div id="loader-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
-                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูลผ่าน Proxy...</p>
+                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังสแกนดึงภาพผ่าน Cloudflare Worker...</p>
                     </div>
                     <div id="content-left" class="w-full h-full flex items-center justify-center"></div>
                 </div>
@@ -214,7 +214,7 @@
                 </div>
                 <div id="box-right" class="radar-box flex-1">
                     <div id="loader-right" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
-                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูลผ่าน Proxy...</p>
+                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังสแกนดึงภาพผ่าน Cloudflare Worker...</p>
                     </div>
                     <div id="content-right" class="w-full h-full flex items-center justify-center"></div>
                 </div>
@@ -233,12 +233,11 @@
         </div>
         <div class="text-slate-400 flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-            <span>Cloudflare Workers Powered</span>
+            <span>Cloudflare Worker Scraper Engine</span>
         </div>
     </footer>
 
     <script>
-        // ✅ Cloudflare Worker Endpoint อัปเดตเรียบร้อยครับ
         const WORKER_PROXY = "https://little-mountain-ab23.hs1wfk.workers.dev/?url=";
 
         const REFRESH_SECONDS = 180;
@@ -247,7 +246,6 @@
         let rightScaleUserOffset = 0;
         let isIOS = false;
 
-        // ลิงก์หน้าเว็บหลัก (สำหรับเปิดแท็บใหม่บน Desktop / Link button)
         const RAW_URLS = {
             anim: { 
                 nk: "https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx", 
@@ -259,21 +257,6 @@
                 chn: "https://weather.tmd.go.th/chnloop.php",
                 skm: "https://weather.tmd.go.th/skm240loop.php",
                 ryg: "https://weather.tmd.go.th/rygloop.php"
-            }
-        };
-
-        // ลิงก์ไฟล์รูปภาพโดยตรง (สำหรับเรนเดอร์ลงใน <img> ผ่าน Cloudflare Worker บน iOS)
-        const DIRECT_IMAGE_URLS = {
-            anim: {
-                nk: "https://weather.bangkok.go.th/Radar/pics/radar.gif",
-                nj: "https://weather.bangkok.go.th/Radar/pics/radar_nj.gif"
-            },
-            hires: {
-                bkk: "https://weather.bangkok.go.th/Radar/pics/radarnk.jpg",
-                svp: "https://weather.tmd.go.th/svp240.png",
-                chn: "https://weather.tmd.go.th/chn.png",
-                skm: "https://weather.tmd.go.th/skm240.png",
-                ryg: "https://weather.tmd.go.th/ryg.png"
             }
         };
 
@@ -294,9 +277,9 @@
             const containerRight = document.getElementById('content-right');
 
             if (isIOS) {
-                // บน iOS: ดึงไฟล์รูปภาพตรงผ่าน Cloudflare Worker Proxy
-                const leftImgProxy = WORKER_PROXY + encodeURIComponent(DIRECT_IMAGE_URLS.anim[currentLeftType]) + `&t=${timestamp}`;
-                const rightImgProxy = WORKER_PROXY + encodeURIComponent(DIRECT_IMAGE_URLS.hires[currentRightType]) + `&t=${timestamp}`;
+                // บน iOS: ใช้ Worker Scraper ดึงภาพล่าสุดมาใส่ <img>
+                const leftImgProxy = WORKER_PROXY + encodeURIComponent(RAW_URLS.anim[currentLeftType]) + `&t=${timestamp}`;
+                const rightImgProxy = WORKER_PROXY + encodeURIComponent(RAW_URLS.hires[currentRightType]) + `&t=${timestamp}`;
 
                 containerLeft.innerHTML = `<img src="${leftImgProxy}" class="ios-radar-img" onload="hideLoader('loader-left')" onerror="hideLoader('loader-left')">`;
                 containerRight.innerHTML = `<img src="${rightImgProxy}" class="ios-radar-img" onload="hideLoader('loader-right')" onerror="hideLoader('loader-right')">`;
@@ -428,7 +411,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             isIOS = detectIOS();
-            document.getElementById('os-status-text').textContent = isIOS ? "โหมด: iOS Direct Image (Cloudflare Proxy Enabled)" : "โหมด: Desktop Iframe (Cloudflare Proxy Enabled)";
+            document.getElementById('os-status-text').textContent = isIOS ? "โหมด: iOS Scraper (Cloudflare Worker Proxy Enabled)" : "โหมด: Desktop Iframe (Cloudflare Worker Proxy Enabled)";
             updateTimestamp();
             updateTimerUI();
             startCountdown();
