@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Compact Header Meter V.1.5.0</title>
+  <title>International News - Compact Header Meter V.1.5.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -101,10 +101,18 @@
     canvas#oscilloscope { display: block; width: 100%; height: 100%; }
 
     .audio-content-stats { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: none; margin-top: 5px; padding-left: 5px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9); color: #a0a0a0; }
+    
     .stats-main-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
     
-    .channels-indicator { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; }
-    .buf-meter-container { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 700; color: #8ab4ff; font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace; white-space: nowrap; width: 50%; }
+    .channels-indicator { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; }
+    
+    /* ลดความกว้างลงเหลือ 40% เพื่อให้ Bar สั้นลงและให้ช่องว่างกับ CH: Mono | Stereo */
+    .buf-meter-container { 
+      display: flex; align-items: center; gap: 10px; 
+      font-size: 22px; font-weight: 700; color: #8ab4ff; 
+      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace; 
+      white-space: nowrap; width: 40%; 
+    }
     
     .buf-bar-bg { flex-grow: 1; height: 12px; background-color: rgba(17, 17, 17, 0.95); border: 1px solid #555555; border-radius: 2px; overflow: hidden; }
     .buf-bar-fill { width: 0%; height: 100%; background-color: #ef4444; transition: width 0.1s linear, background-color 0.2s ease; }
@@ -210,7 +218,10 @@
       .utc-time-display, .local-time-display, .station-fixed-title, .station-ticker-text { font-size: 19px !important; }
       
       .channels-indicator { font-size: 17px; }
-      .buf-meter-container { font-size: 16px; width: 60%; }
+      
+      /* ลดความกว้างลงเหลือ 45% บนมือถือ เพื่อไม่ให้ชนกับ CH: Mono | Stereo */
+      .buf-meter-container { font-size: 16px; width: 45%; }
+      
       .connection-status-line { font-size: 14px; letter-spacing: 0px; }
       
       .vu-container-global { --bar-h: 11px; --label-h: 17px; width: 50%; }
@@ -260,7 +271,8 @@
           </div>
 
           <div class="buf-meter-container">
-            <span>Buffer: <span id="buf-val" class="status-highlight-red">0.0</span>s</span>
+            <!-- เปลี่ยนจาก Buffer: เป็น Buf: -->
+            <span>Buf: <span id="buf-val" class="status-highlight-red">0.0</span>s</span>
             <div class="buf-bar-bg">
               <div class="buf-bar-fill" id="buf-bar"></div>
             </div>
@@ -295,7 +307,7 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.5.0</div>
+  <div class="page-version-footer">ver.1.5.1</div>
 
   <!-- Dual Engines: Video for HLS, Audio for Direct Stream -->
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
@@ -416,7 +428,6 @@
       item.className = 'channel-item';
       item.dataset.index = index;
       
-      // Removed .radio-dot completely, using pure button design
       item.innerHTML = `
         <span class="channel-name">${channel.name}</span>
       `;
@@ -542,7 +553,6 @@
       const sid = directAttempt;
       usingNative = true;
 
-      // สร้างลูปทดลองเชื่อมต่อเผื่อติดเรื่อง HTTPS / CORS
       const cands = [];
       if (location.protocol === 'https:' && /^http:/i.test(url)) cands.push(url.replace(/^http:/i, 'https:')); 
       cands.push(url);
@@ -579,7 +589,7 @@
         const onErr = () => { if (!done) { cleanup(); attemptAt(i + 1); } };
         const onOk = () => { if (!done) { cleanup(); if (sid === directAttempt) onDirectPlaying(cors); } };
 
-        tm = setTimeout(onErr, 10000); // ให้เวลาเชื่อมต่อสูงสุด 10 วินาที
+        tm = setTimeout(onErr, 10000);
         audioEl.addEventListener('error', onErr);
         audioEl.addEventListener('playing', onOk);
         audioEl.crossOrigin = cors ? 'anonymous' : null;
@@ -600,13 +610,12 @@
           meterMode = 'analyser';
         } catch (e) { meterMode = 'none'; }
       } else {
-        meterMode = 'none'; // Fallback เล่นเสียงได้แต่กราฟนิ่ง หากเซิร์ฟเวอร์บล็อก CORS
+        meterMode = 'none';
       }
       
-      videoEl.dispatchEvent(new Event('playing')); // ดึงให้ Ticker ทำงาน
+      videoEl.dispatchEvent(new Event('playing'));
       onPlayStarted();
       
-      // จำลอง Data Received & Bitrate ให้สตรีมตรง
       clearInterval(directRxTimer);
       directBufStart = null;
       directRxTimer = setInterval(() => {
