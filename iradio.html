@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>International News - Compact Header Meter V.1.5.1</title>
+  <title>Global News - Compact Header Meter V.1.5.2</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -42,7 +42,6 @@
       pointer-events: none;
     }
 
-    /* --- Scaled up by 20% --- */
     .sticky-header {
       position: sticky;
       top: 0;
@@ -64,7 +63,16 @@
     .callsign { font-size: 31px; font-weight: 700; color: #a0a0a0; letter-spacing: 0.5px; margin-bottom: 5px; }
     .title-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
     
-    h1.page-title { font-size: 48px; font-weight: 700; color: #ffffff; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95); margin: 0; line-height: 1.1; }
+    /* เปลี่ยนชื่อเป็น Global News และควบคุมให้อยู่บรรทัดเดียวกัน */
+    h1.page-title { 
+      font-size: 48px; 
+      font-weight: 700; 
+      color: #ffffff; 
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95); 
+      margin: 0; 
+      line-height: 1.1; 
+      white-space: nowrap;
+    }
     
     .utc-time-display {
       font-size: 31px; font-weight: 600; color: #ffffff;
@@ -87,8 +95,9 @@
       100% { transform: translateX(-50%); }
     }
 
+    /* เพิ่มความสูงขึ้นอีก 20% (จาก 60px เป็น 72px) */
     .scope-container {
-      position: relative; width: 100%; height: 60px; background-color: rgba(5, 11, 5, 0.92);
+      position: relative; width: 100%; height: 72px; background-color: rgba(5, 11, 5, 0.92);
       border: 1px solid rgba(28, 59, 28, 0.85); border-radius: 5px; overflow: hidden;
       box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.7); margin-bottom: 8px;
     }
@@ -103,10 +112,8 @@
     .audio-content-stats { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: none; margin-top: 5px; padding-left: 5px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9); color: #a0a0a0; }
     
     .stats-main-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
-    
     .channels-indicator { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; }
     
-    /* ลดความกว้างลงเหลือ 40% เพื่อให้ Bar สั้นลงและให้ช่องว่างกับ CH: Mono | Stereo */
     .buf-meter-container { 
       display: flex; align-items: center; gap: 10px; 
       font-size: 22px; font-weight: 700; color: #8ab4ff; 
@@ -149,7 +156,7 @@
     .stat-term.active-red { color: #ef4444 !important; }
     .stat-term.disable-gray { color: #555555; }
 
-    /* --- Playlist Button Grid Redesign --- */
+    /* --- Playlist Button Grid --- */
     .playlist-container { 
       display: grid; 
       grid-template-columns: repeat(2, 1fr); 
@@ -208,27 +215,24 @@
 
     audio, video { display: none; }
 
-    /* --- Mobile Scale Up (approx +20% from old mobile rules) --- */
     @media (max-width: 480px) {
       body { padding: 0 12px 16px 12px; }
       .sticky-header { padding-left: 10px; padding-right: 10px; }
       .callsign { font-size: 19px; }
-      h1.page-title { font-size: 30px; }
+      h1.page-title { font-size: 28px; }
       
       .utc-time-display, .local-time-display, .station-fixed-title, .station-ticker-text { font-size: 19px !important; }
       
       .channels-indicator { font-size: 17px; }
-      
-      /* ลดความกว้างลงเหลือ 45% บนมือถือ เพื่อไม่ให้ชนกับ CH: Mono | Stereo */
       .buf-meter-container { font-size: 16px; width: 45%; }
-      
       .connection-status-line { font-size: 14px; letter-spacing: 0px; }
       
       .vu-container-global { --bar-h: 11px; --label-h: 17px; width: 50%; }
       .vu-scale-labels { font-size: 13px; }
-      .scope-container { height: 48px; margin-bottom: 8px; }
       
-      /* Grid adjustments for narrow screens */
+      /* ปรับความสูง Scope บนมือถือเพิ่มเป็น 58px */
+      .scope-container { height: 58px; margin-bottom: 8px; }
+      
       .playlist-container { padding: 16px; gap: 12px; }
       .channel-item { padding: 14px 6px; min-height: 58px; border-radius: 6px; }
       .channel-name { font-size: 17px; }
@@ -243,7 +247,8 @@
       <div class="callsign">HS1WFK</div>
 
       <div class="title-row">
-        <h1 class="page-title">International News</h1>
+        <!-- ปรับชื่อเป็น Global News -->
+        <h1 class="page-title">Global News</h1>
         <div class="utc-time-display" id="utc-clock">UTC --:--:--</div>
       </div>
 
@@ -271,7 +276,6 @@
           </div>
 
           <div class="buf-meter-container">
-            <!-- เปลี่ยนจาก Buffer: เป็น Buf: -->
             <span>Buf: <span id="buf-val" class="status-highlight-red">0.0</span>s</span>
             <div class="buf-bar-bg">
               <div class="buf-bar-fill" id="buf-bar"></div>
@@ -281,8 +285,8 @@
 
         <div class="connection-status-line" id="conn-status">
           <span>CONNECTED</span>
-          <span>|</span>
-          <span>Bitrate: <span class="status-highlight-red" id="conn-br">-- kbps</span></span>
+          <span id="sep-br">|</span>
+          <span id="wrap-br">Bitrate: <span class="status-highlight-red" id="conn-br">-- kbps</span></span>
           <span>|</span>
           <span>Data Received <span class="status-highlight-red" id="conn-rx">0.00 MB</span></span>
         </div>
@@ -307,7 +311,7 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.5.1</div>
+  <div class="page-version-footer">ver.1.5.2</div>
 
   <!-- Dual Engines: Video for HLS, Audio for Direct Stream -->
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
@@ -362,11 +366,13 @@
     const bufBarElem = document.getElementById('buf-bar');
     const connBrElem = document.getElementById('conn-br');
     const connRxElem = document.getElementById('conn-rx');
+    const wrapBrElem = document.getElementById('wrap-br');
+    const sepBrElem = document.getElementById('sep-br');
     const globalVuFill = document.getElementById('global-vu-fill');
     const globalLed = document.getElementById('global-led');
 
     // Dual Engine Vars
-    let player = videoEl; // active player pointer
+    let player = videoEl;
     let audioEl = null;
     let directSrc = null;
     let directAttempt = 0;
@@ -624,8 +630,8 @@
           if (!b.length) return;
           if (directBufStart === null) directBufStart = b.start(0);
           const sec = Math.max(0, b.end(b.length - 1) - directBufStart);
-          const kbps = (channels[activeIndex] && channels[activeIndex].kbps) || 128;
-          totalRxBytes = sec * kbps * 125;
+          const kbps = (channels[activeIndex] && channels[activeIndex].kbps) || 0;
+          totalRxBytes = sec * (kbps || 128) * 125;
           currentBitrate = kbps;
         } catch (e) {}
       }, 500);
@@ -647,7 +653,11 @@
           hls.loadSource(url);
           hls.attachMedia(player);
           hls.on(Hls.Events.MANIFEST_PARSED, () => { if (LOWEST_QUALITY) hls.autoLevelCapping = 0; player.play().then(onPlayStarted).catch(e => console.log("Play error:", e)); });
-          hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { if (data.details && data.details.totalduration) currentBitrate = Math.round((data.details.totalduration > 0 ? (data.details.bandwidth || 128000) : 128000) / 1000); });
+          hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { 
+            if (data.details && data.details.totalduration) {
+              currentBitrate = Math.round((data.details.totalduration > 0 ? (data.details.bandwidth || 0) : 0) / 1000); 
+            }
+          });
           hls.on(Hls.Events.BUFFER_APPENDING, (event, data) => handleBufferAppending(sid, data));
         } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
           usingNative = true;
@@ -771,7 +781,16 @@
           if (bufPercent > 50) { bufBarElem.classList.add('green-status'); bufBarElem.classList.remove('red-status'); }
           else { bufBarElem.classList.add('red-status'); bufBarElem.classList.remove('green-status'); }
 
-          connBrElem.innerText = `${currentBitrate || 128} kbps`;
+          /* ตรวจสอบ Dynamic Bitrate: ถ้าไม่ใช่ค่าจริง (>0) ให้ซ่อนออก แล้วเลื่อน Data Received เข้าแทน */
+          if (currentBitrate && currentBitrate > 0) {
+            connBrElem.innerText = `${currentBitrate} kbps`;
+            wrapBrElem.style.display = 'inline';
+            sepBrElem.style.display = 'inline';
+          } else {
+            wrapBrElem.style.display = 'none';
+            sepBrElem.style.display = 'none';
+          }
+
           connRxElem.innerText = `${(totalRxBytes / (1024 * 1024)).toFixed(2)} MB`;
 
           globalVuFill.style.width = currentLevel.toFixed(1) + '%';
