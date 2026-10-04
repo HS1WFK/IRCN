@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Compact Header Meter V.1.5.5</title>
+  <title>Global News - Compact Header Meter V.1.5.6</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -335,7 +335,7 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.5.5</div>
+  <div class="page-version-footer">ver.1.5.6</div>
 
   <!-- Dual Engines: Video for HLS, Audio for Direct Stream -->
   <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
@@ -360,7 +360,6 @@
       { name: "บ้านธรรมะ", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Dhamma media and radio broadcasting operated by the Dhamma Study and Propagation Foundation.", url: "https://radio10.plathong.net/7238/;stream.mp3", kbps: 128 }
     ];
 
-    /* ปรับระยะพิกัดสเกลใหม่: ลดระยะช่วง -5 ถึง 0 คืนพื้นที่ให้ฝั่งขวา */
     const dbMarks = [ 
       { db: "-20", pos: 0, isMinusTwenty: true }, 
       { db: "-10", pos: 30 }, 
@@ -475,6 +474,44 @@
       playlistContainer.appendChild(item);
     });
 
+    // --- Web Media Session Integration (Tesla Screen & Steering Wheel Support) ---
+    function updateTeslaMediaSession(channel) {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: channel.name,
+          artist: `${channel.location} (${channel.utc})`,
+          album: 'Global News Live'
+        });
+
+        // สั่งงานด้วยปุ่มพวงมาลัย Tesla ( Next / Previous )
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+          let nextIndex = (activeIndex + 1) % channels.length;
+          toggleChannel(nextIndex);
+        });
+
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+          let prevIndex = (activeIndex - 1 + channels.length) % channels.length;
+          toggleChannel(prevIndex);
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => {
+          if (player && player.paused) player.play();
+        });
+
+        navigator.mediaSession.setActionHandler('pause', () => {
+          if (player && !player.paused) player.pause();
+        });
+      }
+    }
+
+    function clearTeslaMediaSession() {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+      }
+    }
+
     function initAudioContext() {
       if (IS_IOS && meterMode !== 'analyser') return;
       if (!audioCtx) {
@@ -510,6 +547,9 @@
         stationTickerText.style.animation = 'ticker-scroll-slow 45s linear infinite';
         stationInfoRow.style.visibility = 'visible';
         updateClocks();
+        
+        // อัปเดตข้อมูลขึ้นจอ Tesla
+        updateTeslaMediaSession(ch);
       }
     }
 
@@ -732,6 +772,7 @@
       
       globalLed.classList.remove('active');
       audioTextTag.classList.remove('active');
+      clearTeslaMediaSession();
     }
 
     // --- Drawing & Meters ---
