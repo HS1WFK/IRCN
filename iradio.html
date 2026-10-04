@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Compact Header Meter V.1.5.7</title>
+  <title>Global News - Compact Header Meter V.1.5.8</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -94,13 +94,13 @@
       100% { transform: translateX(-50%); }
     }
 
-    /* --- Video Toggle Container --- */
+    /* --- Video Wrapper --- */
     .video-wrapper {
       width: 100%;
       border-radius: 5px;
       overflow: hidden;
       margin-bottom: 8px;
-      display: none; /* ซ่อนโดยค่าเริ่มต้น */
+      display: none;
       background: #000;
       border: 1px solid rgba(28, 59, 28, 0.85);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
@@ -130,16 +130,24 @@
     .stats-main-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
     .channels-indicator { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; display: flex; align-items: center; }
     
-    /* --- Video Button --- */
+    /* 1 & 2. ปรับปุ่ม VIDEO ปุ่มย้ายไปวางด้านหน้า CH: Mono | Stereo */
     .video-btn {
-      font-size: 16px; font-weight: 700; padding: 2px 8px; margin-left: 12px;
-      border-radius: 4px; border: 1px solid #555555; color: #555555;
+      font-size: 16px; font-weight: 700; padding: 2px 8px; margin-right: 10px;
+      border-radius: 4px; border: 1px solid #555555; color: #555555; background: transparent;
       cursor: pointer; transition: all 0.2s ease; user-select: none;
       letter-spacing: 0.5px; line-height: 1.2;
     }
-    .video-btn:active { transform: scale(0.95); }
-    .video-btn.active { color: #22c55e; border-color: #22c55e; background: rgba(34, 197, 94, 0.1); box-shadow: 0 0 6px rgba(34, 197, 94, 0.3); }
-    .video-btn.hidden { display: none; }
+    .video-btn.disabled-btn {
+      color: #555555 !important; border-color: #555555 !important;
+      background: transparent !important; box-shadow: none !important; cursor: not-allowed;
+    }
+    .video-btn.has-video {
+      color: #22c55e !important; border-color: #22c55e !important; cursor: pointer;
+    }
+    .video-btn.has-video.active {
+      background: rgba(34, 197, 94, 0.15) !important; box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+    }
+    .video-btn:active:not(.disabled-btn) { transform: scale(0.95); }
 
     .buf-meter-container { 
       display: flex; align-items: center; gap: 10px; 
@@ -207,6 +215,7 @@
     .stat-term.active-red { color: #ef4444 !important; }
     .stat-term.disable-gray { color: #555555; }
 
+    /* --- Playlist Button Grid --- */
     .playlist-container { 
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; 
       background: rgba(0, 0, 0, 0.65); padding: 24px; border-radius: 8px; 
@@ -221,9 +230,19 @@
       background: rgba(0, 0, 0, 0.4); transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; 
     }
     .channel-item:hover { background: rgba(255, 255, 255, 0.1); border-color: #777777; }
-    .channel-item.active { background: #ff9800; border-color: #ff9800; }
+    
+    /* 3. ปรับสไตล์ปุ่ม Station ตอน Active เป็น พื้นดำ + กรอบสีส้ม + Text สีส้ม */
+    .channel-item.active { 
+      background: #000000 !important; 
+      border-color: #ff9800 !important;
+      box-shadow: 0 0 10px rgba(255, 152, 0, 0.25);
+    }
     .channel-name { font-size: 22px; font-weight: 600; color: #a0a0a0; text-align: center; line-height: 1.2; white-space: normal; word-break: break-word; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95); }
-    .channel-item.active .channel-name { color: #050a12; font-weight: 800; text-shadow: none; }
+    .channel-item.active .channel-name { 
+      color: #ff9800 !important; 
+      font-weight: 800; 
+      text-shadow: 0 0 4px rgba(255, 152, 0, 0.4);
+    }
     
     .page-version-footer { text-align: center; font-size: 14px; color: #666666; margin-top: 20px; letter-spacing: 0.5px; }
 
@@ -235,7 +254,7 @@
       .utc-time-display, .local-time-display, .station-fixed-title, .station-ticker-text { font-size: 19px !important; }
       .channels-indicator { font-size: 17px; }
       
-      .video-btn { font-size: 13px; padding: 2px 6px; margin-left: 8px; }
+      .video-btn { font-size: 13px; padding: 2px 6px; margin-right: 6px; }
       
       .buf-meter-container { font-size: 16px; width: 52%; }
       .connection-status-line { font-size: 14px; letter-spacing: 0px; }
@@ -270,7 +289,7 @@
         </div>
       </div>
 
-      <!-- VIDEO WRAPPER (อยู่ระหว่าง Station Info และ Scope) -->
+      <!-- VIDEO WRAPPER (ระหว่าง Station Info และ Scope) -->
       <div class="video-wrapper" id="video-wrapper">
         <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
       </div>
@@ -283,12 +302,12 @@
       <div class="audio-content-stats" id="audio-content-stats">
         <div class="stats-main-row">
           <div class="channels-indicator">
+            <!-- 1. ปุ่ม VIDEO ย้ายมาอยู่ด้านหน้า CH: -->
+            <button id="video-toggle-btn" class="video-btn disabled-btn">VIDEO</button>
             CH:&nbsp;
             <span id="stat-mono" class="stat-term disable-gray">Mono</span>
             &nbsp;|&nbsp;
             <span id="stat-stereo" class="stat-term disable-gray">Stereo</span>
-            <!-- ปุ่ม VIDEO TOGGLE -->
-            <span id="video-toggle-btn" class="video-btn hidden">VIDEO</span>
           </div>
 
           <div class="buf-meter-container">
@@ -330,7 +349,7 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.5.7</div>
+  <div class="page-version-footer">ver.1.5.8</div>
 
   <script>
     const channels = [
@@ -435,15 +454,21 @@
     let currentBitrate = 0;
     const segTimeB = new Uint8Array(2048);
 
-    // --- Video Visibility Manager ---
+    // --- Video Toggle & State Management ---
     videoToggleBtn.addEventListener('click', () => {
-      isVideoToggledOn = !isVideoToggledOn;
-      updateVideoVisibility();
+      if (activeIndex === -1) return;
+      const ch = channels[activeIndex];
+      const isVideoSource = ch.url.includes('.m3u8');
+      
+      if (isVideoSource) {
+        isVideoToggledOn = !isVideoToggledOn;
+        updateVideoVisibility();
+      }
     });
 
     function updateVideoVisibility() {
       if (activeIndex === -1) {
-        videoToggleBtn.classList.add('hidden');
+        videoToggleBtn.className = 'video-btn disabled-btn';
         videoWrapper.classList.remove('show');
         return;
       }
@@ -452,7 +477,7 @@
       const isVideoSource = ch.url.includes('.m3u8');
       
       if (isVideoSource) {
-        videoToggleBtn.classList.remove('hidden');
+        videoToggleBtn.className = 'video-btn has-video';
         if (isVideoToggledOn) {
           videoToggleBtn.classList.add('active');
           videoWrapper.classList.add('show');
@@ -461,8 +486,8 @@
           videoWrapper.classList.remove('show');
         }
       } else {
-        // หากไม่ใช่ Video ให้ซ่อนปุ่ม
-        videoToggleBtn.classList.add('hidden');
+        // หากเป็น Audio Stream ปุ่มจะกลายเป็นเทาเข้ม Disable
+        videoToggleBtn.className = 'video-btn disabled-btn';
         videoWrapper.classList.remove('show');
       }
     }
@@ -572,7 +597,7 @@
         updateClocks();
         
         updateTeslaMediaSession(ch);
-        updateVideoVisibility(); // ตรวจสอบและแสดงปุ่ม VIDEO อัตโนมัติ
+        updateVideoVisibility();
       }
     }
 
@@ -796,7 +821,7 @@
       globalLed.classList.remove('active');
       audioTextTag.classList.remove('active');
       clearTeslaMediaSession();
-      updateVideoVisibility(); // ซ่อนปุ่ม VIDEO ตอนกดหยุด
+      updateVideoVisibility();
     }
 
     // --- Drawing & Meters ---
