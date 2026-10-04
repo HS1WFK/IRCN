@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project 4 Streams - YouTube Edition v1.2.2</title>
+  <title>Project 4 Streams - YouTube Edition v1.3.0</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -109,7 +109,7 @@
       color: white;
     }
 
-    /* ThaiPBS Custom Button Style (Matched Dimension to Page 1 Button) */
+    /* ThaiPBS Custom Button Style */
     .btn-thaipbs {
       background-color: var(--accent-thaipbs);
       color: #ffffff;
@@ -118,7 +118,7 @@
       padding: 0.4rem 0.8rem;
       border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.2);
-      min-width: 145px;
+      min-width: 175px;
       text-align: center;
       font-family: inherit;
     }
@@ -329,7 +329,7 @@
       font-weight: 700;
     }
 
-    /* Phase 2: ThaiPBS Mode Standby Control Overlay */
+    /* Phase 2: ThaiPBS Standby Control Overlay */
     .thaipbs-mode-overlay {
       display: none;
       position: absolute;
@@ -416,13 +416,13 @@
   <!-- Top Navigation -->
   <header>
     <div class="brand-title">
-      PROJECT 4 STREAMS <span class="brand-badge">v1.2.2</span>
+      PROJECT 4 STREAMS <span class="brand-badge">v1.3.0</span>
     </div>
 
     <div class="controls-main">
-      <!-- ThaiPBS Custom Button with Integrated 30s Test Countdown -->
+      <!-- ThaiPBS Custom Button with Dynamic Schedule Countdown -->
       <button class="btn btn-thaipbs" id="btn-thaipbs-live" onclick="openThaiPBSLive(true)">
-        ThaiPBS (30s)
+        ThaiPBS
       </button>
 
       <!-- Page Switcher -->
@@ -457,7 +457,6 @@
       </div>
 
       <div class="btn-action-group">
-        <!-- Direct User Click Button to Bypass Browser Popup Blocker -->
         <button class="btn-launch-fallback" id="btn-manual-popup" onclick="openThaiPBSLive(true)" style="display: none;">
           ▶️ Click to Open ThaiPBS Live Window
         </button>
@@ -678,8 +677,8 @@
       for (let i = 1; i <= 8; i++) {
         initPlayer(i);
       }
-      startHourlyTimer();     // Real-time Hourly Timer
-      startThaiPBSTestTimer(); // Launch 30s Countdown Test Timer for ThaiPBS Popup
+      startHourlyTimer();           // Real-time Hourly Timer
+      startThaiPBSScheduleTimer();  // Launch Real ThaiPBS Schedule Countdown Engine
     }
 
     // Populate Dropdowns with Grouping
@@ -886,11 +885,28 @@
     }
 
     /* ==========================================================================
-       PHASE 2: THAIPBS LIVE POPUP & POPUP BLOCKER PROTECTION ENGINE (v1.2.2)
+       PHASE 2: THAIPBS OFFICIAL BROADCAST SCHEDULE REGISTRY & COUNTDOWN (v1.3.0)
        ========================================================================== */
 
-    let thaipbsCountdownSec = 30;
-    let thaipbsTestInterval = null;
+    // ThaiPBS Official News Broadcast Schedule
+    const THAIPBS_SCHEDULE = {
+      // Weekdays: Monday (1) to Friday (5)
+      weekdays: [
+        { start: '05:00', end: '06:59' },
+        { start: '10:30', end: '11:59' },
+        { start: '18:02', end: '20:29' },
+        { start: '23:00', end: '23:29' }
+      ],
+      // Weekend: Saturday (6) and Sunday (0)
+      weekend: [
+        { start: '08:30', end: '09:59' },
+        { start: '12:00', end: '12:59' },
+        { start: '18:02', end: '20:14' }
+      ]
+    };
+
+    let thaipbsScheduleInterval = null;
+    let lastAutoTriggeredSlotKey = null;
 
     // Stop all YouTube streams to save network bandwidth and system resources
     function stopAllStreamsToSaveResources() {
@@ -912,39 +928,28 @@
       }
     }
 
-    // Open ThaiPBS Live Window & Handle Browser Popup Blocker
+    // Open ThaiPBS Live Window
     function openThaiPBSLive(isUserClick = false) {
-      if (thaipbsTestInterval) clearInterval(thaipbsTestInterval);
-      document.getElementById('btn-thaipbs-live').textContent = 'ThaiPBS';
-
-      // 1. Stop 4-Streams to release resources
       stopAllStreamsToSaveResources();
-
-      // 2. Play Audio Alert
       playTripleBeep();
 
-      // 3. Attempt Popup Launch
       thaipbsWindowRef = window.open(
         'https://www.thaipbs.or.th/live',
         'ThaiPBSLiveWindow',
         'width=1280,height=720,scrollbars=yes,resizable=yes'
       );
 
-      // 4. Check if Popup was Blocked by Browser Security Policy
       const manualBtn = document.getElementById('btn-manual-popup');
       const descText = document.getElementById('overlay-desc-text');
 
       if (!thaipbsWindowRef || thaipbsWindowRef.closed || typeof thaipbsWindowRef.closed === 'undefined') {
-        // Blocked by Popup Blocker -> Show Fallback Direct Click Button
         manualBtn.style.display = 'inline-block';
         descText.innerHTML = `⚠️ <b>ThaiPBS News Time!</b> Browser blocked automatic popup.<br>Click the orange button below to launch ThaiPBS Live.`;
       } else {
-        // Successfully Opened Popup Window
         manualBtn.style.display = 'none';
         descText.innerHTML = `4-Streams have been paused to minimize bandwidth & system resource usage.<br>ThaiPBS Live stream is playing in a popup window.`;
       }
 
-      // 5. Display Control Overlay
       document.getElementById('thaipbs-overlay').classList.add('active');
     }
 
@@ -959,27 +964,84 @@
 
       switchPage(1);
       toggleSolo(1);
-
-      startThaiPBSTestTimer();
     }
 
-    // Module: 30-Second Test Timer for ThaiPBS Auto-Popup
-    function startThaiPBSTestTimer() {
-      if (thaipbsTestInterval) clearInterval(thaipbsTestInterval);
-      thaipbsCountdownSec = 30;
+    // Helper: Convert "HH:MM" time string to today's Date object
+    function parseTimeStringToDate(timeStr, baseDate = new Date()) {
+      const [h, m] = timeStr.split(':').map(Number);
+      const d = new Date(baseDate);
+      d.setHours(h, m, 0, 0);
+      return d;
+    }
 
-      const btnThaiPBS = document.getElementById('btn-thaipbs-live');
-      btnThaiPBS.textContent = `ThaiPBS (${thaipbsCountdownSec}s)`;
+    // Real-Time Schedule Engine: Calculates next news slot & updates ThaiPBS button countdown
+    function startThaiPBSScheduleTimer() {
+      if (thaipbsScheduleInterval) clearInterval(thaipbsScheduleInterval);
 
-      thaipbsTestInterval = setInterval(() => {
-        thaipbsCountdownSec--;
+      thaipbsScheduleInterval = setInterval(() => {
+        const now = new Date();
+        const dayOfWeek = now.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+        const scheduleList = isWeekend ? THAIPBS_SCHEDULE.weekend : THAIPBS_SCHEDULE.weekdays;
 
-        if (thaipbsCountdownSec > 0) {
-          btnThaiPBS.textContent = `ThaiPBS (${thaipbsCountdownSec}s)`;
-        } else {
-          clearInterval(thaipbsTestInterval);
-          btnThaiPBS.textContent = 'ThaiPBS';
-          openThaiPBSLive(false); // Trigger Popup Event
+        let activeSlot = null;
+        let nextSlotStart = null;
+
+        // Check current status against today's slots
+        for (const slot of scheduleList) {
+          const slotStart = parseTimeStringToDate(slot.start, now);
+          const slotEnd = parseTimeStringToDate(slot.end, now);
+
+          if (now >= slotStart && now <= slotEnd) {
+            activeSlot = slot;
+            break;
+          } else if (now < slotStart) {
+            if (!nextSlotStart || slotStart < nextSlotStart) {
+              nextSlotStart = slotStart;
+            }
+          }
+        }
+
+        // If no more slots today, find the first slot for tomorrow
+        if (!activeSlot && !nextSlotStart) {
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const tomorrowDay = tomorrow.getDay();
+          const tomorrowIsWeekend = (tomorrowDay === 0 || tomorrowDay === 6);
+          const tomorrowList = tomorrowIsWeekend ? THAIPBS_SCHEDULE.weekend : THAIPBS_SCHEDULE.weekdays;
+
+          nextSlotStart = parseTimeStringToDate(tomorrowList[0].start, tomorrow);
+        }
+
+        const btnThaiPBS = document.getElementById('btn-thaipbs-live');
+
+        if (activeSlot) {
+          // Currently in a news broadcast window
+          btnThaiPBS.textContent = 'ThaiPBS (Live Now)';
+
+          // Trigger popup once when starting slot if not already open
+          const slotKey = `${now.toDateString()}_${activeSlot.start}`;
+          if (lastAutoTriggeredSlotKey !== slotKey) {
+            lastAutoTriggeredSlotKey = slotKey;
+            openThaiPBSLive(false);
+          }
+        } else if (nextSlotStart) {
+          // Outside news window -> Countdown to next slot
+          const diffMs = nextSlotStart - now;
+          const totalSecs = Math.floor(diffMs / 1000);
+
+          const hrs = Math.floor(totalSecs / 3600);
+          const mins = Math.floor((totalSecs % 3600) / 60);
+          const secs = totalSecs % 60;
+
+          const formattedMin = mins < 10 ? `0${mins}` : mins;
+          const formattedSec = secs < 10 ? `0${secs}` : secs;
+
+          if (hrs > 0) {
+            btnThaiPBS.textContent = `ThaiPBS (${hrs}h ${formattedMin}m)`;
+          } else {
+            btnThaiPBS.textContent = `ThaiPBS (${formattedMin}:${formattedSec})`;
+          }
         }
       }, 1000);
     }
