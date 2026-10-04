@@ -1,451 +1,1161 @@
 <!DOCTYPE html>
-<html lang="th" class="h-full w-full overflow-hidden">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bangkok BMA Radar Live Monitor - v.1.0.9</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
-        
-        * {
-            font-family: 'Kanit', sans-serif;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project 4 Streams - YouTube Edition v1.3.0</title>
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: #111827;
+      --border-color: #1f2937;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-blue: #3b82f6;
+      --accent-gold: #f59e0b;
+      --accent-thaipbs: #f97316;
+      --header-bg: #161e2e;
+    }
 
-        html, body {
-            height: 100vh;
-            height: -webkit-fill-available;
-            width: 100vw;
-            margin: 0;
-            padding: 0;
-            overflow: hidden !important;
-            background-color: #0b0f17;
-            color: #f8fafc;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        /* Iframe Box Styles */
-        .radar-box {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            overflow: hidden !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #0f172a;
-        }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
 
-        .scaler-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
+    /* Top Navigation Bar */
+    header {
+      background-color: var(--header-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      z-index: 100;
+    }
 
-        .iframe-crop {
-            position: absolute;
-            transform-origin: center center;
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            pointer-events: auto;
-            transform: translateZ(0);
-        }
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #ffffff;
+    }
 
-        .radar-iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 1px;
-            min-width: 100%;
-            height: 100%;
-            border: none;
-            background-color: #0f172a;
-            overflow: hidden;
-        }
+    .brand-badge {
+      background-color: var(--accent-red);
+      color: white;
+      font-size: 0.65rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
 
-        /* Custom Radio */
-        .radar-radio input[type="radio"] { display: none; }
-        .radar-radio label {
-            cursor: pointer;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            background-color: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(51, 65, 85, 0.8);
-            color: #94a3b8;
-        }
-        .radar-radio input[type="radio"]:checked + label {
-            background-color: #0284c7;
-            border-color: #38bdf8;
-            color: #ffffff;
-            box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
-        }
+    .controls-main {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
 
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            border-top: 3px solid #38bdf8;
-            width: 32px;
-            height: 32px;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+    .btn-group {
+      display: flex;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      padding: 2px;
+      border: 1px solid var(--border-color);
+    }
 
-        /* Button hover animations */
-        .launch-btn {
-            transition: transform 0.1s, box-shadow 0.2s;
-        }
-        .launch-btn:active {
-            transform: scale(0.96);
-        }
-    </style>
+    .btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+    }
+
+    .btn:hover {
+      color: var(--text-main);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn.active {
+      background-color: var(--accent-blue);
+      color: white;
+    }
+
+    /* ThaiPBS Custom Button Style */
+    .btn-thaipbs {
+      background-color: var(--accent-thaipbs);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      min-width: 175px;
+      text-align: center;
+      font-family: inherit;
+    }
+
+    .btn-thaipbs:hover {
+      background-color: #ea580c;
+      color: #ffffff;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .page-view {
+      display: none;
+      flex: 1;
+      width: 100%;
+    }
+
+    .page-view.active {
+      display: block;
+    }
+
+    /* Grid Layout Modes */
+    .grid-2x2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 0.75rem;
+      height: calc(100vh - 75px);
+    }
+
+    .grid-focus {
+      display: grid;
+      grid-template-columns: 2.8fr 1fr;
+      grid-template-rows: repeat(3, 1fr);
+      gap: 0.75rem;
+      height: calc(100vh - 75px);
+    }
+
+    .grid-focus .screen-card:nth-child(1) {
+      grid-row: span 3;
+    }
+
+    @media (max-width: 900px) {
+      .grid-2x2, .grid-focus {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        height: auto;
+      }
+      .grid-focus .screen-card:nth-child(1) {
+        grid-row: auto;
+      }
+      .screen-card {
+        height: 280px;
+      }
+    }
+
+    /* Screen Card UI */
+    .screen-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .screen-card.solo-active {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 0 1px var(--accent-green);
+    }
+
+    .screen-header {
+      background-color: rgba(0, 0, 0, 0.4);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.35rem 0.6rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .ch-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+      background: rgba(245, 158, 11, 0.1);
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    .station-select {
+      background-color: #0d121d;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 0.2rem 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      outline: none;
+      flex: 1;
+      max-width: 180px;
+      cursor: pointer;
+    }
+
+    .station-select optgroup {
+      background-color: #111827;
+      color: var(--accent-gold);
+    }
+
+    .screen-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .action-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .action-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .action-btn.solo-btn {
+      color: #9ca3af;
+    }
+
+    .action-btn.solo-btn.active {
+      background-color: var(--accent-green);
+      color: white;
+      border-color: var(--accent-green);
+    }
+
+    /* Video Frame Container */
+    .video-wrapper {
+      flex: 1;
+      position: relative;
+      background-color: #000;
+      width: 100%;
+      height: 100%;
+    }
+
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Screen Footer Overlay for Manual URL Input */
+    .screen-footer {
+      background-color: rgba(10, 15, 25, 0.95);
+      border-top: 1px solid var(--border-color);
+      padding: 0.3rem 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .url-input {
+      flex: 1;
+      background-color: #05080e;
+      border: 1px solid var(--border-color);
+      border-radius: 3px;
+      color: var(--text-main);
+      padding: 0.2rem 0.4rem;
+      font-size: 0.7rem;
+      font-family: monospace;
+      outline: none;
+    }
+
+    .url-input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    /* Timer Status Countdown Badge UI */
+    .timer-badge {
+      font-size: 0.75rem;
+      font-family: monospace;
+      color: var(--accent-gold);
+      background: rgba(245, 158, 11, 0.15);
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 700;
+    }
+
+    /* Phase 2: ThaiPBS Standby Control Overlay */
+    .thaipbs-mode-overlay {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(11, 15, 25, 0.94);
+      backdrop-filter: blur(8px);
+      z-index: 500;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 1.2rem;
+      text-align: center;
+      padding: 1.5rem;
+    }
+
+    .thaipbs-mode-overlay.active {
+      display: flex;
+    }
+
+    .overlay-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent-thaipbs);
+    }
+
+    .overlay-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      max-width: 480px;
+      line-height: 1.5;
+    }
+
+    .btn-action-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-launch-fallback {
+      background-color: var(--accent-thaipbs);
+      color: #ffffff;
+      font-size: 1rem;
+      padding: 0.7rem 1.4rem;
+      font-weight: 700;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+      animation: pulse-orange 1.5s infinite;
+    }
+
+    .btn-resume {
+      background-color: var(--accent-green);
+      color: #ffffff;
+      font-size: 1rem;
+      padding: 0.7rem 1.4rem;
+      font-weight: 700;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .btn-resume:hover {
+      background-color: #059669;
+      transform: translateY(-2px);
+    }
+
+    @keyframes pulse-orange {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
+      70% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+    }
+  </style>
+  <script src="https://www.youtube.com/iframe_api"></script>
 </head>
-<body class="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden">
+<body>
 
-    <!-- Header -->
-    <header class="h-12 md:h-14 bg-slate-900/95 border-b border-slate-800 px-3 md:px-5 flex items-center justify-between z-30 shrink-0">
-        <div class="flex items-center space-x-2 md:space-x-3">
-            <div class="p-1.5 md:p-2 bg-sky-500/10 text-sky-400 rounded-lg border border-sky-500/20">
-                <i class="fa-solid fa-radar text-base md:text-lg"></i>
+  <!-- Top Navigation -->
+  <header>
+    <div class="brand-title">
+      PROJECT 4 STREAMS <span class="brand-badge">v1.3.0</span>
+    </div>
+
+    <div class="controls-main">
+      <!-- ThaiPBS Custom Button with Dynamic Schedule Countdown -->
+      <button class="btn btn-thaipbs" id="btn-thaipbs-live" onclick="openThaiPBSLive(true)">
+        ThaiPBS
+      </button>
+
+      <!-- Page Switcher -->
+      <div class="btn-group">
+        <button class="btn active" id="btn-page1" onclick="switchPage(1)">Page 1 (CH1-4)</button>
+        <button class="btn" id="btn-page2" onclick="switchPage(2)">Page 2 (CH5-8)</button>
+      </div>
+
+      <!-- Layout Switcher -->
+      <div class="btn-group">
+        <button class="btn active" id="btn-grid" onclick="setLayout('grid')">2x2 Grid</button>
+        <button class="btn" id="btn-focus" onclick="setLayout('focus')">Main + Sidebar</button>
+      </div>
+
+      <!-- Real-time Hourly Countdown Badge -->
+      <div class="timer-badge" id="timer-status">⏳ Next Alert: --:--</div>
+
+      <!-- Global Actions -->
+      <button class="btn" onclick="muteAllCurrentPage()" style="border: 1px solid var(--border-color);">
+        Mute All
+      </button>
+    </div>
+  </header>
+
+  <!-- Main View Area -->
+  <main>
+    <!-- Phase 2: ThaiPBS Standby Control Overlay -->
+    <div class="thaipbs-mode-overlay" id="thaipbs-overlay">
+      <div class="overlay-title">📺 ThaiPBS Live News Mode</div>
+      <div class="overlay-desc" id="overlay-desc-text">
+        4-Streams have been paused to minimize bandwidth & system resource usage.
+      </div>
+
+      <div class="btn-action-group">
+        <button class="btn-launch-fallback" id="btn-manual-popup" onclick="openThaiPBSLive(true)" style="display: none;">
+          ▶️ Click to Open ThaiPBS Live Window
+        </button>
+        <button class="btn-resume" onclick="closeThaiPBSAndResume()">
+          ⏹ Close ThaiPBS & Resume 4-Streams
+        </button>
+      </div>
+    </div>
+
+    <!-- PAGE 1 -->
+    <div id="page-1" class="page-view active">
+      <div class="grid-2x2" id="grid-p1">
+        <!-- CH 1 -->
+        <div class="screen-card" id="card-1">
+          <div class="screen-header">
+            <span class="ch-tag">CH 1</span>
+            <select class="station-select" id="select-1" onchange="onSelectStation(1)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-1" onclick="toggleSolo(1)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(1)">Reload</button>
             </div>
-            <div>
-                <h1 class="text-xs md:text-sm font-semibold text-slate-100 flex items-center gap-2">
-                    <span class="truncate max-w-[150px] sm:max-w-none">ศูนย์เรดาร์ กทม.</span>
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] md:text-xs font-mono bg-slate-800 text-slate-400 border border-slate-700 cursor-default">
-                        v.1.0.9
-                    </span>
-                </h1>
-                <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ตรวจสอบระบบปฏิบัติการ...</p>
-            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-1"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-1" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(1)">Set</button>
+          </div>
         </div>
 
-        <div class="flex items-center gap-2 md:gap-3">
-            <!-- Zoom Controls (Desktop Only) -->
-            <div id="desktop-zoom-controls" class="hidden items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 text-xs mr-2">
-                <button onclick="adjustScale(-0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 transition-colors"><i class="fa-solid fa-minus"></i></button>
-                <button onclick="resetScale()" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 font-mono text-[11px] transition-colors">Reset</button>
-                <button onclick="adjustScale(0.03)" class="px-2 py-1 hover:bg-slate-800 rounded text-slate-300 transition-colors"><i class="fa-solid fa-plus"></i></button>
+        <!-- CH 2 -->
+        <div class="screen-card" id="card-2">
+          <div class="screen-header">
+            <span class="ch-tag">CH 2</span>
+            <select class="station-select" id="select-2" onchange="onSelectStation(2)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-2" onclick="toggleSolo(2)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(2)">Reload</button>
             </div>
-
-            <!-- Timer -->
-            <div class="flex items-center gap-2 bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                <i class="fa-regular fa-clock text-sky-400 text-xs"></i>
-                <div class="text-[11px] md:text-xs font-mono flex items-center gap-1.5">
-                    <span id="countdown-timer" class="text-sky-400 font-bold">03:00</span>
-                </div>
-                <div class="w-8 md:w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden ml-1">
-                    <div id="progress-bar" class="h-full bg-sky-400 transition-all duration-1000 ease-linear w-full"></div>
-                </div>
-            </div>
-
-            <button id="refresh-btn" onclick="manualRefresh()" class="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium rounded-lg transition-colors">
-                <i id="refresh-icon" class="fa-solid fa-arrows-rotate text-xs"></i>
-                <span class="hidden sm:inline">รีเฟรช</span>
-            </button>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-2"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-2" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(2)">Set</button>
+          </div>
         </div>
-    </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 relative overflow-hidden bg-slate-950 p-2">
+        <!-- CH 3 -->
+        <div class="screen-card" id="card-3">
+          <div class="screen-header">
+            <span class="ch-tag">CH 3</span>
+            <select class="station-select" id="select-3" onchange="onSelectStation(3)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-3" onclick="toggleSolo(3)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(3)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-3"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-3" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(3)">Set</button>
+          </div>
+        </div>
+
+        <!-- CH 4 -->
+        <div class="screen-card" id="card-4">
+          <div class="screen-header">
+            <span class="ch-tag">CH 4</span>
+            <select class="station-select" id="select-4" onchange="onSelectStation(4)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-4" onclick="toggleSolo(4)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(4)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-4"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-4" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(4)">Set</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div id="page-2" class="page-view">
+      <div class="grid-2x2" id="grid-p2">
+        <!-- CH 5 -->
+        <div class="screen-card" id="card-5">
+          <div class="screen-header">
+            <span class="ch-tag">CH 5</span>
+            <select class="station-select" id="select-5" onchange="onSelectStation(5)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-5" onclick="toggleSolo(5)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(5)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-5"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-5" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(5)">Set</button>
+          </div>
+        </div>
+
+        <!-- CH 6 -->
+        <div class="screen-card" id="card-6">
+          <div class="screen-header">
+            <span class="ch-tag">CH 6</span>
+            <select class="station-select" id="select-6" onchange="onSelectStation(6)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-6" onclick="toggleSolo(6)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(6)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-6"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-6" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(6)">Set</button>
+          </div>
+        </div>
+
+        <!-- CH 7 -->
+        <div class="screen-card" id="card-7">
+          <div class="screen-header">
+            <span class="ch-tag">CH 7</span>
+            <select class="station-select" id="select-7" onchange="onSelectStation(7)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-7" onclick="toggleSolo(7)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(7)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-7"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-7" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(7)">Set</button>
+          </div>
+        </div>
+
+        <!-- CH 8 -->
+        <div class="screen-card" id="card-8">
+          <div class="screen-header">
+            <span class="ch-tag">CH 8</span>
+            <select class="station-select" id="select-8" onchange="onSelectStation(8)"></select>
+            <div class="screen-actions">
+              <button class="action-btn solo-btn" id="solo-8" onclick="toggleSolo(8)">Solo Audio</button>
+              <button class="action-btn" onclick="reloadScreen(8)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="player-8"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="input-8" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInput(8)">Set</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Master Registry of Stations (News & Music)
+    const STATION_REGISTRY = [
+      // --- NEWS STATIONS ---
+      { id: 'aljazeera', name: 'Al Jazeera', videoId: 'gCNeDWCI0vo', category: 'News' },
+      { id: 'skynews', name: 'Sky News', videoId: 'xDWQ3LkccY8', category: 'News' },
+      { id: 'cna', name: 'CNA', videoId: 'XWq5kBlakcQ', category: 'News' },
+      { id: 'bloomberg', name: 'Bloomberg Business', videoId: 'QB5BNdBFujE', category: 'News' },
+      { id: 'dw', name: 'DW English', videoId: 'LuKwFajn37U', category: 'News' },
+      { id: 'cgtn', name: 'CGTN English', videoId: '0i7n3r01L2U', category: 'News' },
+      { id: 'france24', name: 'France 24 English', videoId: 'HvZt-nh9sGg', category: 'News' },
+      { id: 'ann', name: 'ANN news (Jp)', videoId: 'hADDeXdg_lk', category: 'News' },
+      { id: 'euronews', name: 'Euro News', videoId: 'pykpO5kQJ98', category: 'News' },
+      { id: 'gbnews', name: 'GB News', videoId: 'O9s2TMny6KQ', category: 'News' },
+      { id: 'yahoofinance', name: 'Yahoo Finance 24/7', videoId: 'KQp-e_XQnDE', category: 'News' },
+      { id: 'trtworld', name: 'TRT World', videoId: 'qBe59l6p_EU', category: 'News' },
+
+      // --- MUSIC & AUDIO RELAXATION ---
+      { id: 'native_flute', name: 'Rain & Native American Flute', videoId: 'Unbi1YfQfBU', category: 'Music' },
+      { id: 'beethoven_triple', name: 'Beethoven Triplekonzert', videoId: 'jkD6XuJaj_E', category: 'Music' },
+      { id: 'smooth_jazz', name: 'Smooth Jazz & R&B 90s', videoId: 'oNPKYDvJ6VY', category: 'Music' }
+    ];
+
+    // Default Configurations for Screens
+    const DEFAULT_CONFIGS = {
+      1: { stationId: 'aljazeera', videoId: 'gCNeDWCI0vo' },
+      2: { stationId: 'skynews', videoId: 'xDWQ3LkccY8' },
+      3: { stationId: 'cna', videoId: 'XWq5kBlakcQ' },
+      4: { stationId: 'bloomberg', videoId: 'QB5BNdBFujE' },
+      5: { stationId: 'dw', videoId: 'LuKwFajn37U' },
+      6: { stationId: 'cgtn', videoId: '0i7n3r01L2U' },
+      7: { stationId: 'france24', videoId: 'HvZt-nh9sGg' },
+      8: { stationId: 'ann', videoId: 'hADDeXdg_lk' }
+    };
+
+    let currentPage = 1;
+    let currentLayout = 'grid';
+    let players = {};
+    let playerReadyStatus = {};
+    let screenConfigs = JSON.parse(JSON.stringify(DEFAULT_CONFIGS));
+    let thaipbsWindowRef = null;
+
+    // YouTube API Ready Callback
+    function onYouTubeIframeAPIReady() {
+      populateDropdowns();
+      for (let i = 1; i <= 8; i++) {
+        initPlayer(i);
+      }
+      startHourlyTimer();           // Real-time Hourly Timer
+      startThaiPBSScheduleTimer();  // Launch Real ThaiPBS Schedule Countdown Engine
+    }
+
+    // Populate Dropdowns with Grouping
+    function populateDropdowns() {
+      const newsStations = STATION_REGISTRY.filter(s => s.category === 'News');
+      const musicTracks = STATION_REGISTRY.filter(s => s.category === 'Music');
+
+      for (let i = 1; i <= 8; i++) {
+        const select = document.getElementById(`select-${i}`);
+        select.innerHTML = '';
+
+        // News Group
+        const newsGroup = document.createElement('optgroup');
+        newsGroup.label = '--- NEWS CHANNELS ---';
+        newsStations.forEach(st => {
+          const opt = document.createElement('option');
+          opt.value = st.id;
+          opt.textContent = st.name;
+          newsGroup.appendChild(opt);
+        });
+        select.appendChild(newsGroup);
+
+        // Music Group
+        const musicGroup = document.createElement('optgroup');
+        musicGroup.label = '--- MUSIC & RELAXATION ---';
+        musicTracks.forEach(st => {
+          const opt = document.createElement('option');
+          opt.value = st.id;
+          opt.textContent = st.name;
+          musicGroup.appendChild(opt);
+        });
+        select.appendChild(musicGroup);
+
+        // Custom Choice Option
+        const customOpt = document.createElement('option');
+        customOpt.value = 'custom';
+        customOpt.textContent = 'Custom Video ID';
+        select.appendChild(customOpt);
+
+        select.value = screenConfigs[i].stationId;
+      }
+    }
+
+    // Initialize YouTube Player Instance
+    function initPlayer(ch) {
+      const videoId = screenConfigs[ch].videoId;
+      players[ch] = new YT.Player(`player-${ch}`, {
+        videoId: videoId,
+        playerVars: {
+          autoplay: 1,
+          mute: 1,
+          controls: 1,
+          modestbranding: 1,
+          rel: 0,
+          playsinline: 1
+        },
+        events: {
+          onReady: (e) => {
+            playerReadyStatus[ch] = true;
+            e.target.playVideo();
+            e.target.mute();
+          }
+        }
+      });
+    }
+
+    // Handle Dropdown Selection Change
+    function onSelectStation(ch) {
+      const select = document.getElementById(`select-${ch}`);
+      const selectedValue = select.value;
+
+      if (selectedValue === 'custom') return;
+
+      const station = STATION_REGISTRY.find(s => s.id === selectedValue);
+      if (station) {
+        screenConfigs[ch].stationId = station.id;
+        screenConfigs[ch].videoId = station.videoId;
+        document.getElementById(`input-${ch}`).value = station.videoId;
+        loadVideoToScreen(ch, station.videoId);
+      }
+    }
+
+    // Load Video by ID into Specific Screen
+    function loadVideoToScreen(ch, videoId) {
+      if (players[ch] && typeof players[ch].loadVideoById === 'function') {
+        players[ch].loadVideoById(videoId);
+        players[ch].mute();
+        updateSoloButtonUI(ch, false);
+      }
+    }
+
+    // Helper: Parse Video ID from YouTube URL or Plain ID
+    function extractVideoId(input) {
+      const trimmed = input.trim();
+      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+      const match = trimmed.match(regex);
+      return match ? match[1] : (trimmed.length === 11 ? trimmed : null);
+    }
+
+    // Apply Custom Input (URL/ID)
+    function applyCustomInput(ch) {
+      const inputVal = document.getElementById(`input-${ch}`).value;
+      const vid = extractVideoId(inputVal);
+
+      if (vid) {
+        screenConfigs[ch].stationId = 'custom';
+        screenConfigs[ch].videoId = vid;
+        document.getElementById(`select-${ch}`).value = 'custom';
+        loadVideoToScreen(ch, vid);
+      } else {
+        alert('Invalid YouTube URL or Video ID. Please check and try again.');
+      }
+    }
+
+    // Reload Screen Stream
+    function reloadScreen(ch) {
+      if (players[ch] && typeof players[ch].loadVideoById === 'function') {
+        players[ch].loadVideoById(screenConfigs[ch].videoId);
+      }
+    }
+
+    // Toggle Audio Solo Mode
+    function toggleSolo(ch) {
+      const isSoloActive = document.getElementById(`solo-${ch}`).classList.contains('active');
+      const targetPage = ch <= 4 ? 1 : 2;
+      const startCh = targetPage === 1 ? 1 : 5;
+      const endCh = targetPage === 1 ? 4 : 8;
+
+      if (isSoloActive) {
+        if (players[ch] && playerReadyStatus[ch]) players[ch].mute();
+        updateSoloButtonUI(ch, false);
+      } else {
+        for (let i = startCh; i <= endCh; i++) {
+          if (players[i] && playerReadyStatus[i]) {
+            if (i === ch) {
+              players[i].unMute();
+              updateSoloButtonUI(i, true);
+            } else {
+              players[i].mute();
+              updateSoloButtonUI(i, false);
+            }
+          }
+        }
+      }
+    }
+
+    // Update Solo Button Visual State
+    function updateSoloButtonUI(ch, active) {
+      const btn = document.getElementById(`solo-${ch}`);
+      const card = document.getElementById(`card-${ch}`);
+      if (active) {
+        btn.classList.add('active');
+        card.classList.add('solo-active');
+      } else {
+        btn.classList.remove('active');
+        card.classList.remove('solo-active');
+      }
+    }
+
+    // Mute All Screens on Active Page
+    function muteAllCurrentPage() {
+      const startCh = currentPage === 1 ? 1 : 5;
+      const endCh = currentPage === 1 ? 4 : 8;
+      for (let i = startCh; i <= endCh; i++) {
+        if (players[i] && playerReadyStatus[i]) {
+          players[i].mute();
+          updateSoloButtonUI(i, false);
+        }
+      }
+    }
+
+    // Switch Active Page (Page 1 vs Page 2)
+    function switchPage(pageNum) {
+      currentPage = pageNum;
+      document.getElementById('page-1').classList.toggle('active', pageNum === 1);
+      document.getElementById('page-2').classList.toggle('active', pageNum === 2);
+
+      document.getElementById('btn-page1').classList.toggle('active', pageNum === 1);
+      document.getElementById('btn-page2').classList.toggle('active', pageNum === 2);
+
+      const inactiveStart = pageNum === 1 ? 5 : 1;
+      const inactiveEnd = pageNum === 1 ? 8 : 4;
+      for (let i = inactiveStart; i <= inactiveEnd; i++) {
+        if (players[i] && playerReadyStatus[i]) {
+          players[i].mute();
+          updateSoloButtonUI(i, false);
+        }
+      }
+    }
+
+    // Set Layout Mode (Grid vs Focus)
+    function setLayout(mode) {
+      currentLayout = mode;
+      const gridP1 = document.getElementById('grid-p1');
+      const gridP2 = document.getElementById('grid-p2');
+
+      const targetClass = mode === 'grid' ? 'grid-2x2' : 'grid-focus';
+
+      gridP1.className = targetClass;
+      gridP2.className = targetClass;
+
+      document.getElementById('btn-grid').classList.toggle('active', mode === 'grid');
+      document.getElementById('btn-focus').classList.toggle('active', mode === 'focus');
+    }
+
+    /* ==========================================================================
+       PHASE 2: THAIPBS OFFICIAL BROADCAST SCHEDULE REGISTRY & COUNTDOWN (v1.3.0)
+       ========================================================================== */
+
+    // ThaiPBS Official News Broadcast Schedule
+    const THAIPBS_SCHEDULE = {
+      // Weekdays: Monday (1) to Friday (5)
+      weekdays: [
+        { start: '05:00', end: '06:59' },
+        { start: '10:30', end: '11:59' },
+        { start: '18:02', end: '20:29' },
+        { start: '23:00', end: '23:29' }
+      ],
+      // Weekend: Saturday (6) and Sunday (0)
+      weekend: [
+        { start: '08:30', end: '09:59' },
+        { start: '12:00', end: '12:59' },
+        { start: '18:02', end: '20:14' }
+      ]
+    };
+
+    let thaipbsScheduleInterval = null;
+    let lastAutoTriggeredSlotKey = null;
+
+    // Stop all YouTube streams to save network bandwidth and system resources
+    function stopAllStreamsToSaveResources() {
+      for (let i = 1; i <= 8; i++) {
+        if (players[i] && playerReadyStatus[i] && typeof players[i].stopVideo === 'function') {
+          players[i].stopVideo();
+          updateSoloButtonUI(i, false);
+        }
+      }
+    }
+
+    // Resume all YouTube streams when exiting ThaiPBS mode
+    function resumeAllStreams() {
+      for (let i = 1; i <= 8; i++) {
+        if (players[i] && playerReadyStatus[i] && typeof players[i].playVideo === 'function') {
+          players[i].playVideo();
+          players[i].mute();
+        }
+      }
+    }
+
+    // Open ThaiPBS Live Window
+    function openThaiPBSLive(isUserClick = false) {
+      stopAllStreamsToSaveResources();
+      playTripleBeep();
+
+      thaipbsWindowRef = window.open(
+        'https://www.thaipbs.or.th/live',
+        'ThaiPBSLiveWindow',
+        'width=1280,height=720,scrollbars=yes,resizable=yes'
+      );
+
+      const manualBtn = document.getElementById('btn-manual-popup');
+      const descText = document.getElementById('overlay-desc-text');
+
+      if (!thaipbsWindowRef || thaipbsWindowRef.closed || typeof thaipbsWindowRef.closed === 'undefined') {
+        manualBtn.style.display = 'inline-block';
+        descText.innerHTML = `⚠️ <b>ThaiPBS News Time!</b> Browser blocked automatic popup.<br>Click the orange button below to launch ThaiPBS Live.`;
+      } else {
+        manualBtn.style.display = 'none';
+        descText.innerHTML = `4-Streams have been paused to minimize bandwidth & system resource usage.<br>ThaiPBS Live stream is playing in a popup window.`;
+      }
+
+      document.getElementById('thaipbs-overlay').classList.add('active');
+    }
+
+    // Close ThaiPBS Window & Resume 4-Streams
+    function closeThaiPBSAndResume() {
+      if (thaipbsWindowRef && !thaipbsWindowRef.closed) {
+        thaipbsWindowRef.close();
+      }
+
+      document.getElementById('thaipbs-overlay').classList.remove('active');
+      resumeAllStreams();
+
+      switchPage(1);
+      toggleSolo(1);
+    }
+
+    // Helper: Convert "HH:MM" time string to today's Date object
+    function parseTimeStringToDate(timeStr, baseDate = new Date()) {
+      const [h, m] = timeStr.split(':').map(Number);
+      const d = new Date(baseDate);
+      d.setHours(h, m, 0, 0);
+      return d;
+    }
+
+    // Real-Time Schedule Engine: Calculates next news slot & updates ThaiPBS button countdown
+    function startThaiPBSScheduleTimer() {
+      if (thaipbsScheduleInterval) clearInterval(thaipbsScheduleInterval);
+
+      thaipbsScheduleInterval = setInterval(() => {
+        const now = new Date();
+        const dayOfWeek = now.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+        const scheduleList = isWeekend ? THAIPBS_SCHEDULE.weekend : THAIPBS_SCHEDULE.weekdays;
+
+        let activeSlot = null;
+        let nextSlotStart = null;
+
+        // Check current status against today's slots
+        for (const slot of scheduleList) {
+          const slotStart = parseTimeStringToDate(slot.start, now);
+          const slotEnd = parseTimeStringToDate(slot.end, now);
+
+          if (now >= slotStart && now <= slotEnd) {
+            activeSlot = slot;
+            break;
+          } else if (now < slotStart) {
+            if (!nextSlotStart || slotStart < nextSlotStart) {
+              nextSlotStart = slotStart;
+            }
+          }
+        }
+
+        // If no more slots today, find the first slot for tomorrow
+        if (!activeSlot && !nextSlotStart) {
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const tomorrowDay = tomorrow.getDay();
+          const tomorrowIsWeekend = (tomorrowDay === 0 || tomorrowDay === 6);
+          const tomorrowList = tomorrowIsWeekend ? THAIPBS_SCHEDULE.weekend : THAIPBS_SCHEDULE.weekdays;
+
+          nextSlotStart = parseTimeStringToDate(tomorrowList[0].start, tomorrow);
+        }
+
+        const btnThaiPBS = document.getElementById('btn-thaipbs-live');
+
+        if (activeSlot) {
+          // Currently in a news broadcast window
+          btnThaiPBS.textContent = 'ThaiPBS (Live Now)';
+
+          // Trigger popup once when starting slot if not already open
+          const slotKey = `${now.toDateString()}_${activeSlot.start}`;
+          if (lastAutoTriggeredSlotKey !== slotKey) {
+            lastAutoTriggeredSlotKey = slotKey;
+            openThaiPBSLive(false);
+          }
+        } else if (nextSlotStart) {
+          // Outside news window -> Countdown to next slot
+          const diffMs = nextSlotStart - now;
+          const totalSecs = Math.floor(diffMs / 1000);
+
+          const hrs = Math.floor(totalSecs / 3600);
+          const mins = Math.floor((totalSecs % 3600) / 60);
+          const secs = totalSecs % 60;
+
+          const formattedMin = mins < 10 ? `0${mins}` : mins;
+          const formattedSec = secs < 10 ? `0${secs}` : secs;
+
+          if (hrs > 0) {
+            btnThaiPBS.textContent = `ThaiPBS (${hrs}h ${formattedMin}m)`;
+          } else {
+            btnThaiPBS.textContent = `ThaiPBS (${formattedMin}:${formattedSec})`;
+          }
+        }
+      }, 1000);
+    }
+
+    /* ==========================================================================
+       REAL-TIME HOURLY TIMER WITH EARLY TRIGGER (-10s)
+       ========================================================================== */
+
+    let audioCtx = null;
+    let timerInterval = null;
+    let lastTriggerKey = null;
+
+    // Web Audio API Engine for Generating Beep Sounds
+    function initAudioContext() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playBeep(freq = 880, type = 'sine', duration = 0.15, delay = 0) {
+      initAudioContext();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = type;
+      osc.frequency.value = freq;
+
+      const startTime = audioCtx.currentTime + delay;
+      gain.gain.setValueAtTime(0.3, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    }
+
+    function playTripleBeep() {
+      playBeep(880, 'sine', 0.12, 0);     // Beep 1
+      playBeep(880, 'sine', 0.12, 0.2);   // Beep 2
+      playBeep(1200, 'sine', 0.25, 0.4);  // Beep 3 (Higher Pitch Ending)
+    }
+
+    // Main Timer System: Real-Time Clock Sync & Early Trigger (-10 sec)
+    function startHourlyTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+
+      timerInterval = setInterval(() => {
+        const now = new Date();
         
-        <!-- ================= 1. DESKTOP LAYOUT (2 กรอบ) ================= -->
-        <div id="layout-desktop" class="hidden grid-cols-2 gap-2 h-full w-full">
-            
-            <!-- Left: Radar Animation -->
-            <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
-                <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
-                    <div class="flex items-center gap-2 text-sky-400">
-                        <i class="fa-solid fa-circle-play"></i>
-                        <span class="text-slate-200">ภาพเคลื่อนไหว</span>
-                        <div class="flex items-center gap-1 ml-2">
-                            <div class="radar-radio"><input type="radio" id="d-left-nk" name="d-left" value="nk" checked onchange="changeDeskLeft('nk')"><label for="d-left-nk">NK</label></div>
-                            <div class="radar-radio"><input type="radio" id="d-left-nj" name="d-left" value="nj" onchange="changeDeskLeft('nj')"><label for="d-left-nj">NJ</label></div>
-                        </div>
-                    </div>
-                    <a id="link-desk-left" href="#" target="_blank" class="text-slate-400 hover:text-sky-300"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-                </div>
-                <div id="box-desk-left" class="radar-box flex-1">
-                    <div id="loader-desk-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
-                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูล...</p>
-                    </div>
-                    <div class="scaler-wrapper">
-                        <div id="scaler-desk-left" class="iframe-crop">
-                            <iframe id="iframe-desk-left" class="radar-iframe" scrolling="no" onload="hideLoader('loader-desk-left')"></iframe>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Right: High Res + Satellite Button -->
-            <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
-                <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
-                    <div class="flex items-center gap-2 text-indigo-400 truncate">
-                        <i class="fa-solid fa-crosshairs"></i>
-                        <span class="text-slate-200">High Res Fit</span>
-                        <div class="flex items-center gap-1 ml-2">
-                            <div class="radar-radio"><input type="radio" id="d-right-bkk" name="d-right" value="bkk" checked onchange="changeDeskRight('bkk')"><label for="d-right-bkk">BKK</label></div>
-                            <div class="radar-radio"><input type="radio" id="d-right-svp" name="d-right" value="svp" onchange="changeDeskRight('svp')"><label for="d-right-svp">SVP240</label></div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center gap-2 shrink-0">
-                        <!-- ปุ่มเปิดดาวเทียมแท็บใหม่ (Desktop) -->
-                        <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30 text-emerald-400 rounded flex items-center gap-1.5 transition-colors text-[10px] sm:text-[11px] launch-btn shadow-sm">
-                            <i class="fa-solid fa-satellite"></i>
-                            <span class="font-medium hidden sm:inline">ดาวเทียม</span>
-                        </a>
-                        
-                        <a id="link-desk-right" href="#" target="_blank" class="text-slate-400 hover:text-indigo-300 ml-1 text-[11px]"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-                    </div>
-                </div>
-                <div id="box-desk-right" class="radar-box flex-1">
-                    <div id="loader-desk-right" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
-                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูล...</p>
-                    </div>
-                    <div class="scaler-wrapper">
-                        <div id="scaler-desk-right" class="iframe-crop">
-                            <iframe id="iframe-desk-right" class="radar-iframe" scrolling="no" onload="hideLoader('loader-desk-right')"></iframe>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <!-- ================= 2. iOS / MOBILE LAYOUT (Launchpad Menu) ================= -->
-        <div id="layout-mobile" class="hidden w-full h-full bg-slate-900 rounded-xl border border-slate-800 flex-col items-center p-4 sm:p-6 shadow-lg overflow-y-auto relative">
-            <div class="mb-6 flex flex-col items-center">
-                <div class="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center mb-3 border border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.2)]">
-                    <i class="fa-solid fa-mobile-screen text-sky-400 text-3xl"></i>
-                </div>
-                <h2 class="text-sm font-semibold text-slate-200">iOS Launchpad Mode</h2>
-                <p class="text-[11px] text-slate-400 text-center max-w-[280px] mt-1">เลือกเปิดหน้าจอที่คุณต้องการ</p>
-            </div>
-
-            <div class="w-full max-w-sm flex flex-col gap-4">
-                
-                <!-- Satellite Button (เปิดแท็บใหม่) -->
-                <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="launch-btn w-full bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4 flex items-center justify-between hover:bg-emerald-600/30">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><i class="fa-solid fa-globe text-emerald-400 text-lg"></i></div>
-                        <div class="text-left">
-                            <h3 class="text-emerald-400 text-sm font-semibold">ดาวเทียม Himawari</h3>
-                            <p class="text-[10px] text-slate-400">เปิดภาพสแกนกลุ่มเมฆ (แท็บใหม่)</p>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-emerald-500/50"></i>
-                </a>
-
-                <div class="h-px w-full bg-slate-800"></div>
-
-                <!-- Radar Animation -->
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-sky-500/50">
-                        <i class="fa-solid fa-cloud-showers-heavy text-sky-400"></i><span class="text-xs text-slate-200">หนองแขม (NK)</span>
-                    </a>
-                    <a href="https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-sky-500/50">
-                        <i class="fa-solid fa-cloud-rain text-sky-400"></i><span class="text-xs text-slate-200">หนองจอก (NJ)</span>
-                    </a>
-                </div>
-
-                <!-- High Res -->
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
-                        <i class="fa-solid fa-map-location-dot text-indigo-400"></i><span class="text-xs text-slate-200">BKK High Res</span>
-                    </a>
-                    <a href="https://weather.tmd.go.th/svp240loop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
-                        <i class="fa-solid fa-layer-group text-indigo-400"></i><span class="text-xs text-slate-200">SVP 240</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="h-7 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between text-[10px] md:text-[11px] text-slate-400 shrink-0">
-        <div class="flex items-center gap-2">
-            <i class="fa-solid fa-arrows-rotate text-sky-400 text-[10px]"></i>
-            <span>รีเฟรชทุก 3 นาที</span>
-            <span class="text-slate-600 hidden sm:inline">|</span>
-            <span class="hidden sm:inline">อัปเดต: <span id="last-updated-time" class="text-slate-300 font-mono">-</span></span>
-        </div>
-        <div class="text-slate-400 flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
-            <span>กทม. & กรมอุตุฯ</span>
-        </div>
-    </footer>
-
-    <script>
-        const REFRESH_SECONDS = 180;
-        let countdown = REFRESH_SECONDS;
-        let timerId = null;
-        let rightScaleUserOffset = 0;
-        let isMobileDevice = false;
-
-        const URLS = {
-            anim: { nk: "https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx", nj: "https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" },
-            hires: { bkk: "https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx", svp: "https://weather.tmd.go.th/svp240loop.php" }
-        };
-
-        let deskLeftType = 'nk';
-        let deskRightType = 'bkk';
-
-        function detectDevice() {
-            const isMob = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document) || window.innerWidth < 768;
-            document.getElementById('os-status-text').textContent = isMob ? "โหมดการแสดงผล: Mobile / iOS Launchpad" : "โหมดการแสดงผล: Desktop";
-            return isMob;
+        let target = new Date(now);
+        if (now.getMinutes() > 59 || (now.getMinutes() === 59 && now.getSeconds() >= 50)) {
+          target.setHours(target.getHours() + 1);
         }
+        target.setMinutes(59);
+        target.setSeconds(50);
+        target.setMilliseconds(0);
 
-        function executeLoad() {
-            const timestamp = new Date().getTime();
-            
-            if (isMobileDevice) {
-                document.getElementById('layout-desktop').style.display = 'none';
-                document.getElementById('layout-mobile').style.display = 'flex';
-            } else {
-                document.getElementById('layout-mobile').style.display = 'none';
-                document.getElementById('layout-desktop').style.display = 'grid';
-                document.getElementById('desktop-zoom-controls').style.display = 'flex';
+        const diffMs = target - now;
+        const totalDiffSec = Math.floor(diffMs / 1000);
 
-                document.getElementById('link-desk-left').href = URLS.anim[deskLeftType];
-                document.getElementById('link-desk-right').href = URLS.hires[deskRightType];
+        const remMins = Math.floor(totalDiffSec / 60);
+        const remSecs = totalDiffSec % 60;
 
-                document.getElementById('iframe-desk-left').src = `${URLS.anim[deskLeftType]}?t=${timestamp}`;
-                document.getElementById('iframe-desk-right').src = `${URLS.hires[deskRightType]}?t=${timestamp}`;
-                
-                applyDynamicTransforms();
-            }
+        const formattedMins = remMins < 10 ? `0${remMins}` : remMins;
+        const formattedSecs = remSecs < 10 ? `0${remSecs}` : remSecs;
+
+        const statusEl = document.getElementById('timer-status');
+        statusEl.textContent = `⏳ Next Alert: ${formattedMins}:${formattedSecs}`;
+
+        if (now.getMinutes() === 59 && now.getSeconds() === 50) {
+          const triggerKey = `${now.getHours()}:59:50`;
+          if (lastTriggerKey !== triggerKey) {
+            lastTriggerKey = triggerKey;
+            executeTopOfTheHourActions();
+          }
         }
+      }, 1000);
+    }
 
-        // --- Iframe Transform Engine (Desktop) ---
-        function applyDynamicTransforms() {
-            if (isMobileDevice) return; 
+    // Action Trigger Function for Top-of-the-Hour Event (-10s Offset)
+    function executeTopOfTheHourActions() {
+      if (document.getElementById('thaipbs-overlay').classList.contains('active')) {
+        return;
+      }
 
-            const boxLeft = document.getElementById('box-desk-left');
-            const boxRight = document.getElementById('box-desk-right');
-            const scalerLeft = document.getElementById('scaler-desk-left');
-            const scalerRight = document.getElementById('scaler-desk-right');
+      console.log(`[Hourly Alert Triggered at XX:59:50] Time: ${new Date().toLocaleTimeString()}`);
 
-            if (!boxLeft || !boxRight || !scalerLeft || !scalerRight) return;
+      const isCh1Unmuted = players[1] && playerReadyStatus[1] && !players[1].isMuted();
+      const isSolo1Active = document.getElementById('solo-1').classList.contains('active');
 
-            scalerLeft.style.width = '1000px';
-            scalerLeft.style.height = '900px';
-            const leftW = boxLeft.clientWidth;
-            const leftH = boxLeft.clientHeight;
-            let leftScale = Math.min(leftW / 920, leftH / 850) * 1.15;
-            scalerLeft.style.transform = `scale(${leftScale}) translate(0px, -90px)`;
+      if (currentPage === 1 && isCh1Unmuted && isSolo1Active) {
+        console.log('[Timer] CH1 is already active & unmuted. Continuing seamless playback.');
+        return;
+      }
 
-            const rightW = boxRight.clientWidth;
-            const rightH = boxRight.clientHeight;
-            let baseRightScale, rightYOffset;
+      playTripleBeep();
 
-            if (deskRightType === 'bkk') {
-                scalerRight.style.width = '1850px';
-                scalerRight.style.height = '1650px';
-                baseRightScale = Math.min(rightW / 1850, rightH / 1650);
-                rightYOffset = -120;
-            } else {
-                scalerRight.style.width = '850px';
-                scalerRight.style.height = '850px';
-                baseRightScale = Math.min(rightW / 850, rightH / 850);
-                rightYOffset = 20;
-            }
+      if (currentPage !== 1) {
+        switchPage(1);
+      }
 
-            const finalRightScale = Math.max(0.15, baseRightScale + rightScaleUserOffset);
-            scalerRight.style.transform = `scale(${finalRightScale}) translate(0px, ${rightYOffset}px)`;
-        }
+      toggleSolo(1);
+    }
 
-        function adjustScale(delta) { rightScaleUserOffset += delta; applyDynamicTransforms(); }
-        function resetScale() { rightScaleUserOffset = 0; applyDynamicTransforms(); }
-
-        function changeDeskLeft(type) { 
-            deskLeftType = type; 
-            document.getElementById('loader-desk-left').style.display = 'flex';
-            executeLoad(); 
-        }
-        function changeDeskRight(type) { 
-            deskRightType = type; 
-            rightScaleUserOffset = 0; 
-            document.getElementById('loader-desk-right').style.display = 'flex';
-            executeLoad(); 
-        }
-
-        // --- Timer and Utility ---
-        function hideLoader(id) {
-            const el = document.getElementById(id);
-            if(el) {
-                el.style.opacity = '0';
-                setTimeout(() => el.style.display = 'none', 300);
-            }
-        }
-
-        function updateTimerUI() {
-            const m = Math.floor(countdown / 60);
-            const s = countdown % 60;
-            document.getElementById('countdown-timer').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-            document.getElementById('progress-bar').style.width = `${(countdown / REFRESH_SECONDS) * 100}%`;
-        }
-
-        function startCountdown() {
-            clearInterval(timerId);
-            timerId = setInterval(() => {
-                countdown--;
-                updateTimerUI();
-                if (countdown <= 0) {
-                    countdown = REFRESH_SECONDS;
-                    executeLoad();
-                    updateTimestamp();
-                }
-            }, 1000);
-        }
-
-        function manualRefresh() {
-            const icon = document.getElementById('refresh-icon');
-            if (icon) icon.classList.add('fa-spin');
-            countdown = REFRESH_SECONDS;
-            
-            if(!isMobileDevice) {
-                document.getElementById('loader-desk-left').style.display = 'flex';
-                document.getElementById('loader-desk-right').style.display = 'flex';
-                document.getElementById('loader-desk-left').style.opacity = '1';
-                document.getElementById('loader-desk-right').style.opacity = '1';
-            }
-            executeLoad();
-            updateTimestamp();
-            setTimeout(() => { if (icon) icon.classList.remove('fa-spin'); }, 800);
-        }
-
-        function updateTimestamp() {
-            document.getElementById('last-updated-time').textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            isMobileDevice = detectDevice();
-            updateTimestamp();
-            updateTimerUI();
-            startCountdown();
-            executeLoad();
-        });
-
-        window.addEventListener('resize', () => {
-            const wasMobile = isMobileDevice;
-            isMobileDevice = detectDevice();
-            if(wasMobile !== isMobileDevice) executeLoad(); 
-            else applyDynamicTransforms();
-        });
-    </script>
+    // Global Listener to Wake AudioContext on First Interaction
+    document.addEventListener('click', () => {
+      initAudioContext();
+    }, { once: true });
+  </script>
 </body>
 </html>
