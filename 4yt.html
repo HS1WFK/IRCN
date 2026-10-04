@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project 4 Streams - YouTube Edition v1.2.0</title>
+  <title>Project 4 Streams - YouTube Edition v1.2.1</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -95,6 +95,7 @@
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 0.3rem;
     }
 
@@ -108,12 +109,18 @@
       color: white;
     }
 
-    /* ThaiPBS Custom Button Style */
+    /* ThaiPBS Custom Button Style (Matched Dimension to Page 1 Button) */
     .btn-thaipbs {
       background-color: var(--accent-thaipbs);
       color: #ffffff;
-      font-weight: 700;
+      font-weight: 600;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.2);
+      min-width: 145px; /* Same dimension width alignment */
+      text-align: center;
+      font-family: inherit;
     }
 
     .btn-thaipbs:hover {
@@ -322,7 +329,7 @@
       font-weight: 700;
     }
 
-    /* Phase 2: ThaiPBS Mode Banner Banner Control Overlay */
+    /* Phase 2: ThaiPBS Mode Standby Control Overlay */
     .thaipbs-mode-overlay {
       display: none;
       position: absolute;
@@ -383,13 +390,13 @@
   <!-- Top Navigation -->
   <header>
     <div class="brand-title">
-      PROJECT 4 STREAMS <span class="brand-badge">v1.2.0 (ThaiPBS Live)</span>
+      PROJECT 4 STREAMS <span class="brand-badge">v1.2.1</span>
     </div>
 
     <div class="controls-main">
-      <!-- ThaiPBS Live Trigger Button -->
+      <!-- ThaiPBS Custom Button with Integrated 30s Test Countdown -->
       <button class="btn btn-thaipbs" id="btn-thaipbs-live" onclick="openThaiPBSLive()">
-        🔴 ThaiPBS Live
+        ThaiPBS (30s)
       </button>
 
       <!-- Page Switcher -->
@@ -631,7 +638,7 @@
     let players = {};
     let playerReadyStatus = {};
     let screenConfigs = JSON.parse(JSON.stringify(DEFAULT_CONFIGS));
-    let thaipbsWindowRef = null; // Pop-up Window Reference
+    let thaipbsWindowRef = null;
 
     // YouTube API Ready Callback
     function onYouTubeIframeAPIReady() {
@@ -639,7 +646,8 @@
       for (let i = 1; i <= 8; i++) {
         initPlayer(i);
       }
-      startHourlyTimer(); // Launch Real-time Hourly Timer System
+      startHourlyTimer();     // Real-time Hourly Timer
+      startThaiPBSTestTimer(); // Launch 30s Countdown Test Timer for ThaiPBS Popup
     }
 
     // Populate Dropdowns with Grouping
@@ -769,11 +777,9 @@
       const endCh = targetPage === 1 ? 4 : 8;
 
       if (isSoloActive) {
-        // Mute this screen
         if (players[ch] && playerReadyStatus[ch]) players[ch].mute();
         updateSoloButtonUI(ch, false);
       } else {
-        // Mute all other screens in this page & Unmute target screen
         for (let i = startCh; i <= endCh; i++) {
           if (players[i] && playerReadyStatus[i]) {
             if (i === ch) {
@@ -822,7 +828,6 @@
       document.getElementById('btn-page1').classList.toggle('active', pageNum === 1);
       document.getElementById('btn-page2').classList.toggle('active', pageNum === 2);
 
-      // Mute the page being hidden
       const inactiveStart = pageNum === 1 ? 5 : 1;
       const inactiveEnd = pageNum === 1 ? 8 : 4;
       for (let i = inactiveStart; i <= inactiveEnd; i++) {
@@ -849,8 +854,11 @@
     }
 
     /* ==========================================================================
-       PHASE 2: THAIPBS LIVE POPUP & RESOURCE MANAGEMENT ENGINE (v1.2.0)
+       PHASE 2: THAIPBS LIVE POPUP & RESOURCE MANAGEMENT ENGINE (v1.2.1)
        ========================================================================== */
+
+    let thaipbsCountdownSec = 30;
+    let thaipbsTestInterval = null;
 
     // Stop all YouTube streams to save network bandwidth and system resources
     function stopAllStreamsToSaveResources() {
@@ -874,7 +882,11 @@
 
     // Open ThaiPBS Live Window & Pause 4-Streams
     function openThaiPBSLive() {
-      // 1. Stop all 8 YouTubeStreams to free resources
+      // Pause/Clear Test Countdown Timer
+      if (thaipbsTestInterval) clearInterval(thaipbsTestInterval);
+      document.getElementById('btn-thaipbs-live').textContent = 'ThaiPBS';
+
+      // 1. Stop all 8 YouTube Streams to free resources
       stopAllStreamsToSaveResources();
 
       // 2. Open ThaiPBS Live Web Page in a Popup Window
@@ -904,6 +916,31 @@
       // 4. Default to Page 1 and Unmute CH1 (Al Jazeera)
       switchPage(1);
       toggleSolo(1);
+
+      // 5. Restart 30s ThaiPBS Test Timer
+      startThaiPBSTestTimer();
+    }
+
+    // Module: 30-Second Test Timer for ThaiPBS Auto-Popup
+    function startThaiPBSTestTimer() {
+      if (thaipbsTestInterval) clearInterval(thaipbsTestInterval);
+      thaipbsCountdownSec = 30;
+
+      const btnThaiPBS = document.getElementById('btn-thaipbs-live');
+      btnThaiPBS.textContent = `ThaiPBS (${thaipbsCountdownSec}s)`;
+
+      thaipbsTestInterval = setInterval(() => {
+        thaipbsCountdownSec--;
+
+        if (thaipbsCountdownSec > 0) {
+          btnThaiPBS.textContent = `ThaiPBS (${thaipbsCountdownSec}s)`;
+        } else {
+          // Timer reached 0: Trigger ThaiPBS Live Popup automatically
+          clearInterval(thaipbsTestInterval);
+          btnThaiPBS.textContent = 'ThaiPBS';
+          openThaiPBSLive();
+        }
+      }, 1000);
     }
 
     /* ==========================================================================
@@ -957,7 +994,6 @@
       timerInterval = setInterval(() => {
         const now = new Date();
         
-        // Target trigger time is XX:59:50 (10 seconds before top of the hour)
         let target = new Date(now);
         if (now.getMinutes() > 59 || (now.getMinutes() === 59 && now.getSeconds() >= 50)) {
           target.setHours(target.getHours() + 1);
@@ -966,7 +1002,6 @@
         target.setSeconds(50);
         target.setMilliseconds(0);
 
-        // Calculate remaining seconds until next trigger
         const diffMs = target - now;
         const totalDiffSec = Math.floor(diffMs / 1000);
 
@@ -976,11 +1011,9 @@
         const formattedMins = remMins < 10 ? `0${remMins}` : remMins;
         const formattedSecs = remSecs < 10 ? `0${remSecs}` : remSecs;
 
-        // Update real-time countdown display
         const statusEl = document.getElementById('timer-status');
         statusEl.textContent = `⏳ Next Alert: ${formattedMins}:${formattedSecs}`;
 
-        // Trigger condition: Exactly at minute 59, second 50 (XX:59:50)
         if (now.getMinutes() === 59 && now.getSeconds() === 50) {
           const triggerKey = `${now.getHours()}:59:50`;
           if (lastTriggerKey !== triggerKey) {
@@ -993,7 +1026,6 @@
 
     // Action Trigger Function for Top-of-the-Hour Event (-10s Offset)
     function executeTopOfTheHourActions() {
-      // Ignore hourly alert if ThaiPBS Live Mode is active
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) {
         return;
       }
