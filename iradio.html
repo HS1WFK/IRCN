@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Compact Header Meter V.1.5.8</title>
+  <title>Global News - Compact Header Meter V.1.5.9</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -83,18 +83,22 @@
     .station-ticker-wrapper { display: flex; align-items: center; width: 100%; overflow: hidden; }
     .station-fixed-title { font-size: 24px; font-weight: 700; color: #ff9800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); white-space: nowrap; margin-right: 10px; flex-shrink: 0; }
     .station-ticker-container { flex-grow: 1; overflow: hidden; white-space: nowrap; position: relative; }
+    
     .station-ticker-text {
-      display: inline-block; font-size: 24px; font-weight: 600; color: #ff9800;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); white-space: nowrap;
-      animation: ticker-scroll-slow 45s linear infinite;
+      display: inline-block; font-size: 24px; font-weight: 600;
+      white-space: nowrap;
+      animation: ticker-scroll-slow 50s linear infinite;
     }
+
+    /* สลับสี Ticker ระหว่างสีส้ม (Station Info) และ สีเขียว (RSS Feed) */
+    .station-ticker-text.color-info { color: #ff9800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); }
+    .station-ticker-text.color-rss { color: #22c55e; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); }
 
     @keyframes ticker-scroll-slow {
       0% { transform: translateX(0); }
       100% { transform: translateX(-50%); }
     }
 
-    /* --- Video Wrapper --- */
     .video-wrapper {
       width: 100%;
       border-radius: 5px;
@@ -130,7 +134,6 @@
     .stats-main-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
     .channels-indicator { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; display: flex; align-items: center; }
     
-    /* 1 & 2. ปรับปุ่ม VIDEO ปุ่มย้ายไปวางด้านหน้า CH: Mono | Stereo */
     .video-btn {
       font-size: 16px; font-weight: 700; padding: 2px 8px; margin-right: 10px;
       border-radius: 4px; border: 1px solid #555555; color: #555555; background: transparent;
@@ -231,7 +234,6 @@
     }
     .channel-item:hover { background: rgba(255, 255, 255, 0.1); border-color: #777777; }
     
-    /* 3. ปรับสไตล์ปุ่ม Station ตอน Active เป็น พื้นดำ + กรอบสีส้ม + Text สีส้ม */
     .channel-item.active { 
       background: #000000 !important; 
       border-color: #ff9800 !important;
@@ -284,7 +286,7 @@
         <div class="station-ticker-wrapper">
           <div class="station-fixed-title" id="station-fixed-title"></div>
           <div class="station-ticker-container">
-            <div class="station-ticker-text" id="station-ticker-text"></div>
+            <div class="station-ticker-text color-info" id="station-ticker-text"></div>
           </div>
         </div>
       </div>
@@ -302,7 +304,6 @@
       <div class="audio-content-stats" id="audio-content-stats">
         <div class="stats-main-row">
           <div class="channels-indicator">
-            <!-- 1. ปุ่ม VIDEO ย้ายมาอยู่ด้านหน้า CH: -->
             <button id="video-toggle-btn" class="video-btn disabled-btn">VIDEO</button>
             CH:&nbsp;
             <span id="stat-mono" class="stat-term disable-gray">Mono</span>
@@ -349,26 +350,27 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.5.8</div>
+  <div class="page-version-footer">ver.1.5.9</div>
 
   <script>
+    /* 1. ค้นหาและระบุลิงก์ RSS Feed ตรงตามรายชื่อสถานี */
     const channels = [
-      { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network.", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8" },
-      { name: "ABC Australia", location: "Sydney, Australia", utc: "UTC+10", tz: "Australia/Sydney", about: "Australia’s public broadcasting service.", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8" },
-      { name: "Arirang Korea", location: "Seoul, South Korea", utc: "UTC+9", tz: "Asia/Seoul", about: "South Korean English-language international broadcasting network.", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8" },
-      { name: "BBC News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "The operational business division of the British Broadcasting Corporation (BBC).", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8" },
-      { name: "CGTN", location: "Beijing, China", utc: "UTC+8", tz: "Asia/Shanghai", about: "China Global Television Network, the international division of CCTV.", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8" },
-      { name: "CNA", location: "Singapore", utc: "UTC+8", tz: "Asia/Singapore", about: "Channel NewsAsia, a Singaporean multinational news channel.", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8" },
-      { name: "NHK English", location: "Tokyo, Japan", utc: "UTC+9", tz: "Asia/Tokyo", about: "NHK World-Japan, the international broadcasting service of NHK.", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8" },
-      { name: "DW En", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "Deutsche Welle English, Germany's public international broadcaster.", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8" },
-      { name: "France 24 En", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The English-language arm of France's state-owned international news network.", url: "https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8" },
-      { name: "France 24 Fr", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The French-language domestic and international channel of France 24.", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8" },
-      { name: "GB News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "A British free-to-air news and opinion channel.", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8" },
-      { name: "Tagesschau24", location: "Hamburg, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "A German specialized news channel operated by ARD.", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8" },
-      { name: "TPTV", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Parliament Television.", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org" },
-      { name: "Classic FM", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "UK classic music radio stream based in Leicester Square, London.", url: "http://media-ice.musicradio.com/ClassicFMMP3", kbps: 128 },
-      { name: "Klassik-1", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "German classical music online radio station based in Berlin.", url: "http://icepool.silvacast.com/KLASSIK1.mp3", kbps: 128 },
-      { name: "บ้านธรรมะ", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Dhamma media and radio broadcasting operated by the Dhamma Study and Propagation Foundation.", url: "https://radio10.plathong.net/7238/;stream.mp3", kbps: 128 }
+      { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network.", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8", rss: "https://www.aljazeera.com/xml/rss/all.xml" },
+      { name: "ABC Australia", location: "Sydney, Australia", utc: "UTC+10", tz: "Australia/Sydney", about: "Australia’s public broadcasting service.", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8", rss: "https://www.abc.net.au/news/feed/51120/rss.xml" },
+      { name: "Arirang Korea", location: "Seoul, South Korea", utc: "UTC+9", tz: "Asia/Seoul", about: "South Korean English-language international broadcasting network.", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8", rss: "https://www.arirang.com/rss/news" },
+      { name: "BBC News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "The operational business division of the British Broadcasting Corporation (BBC).", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8", rss: "http://feeds.bbci.co.uk/news/rss.xml" },
+      { name: "CGTN", location: "Beijing, China", utc: "UTC+8", tz: "Asia/Shanghai", about: "China Global Television Network, the international division of CCTV.", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8", rss: "https://www.cgtn.com/subscribe/rss/p/1.xml" },
+      { name: "CNA", location: "Singapore", utc: "UTC+8", tz: "Asia/Singapore", about: "Channel NewsAsia, a Singaporean multinational news channel.", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8", rss: "https://www.channelnewsasia.com/api/v1/rss-outbound/rssnews/posts.xml" },
+      { name: "NHK English", location: "Tokyo, Japan", utc: "UTC+9", tz: "Asia/Tokyo", about: "NHK World-Japan, the international broadcasting service of NHK.", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8", rss: "https://www3.nhk.or.jp/nhkworld/en/news/backstories/rss/index.xml" },
+      { name: "DW En", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "Deutsche Welle English, Germany's public international broadcaster.", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8", rss: "https://rss.dw.com/rdf/rss-en-all" },
+      { name: "France 24 En", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The English-language arm of France's state-owned international news network.", url: "https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8", rss: "https://www.france24.com/en/rss" },
+      { name: "France 24 Fr", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The French-language domestic and international channel of France 24.", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8", rss: "https://www.france24.com/fr/rss" },
+      { name: "GB News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "A British free-to-air news and opinion channel.", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8", rss: "https://www.gbnews.com/feeds/news.rss" },
+      { name: "Tagesschau24", location: "Hamburg, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "A German specialized news channel operated by ARD.", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8", rss: "https://www.tagesschau.de/xml/rss2/" },
+      { name: "TPTV", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Parliament Television.", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org", rss: null },
+      { name: "Classic FM", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "UK classic music radio stream based in Leicester Square, London.", url: "http://media-ice.musicradio.com/ClassicFMMP3", kbps: 128, rss: null },
+      { name: "Klassik-1", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "German classical music online radio station based in Berlin.", url: "http://icepool.silvacast.com/KLASSIK1.mp3", kbps: 128, rss: null },
+      { name: "บ้านธรรมะ", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Dhamma media and radio broadcasting operated by the Dhamma Study and Propagation Foundation.", url: "https://radio10.plathong.net/7238/;stream.mp3", kbps: 128, rss: null }
     ];
 
     const dbMarks = [ 
@@ -454,7 +456,9 @@
     let currentBitrate = 0;
     const segTimeB = new Uint8Array(2048);
 
-    // --- Video Toggle & State Management ---
+    let activeRssFetchId = 0;
+
+    // --- Video Toggle Management ---
     videoToggleBtn.addEventListener('click', () => {
       if (activeIndex === -1) return;
       const ch = channels[activeIndex];
@@ -486,10 +490,54 @@
           videoWrapper.classList.remove('show');
         }
       } else {
-        // หากเป็น Audio Stream ปุ่มจะกลายเป็นเทาเข้ม Disable
         videoToggleBtn.className = 'video-btn disabled-btn';
         videoWrapper.classList.remove('show');
       }
+    }
+
+    // --- 2. Dynamic Ticker Logic (RSS Feed vs Station Info) ---
+    async function updateTickerContent(ch) {
+      activeRssFetchId++;
+      const currentFetchId = activeRssFetchId;
+
+      // กำหนดข้อความพื้นฐาน (Station Info) ไว้ล่วงหน้า
+      const fallbackInfoText = `${ch.location} | ${ch.utc} | ${ch.about} \u00A0\u00A0•\u00A0\u00A0 `;
+
+      // แสดง Station Info สีส้ม เป็นค่าเริ่มต้นก่อน
+      stationTickerText.className = "station-ticker-text color-info";
+      applyTickerAnimation(fallbackInfoText + fallbackInfoText, "50s");
+
+      // หากสถานีนั้นไม่มี RSS Feed ให้แสดง Station Info สีส้ม ต่อไป
+      if (!ch.rss) return;
+
+      try {
+        // ดึง RSS Feed ผ่าน CORS Proxy (rss2json API)
+        const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(ch.rss)}`;
+        const res = await fetch(proxyUrl);
+        const data = await res.json();
+
+        // ตรวจสอบความถูกต้องของข้อมูล
+        if (currentFetchId !== activeRssFetchId) return; // หากเปลี่ยนสถานีไปแล้ว ให้ยกเลิก
+
+        if (data && data.status === 'ok' && data.items && data.items.length > 0) {
+          // ดึงหัวข้อข่าวล่าสุด 8 ข่าวมาต่อกัน
+          const headlines = data.items.slice(0, 8).map(item => item.title.trim()).join(' \u00A0\u00A0•\u00A0\u00A0 ');
+          const rssText = `🔴 BREAKING NEWS: ${headlines} \u00A0\u00A0•\u00A0\u00A0 `;
+
+          // ปรับสี Ticker เป็น "สีเขียวสด" สำหรับ RSS Feed ข่าวสาร real-time
+          stationTickerText.className = "station-ticker-text color-rss";
+          applyTickerAnimation(rssText + rssText, "85s");
+        }
+      } catch (err) {
+        console.log("RSS Fetch Notice (fallback to info):", err);
+      }
+    }
+
+    function applyTickerAnimation(text, durationStr) {
+      stationTickerText.innerText = text;
+      stationTickerText.style.animation = 'none';
+      stationTickerText.offsetHeight; // trigger reflow
+      stationTickerText.style.animation = `ticker-scroll-slow ${durationStr} linear infinite`;
     }
 
     function initGlobalVuMeterUI() {
@@ -588,11 +636,10 @@
       if (activeIndex !== -1) {
         const ch = channels[activeIndex];
         stationFixedTitle.innerText = `${ch.name} :`;
-        const detailText = `${ch.location} | ${ch.utc} | ${ch.about} \u00A0\u00A0•\u00A0\u00A0 `;
-        stationTickerText.innerText = detailText + detailText;
-        stationTickerText.style.animation = 'none';
-        stationTickerText.offsetHeight; 
-        stationTickerText.style.animation = 'ticker-scroll-slow 45s linear infinite';
+        
+        // เรียกใช้อัลกอริทึมจัดการ Ticker (สลับสีส้ม/สีเขียว ตามข้อมูล RSS)
+        updateTickerContent(ch);
+
         stationInfoRow.style.visibility = 'visible';
         updateClocks();
         
@@ -697,8 +744,8 @@
           const ch = channels[activeIndex];
           if (ch) {
             stationFixedTitle.innerText = ch.name + ' :';
-            stationTickerText.style.animation = 'none';
-            stationTickerText.innerText = 'Cannot open this stream (Mixed Content / Server offline) \u00A0\u00A0•\u00A0\u00A0 ';
+            stationTickerText.className = "station-ticker-text color-info";
+            applyTickerAnimation('Cannot open this stream (Mixed Content / Server offline) \u00A0\u00A0•\u00A0\u00A0 ', "30s");
             stationInfoRow.style.visibility = 'visible';
           }
           return;
@@ -794,6 +841,7 @@
     function stopAudio(clearSrc = true) {
       sessionId++;
       directAttempt++;
+      activeRssFetchId++;
       clearInterval(directRxTimer);
 
       if (directSrc) { try { directSrc.disconnect(); } catch(e) {} directSrc = null; }
