@@ -81,9 +81,27 @@
 
     /* --- Station Info & Dedicated Full-Width Ticker Layout --- */
     .station-info-container { display: flex; flex-direction: column; margin-bottom: 12px; min-height: 42px; visibility: hidden; width: 100%; }
-    .station-title-row { margin-bottom: 2px; }
+    
+    /* 1. จัดวางบรรทัดชื่อสถานีและ Label แสดงสถานะ RSS/Info ชิดขวาสุด */
+    .station-title-row { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: baseline; 
+      margin-bottom: 2px; 
+      width: 100%;
+    }
     .station-fixed-title { font-size: 26px; font-weight: 700; color: #ff9800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); white-space: nowrap; }
     
+    .feed-status-tag {
+      font-size: 20px;
+      font-weight: 700;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    }
+    .feed-status-tag.color-info { color: #ff9800; }
+    .feed-status-tag.color-rss { color: #22c55e; }
+
     /* บรรทัดข้อความวิ่ง ยืดเต็มความกว้างขอบหน้าจอ */
     .station-ticker-full-row { width: 100%; overflow: hidden; white-space: nowrap; position: relative; margin-top: 2px; }
     
@@ -257,6 +275,7 @@
       .callsign { font-size: 19px; }
       h1.page-title { font-size: 28px; }
       .utc-time-display, .local-time-display, .station-fixed-title, .station-ticker-text { font-size: 19px !important; }
+      .feed-status-tag { font-size: 16px; }
       .channels-indicator { font-size: 17px; }
       
       .video-btn { font-size: 13px; padding: 2px 6px; margin-right: 6px; }
@@ -285,10 +304,12 @@
         <div class="utc-time-display" id="utc-clock">UTC --:--:--</div>
       </div>
 
-      <!-- Station Title + Dedicated Full-Width Ticker Row -->
+      <!-- Station Title + Feed Status Tag + Dedicated Full-Width Ticker Row -->
       <div class="station-info-container" id="station-info-row">
         <div class="station-title-row">
           <div class="station-fixed-title" id="station-fixed-title"></div>
+          <!-- Label ชิดขวาสุด -->
+          <div class="feed-status-tag color-info" id="feed-status-tag">Station Info:</div>
         </div>
         <div class="station-ticker-full-row">
           <div class="station-ticker-text color-info" id="station-ticker-text"></div>
@@ -406,6 +427,7 @@
     const localClockElem = document.getElementById('local-clock');
     const stationInfoRow = document.getElementById('station-info-row');
     const stationFixedTitle = document.getElementById('station-fixed-title');
+    const feedStatusTag = document.getElementById('feed-status-tag');
     const stationTickerText = document.getElementById('station-ticker-text');
     const statsPanel = document.getElementById('audio-content-stats');
     const statMono = document.getElementById('stat-mono');
@@ -498,13 +520,16 @@
       }
     }
 
-    // --- Dynamic Ticker Logic (Full-Width Row) ---
+    // --- Dynamic Ticker & Status Tag Logic ---
     async function updateTickerContent(ch) {
       activeRssFetchId++;
       const currentFetchId = activeRssFetchId;
 
       const fallbackInfoText = `${ch.location} | ${ch.utc} | ${ch.about} \u00A0\u00A0•\u00A0\u00A0 `;
 
+      // ตั้งค่าเป็น Station Info (สีส้ม) ก่อน
+      feedStatusTag.innerText = "Station Info:";
+      feedStatusTag.className = "feed-status-tag color-info";
       stationTickerText.className = "station-ticker-text color-info";
       applyTickerAnimation(fallbackInfoText + fallbackInfoText, "50s");
 
@@ -521,6 +546,9 @@
           const headlines = data.items.slice(0, 8).map(item => item.title.trim()).join(' \u00A0\u00A0•\u00A0\u00A0 ');
           const rssText = `🔴 BREAKING NEWS: ${headlines} \u00A0\u00A0•\u00A0\u00A0 `;
 
+          // ปรับข้อความ Label ชิดขวา และข้อความวิ่งเป็น RSS Feed (สีเขียว)
+          feedStatusTag.innerText = "RSS Feed:";
+          feedStatusTag.className = "feed-status-tag color-rss";
           stationTickerText.className = "station-ticker-text color-rss";
           applyTickerAnimation(rssText + rssText, "85s");
         }
@@ -739,6 +767,8 @@
           const ch = channels[activeIndex];
           if (ch) {
             stationFixedTitle.innerText = ch.name;
+            feedStatusTag.innerText = "Station Info:";
+            feedStatusTag.className = "feed-status-tag color-info";
             stationTickerText.className = "station-ticker-text color-info";
             applyTickerAnimation('Cannot open this stream (Mixed Content / Server offline) \u00A0\u00A0•\u00A0\u00A0 ', "30s");
             stationInfoRow.style.visibility = 'visible';
