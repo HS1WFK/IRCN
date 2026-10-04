@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bangkok BMA Radar Live Monitor - v.1.0.8</title>
+    <title>Bangkok BMA Radar Live Monitor - v.1.0.9</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -125,7 +125,7 @@
                 <h1 class="text-xs md:text-sm font-semibold text-slate-100 flex items-center gap-2">
                     <span class="truncate max-w-[150px] sm:max-w-none">ศูนย์เรดาร์ กทม.</span>
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] md:text-xs font-mono bg-slate-800 text-slate-400 border border-slate-700 cursor-default">
-                        v.1.0.8
+                        v.1.0.9
                     </span>
                 </h1>
                 <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ตรวจสอบระบบปฏิบัติการ...</p>
@@ -161,7 +161,7 @@
     <!-- Main Content Area -->
     <main class="flex-1 relative overflow-hidden bg-slate-950 p-2">
         
-        <!-- ================= 1. DESKTOP LAYOUT (2 กรอบตามเดิม) ================= -->
+        <!-- ================= 1. DESKTOP LAYOUT (2 กรอบ) ================= -->
         <div id="layout-desktop" class="hidden grid-cols-2 gap-2 h-full w-full">
             
             <!-- Left: Radar Animation -->
@@ -202,11 +202,11 @@
                     </div>
                     
                     <div class="flex items-center gap-2 shrink-0">
-                        <!-- ปุ่มดาวเทียม (สร้างหน้าต่างใหม่ในแอป) -->
-                        <button onclick="openSatelliteModal()" class="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30 text-emerald-400 rounded flex items-center gap-1.5 transition-colors text-[10px] sm:text-[11px] launch-btn shadow-sm">
+                        <!-- ปุ่มเปิดดาวเทียมแท็บใหม่ (Desktop) -->
+                        <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30 text-emerald-400 rounded flex items-center gap-1.5 transition-colors text-[10px] sm:text-[11px] launch-btn shadow-sm">
                             <i class="fa-solid fa-satellite"></i>
                             <span class="font-medium hidden sm:inline">ดาวเทียม</span>
-                        </button>
+                        </a>
                         
                         <a id="link-desk-right" href="#" target="_blank" class="text-slate-400 hover:text-indigo-300 ml-1 text-[11px]"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                     </div>
@@ -236,17 +236,17 @@
 
             <div class="w-full max-w-sm flex flex-col gap-4">
                 
-                <!-- Satellite Button (Priority) -->
-                <button onclick="openSatelliteModal()" class="launch-btn w-full bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4 flex items-center justify-between hover:bg-emerald-600/30">
+                <!-- Satellite Button (เปิดแท็บใหม่) -->
+                <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="launch-btn w-full bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4 flex items-center justify-between hover:bg-emerald-600/30">
                     <div class="flex items-center gap-4">
                         <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><i class="fa-solid fa-globe text-emerald-400 text-lg"></i></div>
                         <div class="text-left">
                             <h3 class="text-emerald-400 text-sm font-semibold">ดาวเทียม Himawari</h3>
-                            <p class="text-[10px] text-slate-400">ภาพสแกนกลุ่มเมฆ (In-App Player)</p>
+                            <p class="text-[10px] text-slate-400">เปิดภาพสแกนกลุ่มเมฆ (แท็บใหม่)</p>
                         </div>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-emerald-500/50"></i>
-                </button>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-emerald-500/50"></i>
+                </a>
 
                 <div class="h-px w-full bg-slate-800"></div>
 
@@ -288,54 +288,6 @@
         </div>
     </footer>
 
-    <!-- ================= 3. FULLSCREEN MODAL สำหรับดาวเทียม ================= -->
-    <!-- กรอบนี้จำลองการเปิด "หน้าใหม่" (New Page) ซ้อนทับหน้าหลัก พร้อมปุ่ม Close -->
-    <div id="satellite-modal" class="fixed inset-0 z-[100] bg-black hidden flex-col transition-opacity duration-300 opacity-0">
-        <!-- Top Navigation Bar -->
-        <div class="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-3 md:px-5 z-10 shadow-lg">
-            <div class="flex items-center gap-2 md:gap-3 text-emerald-400">
-                <div class="p-1.5 md:p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                    <i class="fa-solid fa-globe"></i>
-                </div>
-                <div>
-                    <h2 class="font-semibold text-xs md:text-sm text-slate-100">ดาวเทียม Himawari (TMD)</h2>
-                    <p class="text-[10px] text-slate-400 hidden sm:block">สแกนกลุ่มเมฆล่าสุด</p>
-                </div>
-            </div>
-            
-            <!-- ปุ่ม [Close] สีแดงเด่นชัด -->
-            <button onclick="closeSatelliteModal()" class="px-3 md:px-4 py-1.5 md:py-2 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white rounded-lg text-xs font-bold flex items-center gap-2 transition-transform active:scale-95 shadow-md shadow-red-900/40">
-                <i class="fa-solid fa-xmark text-sm"></i>
-                <span class="hidden sm:inline">Close</span>
-                <span>(กลับหน้าหลัก)</span>
-            </button>
-        </div>
-
-        <!-- Video Content -->
-        <div class="flex-1 relative flex flex-col items-center justify-center p-2">
-            <!-- Loader -->
-            <div id="sat-loader" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black z-0">
-                <div class="spinner border-emerald-500/20 border-t-emerald-500"></div>
-                <p class="text-xs text-slate-400">กำลังโหลดภาพดาวเทียม...</p>
-            </div>
-            
-            <!-- Player -->
-            <video id="sat-video" class="w-full h-full object-contain relative z-10" autoplay loop muted playsinline 
-                   onerror="handleSatVideoError()" onloadeddata="hideSatLoader()"></video>
-            
-            <!-- Fallback Error (หากโดนบล็อก HTTP Mixed Content) -->
-            <div id="sat-error" class="hidden relative z-20 flex-col items-center justify-center text-center p-6 bg-slate-900/80 rounded-xl border border-slate-700 max-w-sm">
-                <i class="fa-solid fa-shield-halved text-amber-500 text-4xl mb-3"></i>
-                <h3 class="text-slate-200 font-semibold mb-2">เบราว์เซอร์บล็อกการแสดงผล</h3>
-                <p class="text-slate-400 text-xs mb-4">เพื่อความปลอดภัย ระบบป้องกันการโหลดไฟล์วิดีโอ (HTTP) ในหน้านี้ กรุณาเปิดดูที่แท็บเบราว์เซอร์ใหม่โดยตรง</p>
-                <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-emerald-900/50">
-                    เปิดในแท็บใหม่ (New Tab)
-                </a>
-            </div>
-        </div>
-    </div>
-    <!-- ================= END MODAL ================= -->
-
     <script>
         const REFRESH_SECONDS = 180;
         let countdown = REFRESH_SECONDS;
@@ -345,8 +297,7 @@
 
         const URLS = {
             anim: { nk: "https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx", nj: "https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" },
-            hires: { bkk: "https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx", svp: "https://weather.tmd.go.th/svp240loop.php" },
-            sat: "http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" 
+            hires: { bkk: "https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx", svp: "https://weather.tmd.go.th/svp240loop.php" }
         };
 
         let deskLeftType = 'nk';
@@ -376,12 +327,6 @@
                 document.getElementById('iframe-desk-right').src = `${URLS.hires[deskRightType]}?t=${timestamp}`;
                 
                 applyDynamicTransforms();
-            }
-
-            // ถ้าระบบดาวเทียมเปิดอยู่ ให้รีเฟรชภาพดาวเทียมด้วย
-            const satModal = document.getElementById('satellite-modal');
-            if (satModal.style.display === 'flex') {
-                reloadSatelliteVideo(timestamp);
             }
         }
 
@@ -436,54 +381,6 @@
             rightScaleUserOffset = 0; 
             document.getElementById('loader-desk-right').style.display = 'flex';
             executeLoad(); 
-        }
-
-        // --- Satellite Modal Logic ---
-        function openSatelliteModal() {
-            const modal = document.getElementById('satellite-modal');
-            modal.style.display = 'flex';
-            // Trigger animation
-            setTimeout(() => modal.classList.remove('opacity-0'), 10);
-            
-            document.getElementById('sat-loader').style.display = 'flex';
-            document.getElementById('sat-error').style.display = 'none';
-            
-            const vid = document.getElementById('sat-video');
-            vid.style.display = 'block';
-            reloadSatelliteVideo(new Date().getTime());
-        }
-
-        function closeSatelliteModal() {
-            const modal = document.getElementById('satellite-modal');
-            modal.classList.add('opacity-0'); // Fade out
-            
-            const vid = document.getElementById('sat-video');
-            vid.pause();
-            vid.src = "";
-            
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300); // รอให้ Fade out เสร็จค่อยซ่อน
-        }
-
-        function reloadSatelliteVideo(timestamp) {
-            const vid = document.getElementById('sat-video');
-            vid.src = `${URLS.sat}?t=${timestamp}`;
-            vid.load();
-            vid.play().catch(e => {
-                console.log("Autoplay blocked or network error:", e);
-                // ไม่ต้องบังคับแจ้ง error ตรงนี้ ให้รอ event onerror ทำงานเอง
-            });
-        }
-
-        function hideSatLoader() {
-            document.getElementById('sat-loader').style.display = 'none';
-        }
-
-        function handleSatVideoError() {
-            document.getElementById('sat-loader').style.display = 'none';
-            document.getElementById('sat-video').style.display = 'none';
-            document.getElementById('sat-error').style.display = 'flex'; // ขึ้นปุ่มเปิด Browser แบบ External
         }
 
         // --- Timer and Utility ---
