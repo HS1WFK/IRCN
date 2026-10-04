@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project 4 Streams - YouTube Edition v1.1.1</title>
+  <title>Project 4 Streams - YouTube Edition v1.1.2</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -105,11 +105,6 @@
     .btn.active {
       background-color: var(--accent-blue);
       color: white;
-    }
-
-    .btn.active-gold {
-      background-color: var(--accent-gold);
-      color: #000;
     }
 
     /* Main Container */
@@ -297,18 +292,19 @@
       border-color: var(--accent-blue);
     }
 
-    /* Timer Status Indicator UI */
+    /* Timer Status Countdown Badge UI */
     .timer-badge {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-family: monospace;
       color: var(--accent-gold);
       background: rgba(245, 158, 11, 0.15);
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
       border: 1px solid rgba(245, 158, 11, 0.3);
       display: flex;
       align-items: center;
-      gap: 0.3rem;
+      gap: 0.4rem;
+      font-weight: 700;
     }
   </style>
   <script src="https://www.youtube.com/iframe_api"></script>
@@ -318,7 +314,7 @@
   <!-- Top Navigation -->
   <header>
     <div class="brand-title">
-      PROJECT 4 STREAMS <span class="brand-badge">v1.1.1 (Countdown Timer)</span>
+      PROJECT 4 STREAMS <span class="brand-badge">v1.1.2</span>
     </div>
 
     <div class="controls-main">
@@ -334,13 +330,8 @@
         <button class="btn" id="btn-focus" onclick="setLayout('focus')">Main + Sidebar</button>
       </div>
 
-      <!-- Phase 1: Hourly Timer & 30s Countdown Test Switcher -->
-      <div class="btn-group">
-        <button class="btn active-gold" id="btn-timer-real" onclick="setTimerMode('real')">Hourly Timer (.00)</button>
-        <button class="btn" id="btn-timer-30s" onclick="setTimerMode('30s')">Test 30s</button>
-      </div>
-
-      <div class="timer-badge" id="timer-status">⏱ Mode: Real (.00)</div>
+      <!-- Real-time Hourly Countdown Badge -->
+      <div class="timer-badge" id="timer-status">⏳ Next Alert: --:--</div>
 
       <!-- Global Actions -->
       <button class="btn" onclick="muteAllCurrentPage()" style="border: 1px solid var(--border-color);">
@@ -561,7 +552,7 @@
       for (let i = 1; i <= 8; i++) {
         initPlayer(i);
       }
-      startHourlyTimer(); // Launch Phase 1 Timer System
+      startHourlyTimer(); // Launch Real-time Hourly Timer System
     }
 
     // Populate Dropdowns with Grouping
@@ -771,13 +762,11 @@
     }
 
     /* ==========================================================================
-       PHASE 1: HOURLY TIMER & COUNTDOWN TEST LOOP MODULE (v1.1.1)
+       PHASE 1: REAL-TIME HOURLY TIMER WITH EARLY TRIGGER (-10s) (v1.1.2)
        ========================================================================== */
 
     let audioCtx = null;
-    let timerMode = 'real'; // 'real', '30s'
     let timerInterval = null;
-    let countdownSeconds = 30; // 30-second loop counter
     let lastTriggerKey = null;
 
     // Web Audio API Engine for Generating Beep Sounds
@@ -816,76 +805,70 @@
       playBeep(1200, 'sine', 0.25, 0.4);  // Beep 3 (Higher Pitch Ending)
     }
 
-    // Set Timer Mode (Real vs 30s Countdown Test)
-    function setTimerMode(mode) {
-      timerMode = mode;
-      const btnReal = document.getElementById('btn-timer-real');
-      const btn30s = document.getElementById('btn-timer-30s');
-      const statusEl = document.getElementById('timer-status');
-
-      btnReal.classList.toggle('active-gold', mode === 'real');
-      btn30s.classList.toggle('active-gold', mode === '30s');
-
-      if (mode === 'real') {
-        btn30s.textContent = 'Test 30s';
-        statusEl.textContent = '⏱ Mode: Real (.00)';
-      } else if (mode === '30s') {
-        countdownSeconds = 30; // Reset countdown counter to 30
-        btn30s.textContent = `⏳ Test (30s)`;
-        statusEl.textContent = '🧪 Test Loop: 30s Countdown';
-      }
-
-      lastTriggerKey = null; // Reset Trigger Guard
-    }
-
-    // Main Timer Loop Checker
+    // Main Timer System: Real-Time Clock Sync & Early Trigger (-10 sec)
     function startHourlyTimer() {
       if (timerInterval) clearInterval(timerInterval);
 
       timerInterval = setInterval(() => {
         const now = new Date();
-        const mins = now.getMinutes();
-        const secs = now.getSeconds();
+        
+        // Target trigger time is XX:59:50 (10 seconds before top of the hour)
+        let target = new Date(now);
+        if (now.getMinutes() > 59 || (now.getMinutes() === 59 && now.getSeconds() >= 50)) {
+          // If current time is past XX:59:50, set target to next hour's 59:50
+          target.setHours(target.getHours() + 1);
+        }
+        target.setMinutes(59);
+        target.setSeconds(50);
+        target.setMilliseconds(0);
 
-        if (timerMode === 'real') {
-          // Trigger exactly at XX:00:00
-          if (mins === 0 && secs === 0) {
-            const currentHourKey = `${now.getHours()}:${mins}`;
-            if (lastTriggerKey !== currentHourKey) {
-              lastTriggerKey = currentHourKey;
-              executeTopOfTheHourActions();
-            }
-          }
-        } else if (timerMode === '30s') {
-          // Decrement Countdown Counter every 1 second
-          countdownSeconds--;
+        // Calculate remaining seconds until next trigger
+        const diffMs = target - now;
+        const totalDiffSec = Math.floor(diffMs / 1000);
 
-          const btn30s = document.getElementById('btn-timer-30s');
-          const formattedSec = countdownSeconds < 10 ? `0${countdownSeconds}` : countdownSeconds;
-          btn30s.textContent = `⏳ Test (${formattedSec}s)`;
+        const remMins = Math.floor(totalDiffSec / 60);
+        const remSecs = totalDiffSec % 60;
 
-          // Trigger Action when Countdown reaches 0
-          if (countdownSeconds <= 0) {
+        const formattedMins = remMins < 10 ? `0${remMins}` : remMins;
+        const formattedSecs = remSecs < 10 ? `0${remSecs}` : remSecs;
+
+        // Update real-time countdown display
+        const statusEl = document.getElementById('timer-status');
+        statusEl.textContent = `⏳ Next Alert: ${formattedMins}:${formattedSecs}`;
+
+        // Trigger condition: Exactly at minute 59, second 50 (XX:59:50)
+        if (now.getMinutes() === 59 && now.getSeconds() === 50) {
+          const triggerKey = `${now.getHours()}:59:50`;
+          if (lastTriggerKey !== triggerKey) {
+            lastTriggerKey = triggerKey;
             executeTopOfTheHourActions();
-            countdownSeconds = 30; // Reset countdown loop back to 30s
           }
         }
       }, 1000);
     }
 
-    // Action Trigger Function for Top-of-the-Hour Event
+    // Action Trigger Function for Top-of-the-Hour Event (-10s Offset)
     function executeTopOfTheHourActions() {
-      console.log(`[Timer Event Triggered] Time: ${new Date().toLocaleTimeString()} Mode: ${timerMode}`);
+      console.log(`[Hourly Alert Triggered at XX:59:50] Time: ${new Date().toLocaleTimeString()}`);
 
-      // 1. Sound Beep Alert
-      playTripleBeep();
+      const isCh1Unmuted = players[1] && playerReadyStatus[1] && !players[1].isMuted();
+      const isSolo1Active = document.getElementById('solo-1').classList.contains('active');
 
-      // 2. Switch back to Page 1 if currently on Page 2
+      // Check Scenario: Is CH1 currently playing audio and visible on Page 1?
+      if (currentPage === 1 && isCh1Unmuted && isSolo1Active) {
+        console.log('[Timer] CH1 is already active & unmuted. Continuing seamless playback.');
+        return; // Continue playing seamlessly without interruption or beep
+      }
+
+      // Scenario B: CH1 is muted, another CH is selected, or user is on Page 2
+      playTripleBeep(); // Play Beep Alert
+
+      // Switch back to Page 1 if currently viewing Page 2
       if (currentPage !== 1) {
         switchPage(1);
       }
 
-      // 3. Unmute CH1 (Al Jazeera English) & Update UI
+      // Unmute CH1 (Al Jazeera English) and Mute other channels
       toggleSolo(1);
     }
 
