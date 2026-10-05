@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.1.1</title>
+  <title>HS1WFK 4 STREAMS v2.1.2</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -221,7 +221,7 @@
       display: block;
     }
 
-    /* FIXED GRID LAYOUT SYSTEM */
+    /* GRID LAYOUT MODES */
     .grid-2x2 {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -230,7 +230,7 @@
       height: calc(100vh - 65px);
     }
 
-    /* Dynamic Focus Layout [ 1+3 ] Fix */
+    /* Dynamic Focus Layout [ 1+3 ] */
     .grid-focus {
       display: grid;
       grid-template-columns: 2.8fr 1fr;
@@ -242,11 +242,6 @@
       gap: 0.75rem;
       height: calc(100vh - 65px);
     }
-
-    .grid-focus > .screen-card:nth-child(1) { grid-area: focus; }
-    .grid-focus > .screen-card:nth-child(2) { grid-area: side1; }
-    .grid-focus > .screen-card:nth-child(3) { grid-area: side2; }
-    .grid-focus > .screen-card:nth-child(4) { grid-area: side3; }
 
     @media (max-width: 900px) {
       .grid-2x2, .grid-focus {
@@ -371,7 +366,7 @@
       object-fit: contain;
     }
 
-    /* Option 2 Transparent Overlay Layer */
+    /* Fixed Transparent Overlay with Pointer Events Logic */
     .swap-overlay {
       display: none;
       position: absolute;
@@ -381,7 +376,8 @@
       height: 100%;
       background: rgba(0, 0, 0, 0.001);
       cursor: pointer;
-      z-index: 20;
+      z-index: 25;
+      pointer-events: auto;
       transition: background 0.2s ease;
     }
 
@@ -522,7 +518,7 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.1.1</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.1.2</span>
       </div>
 
       <!-- Single System Toggle Button -->
@@ -992,7 +988,7 @@
       document.getElementById(`chk-audio-${selectedCh}`).checked = true;
     }
 
-    /* DYNAMIC SCREEN SWAP & ORDERING ENGINE ([ 1+3 ] Focus Mode) */
+    /* PURE CSS GRID AREA SWAP ENGINE (NO DOM REMOUNTING - PREVENTS YOUTUBE RESET) */
     function handleOverlaySwap(clickedCh) {
       if (currentLayout !== 'focus') return;
 
@@ -1018,26 +1014,31 @@
       }
       rightChannels.sort((a, b) => a - b);
 
-      const orderedChannels = [focusCh, ...rightChannels];
+      const areas = ['side1', 'side2', 'side3'];
 
-      const sys1Grid = document.getElementById(`sys1-grid-p${page}`);
-      const sys2Grid = document.getElementById(`sys2-grid-p${page}`);
+      // Assign Focus Area to big screen
+      setCardGridArea(focusCh, 'focus', false);
 
-      orderedChannels.forEach((ch, index) => {
-        const card1 = document.getElementById(`card-${ch}`);
-        if (card1 && sys1Grid) sys1Grid.appendChild(card1);
-
-        const card2 = document.getElementById(`sys2-card-${ch}`);
-        if (card2 && sys2Grid) sys2Grid.appendChild(card2);
-
-        const overlay1 = document.getElementById(`overlay-sys1-${ch}`);
-        const overlay2 = document.getElementById(`overlay-sys2-${ch}`);
-
-        const overlayDisplay = (index === 0) ? 'none' : 'block';
-
-        if (overlay1) overlay1.style.display = overlayDisplay;
-        if (overlay2) overlay2.style.display = overlayDisplay;
+      // Assign Side Areas to right small screens in ascending order
+      rightChannels.forEach((ch, idx) => {
+        setCardGridArea(ch, areas[idx], true);
       });
+    }
+
+    function setCardGridArea(ch, gridArea, showOverlay) {
+      const card1 = document.getElementById(`card-${ch}`);
+      const card2 = document.getElementById(`sys2-card-${ch}`);
+
+      if (card1) card1.style.gridArea = gridArea;
+      if (card2) card2.style.gridArea = gridArea;
+
+      const overlay1 = document.getElementById(`overlay-sys1-${ch}`);
+      const overlay2 = document.getElementById(`overlay-sys2-${ch}`);
+
+      const displayVal = showOverlay ? 'block' : 'none';
+
+      if (overlay1) overlay1.style.display = displayVal;
+      if (overlay2) overlay2.style.display = displayVal;
     }
 
     function updateOverlayVisibilityAll() {
@@ -1047,6 +1048,11 @@
 
         if (currentLayout === 'grid') {
           for (let ch = startCh; ch <= endCh; ch++) {
+            const card1 = document.getElementById(`card-${ch}`);
+            const card2 = document.getElementById(`sys2-card-${ch}`);
+            if (card1) card1.style.gridArea = 'auto';
+            if (card2) card2.style.gridArea = 'auto';
+
             const o1 = document.getElementById(`overlay-sys1-${ch}`);
             const o2 = document.getElementById(`overlay-sys2-${ch}`);
             if (o1) o1.style.display = 'none';
@@ -1486,7 +1492,7 @@
       }, 1000);
     }
 
-    /* REAL-TIME HOURLY AUTOMATION ENGINE (ACCURATE XX:59:30 TRIGGER FIX) */
+    /* REAL-TIME HOURLY AUTOMATION ENGINE */
     let audioCtx = null;
     let timerInterval = null;
     let lastHourlyTriggerKey = null;
@@ -1530,7 +1536,6 @@
       const now = new Date();
       let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 59, 30, 0);
 
-      // If current time passed xx:59:30, target next hour xx:59:30
       if (now.getTime() >= target.getTime()) {
         target.setHours(target.getHours() + 1);
       }
@@ -1556,7 +1561,6 @@
         const statusEl = document.getElementById('timer-status');
         statusEl.textContent = `⏳ Next: ${formattedMins}:${formattedSecs}`;
 
-        // Exact Match Trigger at xx:59:30
         if (now.getMinutes() === 59 && now.getSeconds() === 30) {
           const triggerKey = `${now.getHours()}:59:30`;
           if (lastHourlyTriggerKey !== triggerKey) {
@@ -1570,7 +1574,7 @@
     function executeHourlyAutomationAt5930() {
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.1.1] Executed accurately at xx:59:30 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.1.2] Executed accurately at xx:59:30 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
