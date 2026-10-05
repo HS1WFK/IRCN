@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.2.2</title>
+  <title>HS1WFK 4 STREAMS v2.3.0</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -36,32 +36,32 @@
       overflow-x: hidden;
     }
 
-    /* Top Navigation Header Balanced Layout for iPad & Mobile */
+    /* Top Navigation Header Balanced Layout */
     header {
       background-color: var(--header-bg);
       border-bottom: 1px solid var(--border-color);
-      padding: 0.5rem 0.75rem;
+      padding: 0.4rem 0.6rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 0.4rem;
       z-index: 100;
     }
 
     .header-left, .header-right {
       display: flex;
       align-items: center;
-      gap: 0.45rem;
+      gap: 0.35rem;
       flex-wrap: wrap;
     }
 
     .brand-title {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 0.25rem;
+      gap: 0.2rem;
       color: #ffffff;
       flex-shrink: 0;
     }
@@ -75,10 +75,10 @@
     /* Single Toggle Buttons (System, Page, Layout) */
     .btn-sys-toggle, .btn-page-toggle, .btn-layout-toggle {
       font-weight: 700;
-      padding: 0.35rem 0.65rem;
-      border-radius: 6px;
+      padding: 0.3rem 0.55rem;
+      border-radius: 5px;
       cursor: pointer;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       transition: all 0.2s ease;
       white-space: nowrap;
     }
@@ -117,16 +117,16 @@
       color: #ffffff;
     }
 
-    /* CUE Selector Checkboxes */
+    /* CUE Selector Checkboxes (CH1..CH8) */
     .ch-selector-group {
       display: flex;
       align-items: center;
-      gap: 0.35rem;
-      background: rgba(0, 0, 0, 0.25);
+      gap: 0.25rem;
+      background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--border-color);
-      padding: 0.2rem 0.45rem;
-      border-radius: 6px;
-      font-size: 0.75rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 5px;
+      font-size: 0.72rem;
       font-weight: 700;
       color: var(--accent-gold);
       flex-shrink: 0;
@@ -135,26 +135,26 @@
     .ch-checkbox-label {
       display: flex;
       align-items: center;
-      gap: 0.15rem;
+      gap: 0.1rem;
       cursor: pointer;
       color: var(--text-main);
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 600;
     }
 
     .ch-checkbox-label input[type="checkbox"] {
       accent-color: var(--accent-blue);
       cursor: pointer;
-      width: 13px;
-      height: 13px;
+      width: 12px;
+      height: 12px;
     }
 
     .btn {
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 0.35rem 0.6rem;
-      font-size: 0.75rem;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.72rem;
       font-weight: 600;
       border-radius: 4px;
       cursor: pointer;
@@ -174,9 +174,9 @@
       background-color: var(--accent-thaipbs);
       color: #ffffff;
       font-weight: 600;
-      font-size: 0.75rem;
-      padding: 0.35rem 0.65rem;
-      border-radius: 6px;
+      font-size: 0.72rem;
+      padding: 0.3rem 0.55rem;
+      border-radius: 5px;
       border: 1px solid rgba(255, 255, 255, 0.2);
       text-align: center;
       white-space: nowrap;
@@ -251,8 +251,8 @@
 
     @media (max-width: 900px) {
       header {
-        gap: 0.4rem;
-        padding: 0.4rem;
+        gap: 0.3rem;
+        padding: 0.35rem;
       }
       .grid-2x2, .grid-focus {
         display: flex;
@@ -438,13 +438,14 @@
       outline: none;
     }
 
+    /* Timer Badge without Sand Clock Icon */
     .timer-badge {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-family: monospace;
       color: var(--accent-gold);
       background: rgba(245, 158, 11, 0.15);
-      padding: 0.3rem 0.5rem;
-      border-radius: 6px;
+      padding: 0.25rem 0.45rem;
+      border-radius: 5px;
       border: 1px solid rgba(245, 158, 11, 0.3);
       display: flex;
       align-items: center;
@@ -527,7 +528,7 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.2.2</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.3.0</span>
       </div>
 
       <!-- Single System Toggle Button -->
@@ -535,17 +536,21 @@
         System 1
       </button>
 
-      <!-- CUE Selector Checkboxes -->
+      <!-- 8-Channel CUE Selector Group -->
       <div class="ch-selector-group">
         <span>CUE:</span>
         <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-1" checked onclick="handleUserCheckboxClick(1)"> CH1</label>
         <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-2" onclick="handleUserCheckboxClick(2)"> CH2</label>
         <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-3" onclick="handleUserCheckboxClick(3)"> CH3</label>
         <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-4" onclick="handleUserCheckboxClick(4)"> CH4</label>
+        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-5" onclick="handleUserCheckboxClick(5)"> CH5</label>
+        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-6" onclick="handleUserCheckboxClick(6)"> CH6</label>
+        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-7" onclick="handleUserCheckboxClick(7)"> CH7</label>
+        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-8" onclick="handleUserCheckboxClick(8)"> CH8</label>
       </div>
 
-      <!-- Real-time Hourly Countdown Badge -->
-      <div class="timer-badge" id="timer-status">⏳ Next: --:--</div>
+      <!-- Real-time Hourly Countdown Badge (Sand Clock Icon Removed) -->
+      <div class="timer-badge" id="timer-status">Next: --:--</div>
 
       <!-- Global Action: Mute -->
       <button class="btn" onclick="muteAllCurrentPage()" style="border: 1px solid var(--border-color);">
@@ -564,7 +569,7 @@
         Page 1
       </button>
 
-      <!-- Single Layout Toggle Button (2x2 <-> 1+3) -->
+      <!-- Single Layout Toggle Button -->
       <button class="btn-layout-toggle" id="btn-single-layout-toggle" onclick="toggleLayout()">
         [ 2x2 ]
       </button>
@@ -582,7 +587,7 @@
 
       <div class="btn-action-group">
         <button class="btn-launch-fallback" id="btn-manual-popup" onclick="openThaiPBSLive(true)" style="display: none;">
-          ▶️️ Click to Open ThaiPBS Live Window
+          ▶ Click to Open ThaiPBS Live Window
         </button>
         <button class="btn-resume" onclick="closeThaiPBSAndResume()">
           ⏹ Close ThaiPBS & Resume 4-Streams
@@ -993,30 +998,34 @@
       switchPage(nextPage);
     }
 
-    /* LAYOUT TOGGLE ENGINE (v2.2.2) */
+    /* LAYOUT TOGGLE ENGINE */
     function toggleLayout() {
       const nextLayout = currentLayout === 'grid' ? 'focus' : 'grid';
       setLayout(nextLayout);
     }
 
-    /* BIDIRECTIONAL AUDIO/CUE CHECKBOX SYNC ENGINE */
+    /* BIDIRECTIONAL 8-CHANNEL CUE SYNC ENGINE (v2.3.0) */
     function syncAudioCheckboxesWithFocus(focusCh) {
-      const checkboxIndex = focusCh > 4 ? focusCh - 4 : focusCh;
-      for (let ch = 1; ch <= 4; ch++) {
+      for (let ch = 1; ch <= 8; ch++) {
         const chk = document.getElementById(`chk-audio-${ch}`);
-        if (chk) chk.checked = (ch === checkboxIndex);
+        if (chk) chk.checked = (ch === focusCh);
       }
     }
 
     function handleUserCheckboxClick(selectedCh) {
-      for (let ch = 1; ch <= 4; ch++) {
+      for (let ch = 1; ch <= 8; ch++) {
         const chk = document.getElementById(`chk-audio-${ch}`);
         if (chk && ch !== selectedCh) chk.checked = false;
       }
       document.getElementById(`chk-audio-${selectedCh}`).checked = true;
 
-      const targetCh = currentPage === 1 ? selectedCh : selectedCh + 4;
-      setFocusChannelAndUnmute(targetCh);
+      // Auto switch page according to chosen CH1..8
+      const targetPage = selectedCh <= 4 ? 1 : 2;
+      if (currentPage !== targetPage) {
+        switchPage(targetPage);
+      }
+
+      setFocusChannelAndUnmute(selectedCh);
     }
 
     /* CLICK TO FOCUS & DYNAMIC SWAP ENGINE */
@@ -1589,7 +1598,7 @@
         const formattedSecs = remSecs < 10 ? `0${remSecs}` : remSecs;
 
         const statusEl = document.getElementById('timer-status');
-        statusEl.textContent = `⏳ Next: ${formattedMins}:${formattedSecs}`;
+        statusEl.textContent = `Next: ${formattedMins}:${formattedSecs}`;
 
         if (now.getMinutes() === 0 && now.getSeconds() === 0) {
           const triggerKey = `${now.getHours()}:00:00`;
@@ -1604,24 +1613,26 @@
     function executeHourlyAutomationAt0000() {
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.2.2] Executed accurately at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.3.0] Executed accurately at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
-      if (currentPage !== 1) {
-        switchPage(1);
-      }
-
-      setLayout('focus');
-
+      // Find which CUE checkbox (1..8) is checked
       let selectedCh = 1;
-      for (let ch = 1; ch <= 4; ch++) {
+      for (let ch = 1; ch <= 8; ch++) {
         if (document.getElementById(`chk-audio-${ch}`).checked) {
           selectedCh = ch;
           break;
         }
       }
 
+      // Switch to page containing target CUE channel
+      const targetPage = selectedCh <= 4 ? 1 : 2;
+      if (currentPage !== targetPage) {
+        switchPage(targetPage);
+      }
+
+      setLayout('focus');
       setFocusChannelAndUnmute(selectedCh);
     }
 
