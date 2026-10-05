@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.1.3</title>
+  <title>HS1WFK 4 STREAMS v2.2.0</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -377,9 +377,9 @@
       object-fit: contain;
     }
 
-    /* Fixed Transparent Overlay with Pointer Events Logic */
+    /* Clickable Overlay Layer for 2x2 and 1+3 Focus Mode */
     .swap-overlay {
-      display: none;
+      display: block;
       position: absolute;
       top: 0;
       left: 0;
@@ -388,7 +388,6 @@
       background: rgba(0, 0, 0, 0.001);
       cursor: pointer;
       z-index: 25;
-      pointer-events: auto;
       transition: background 0.2s ease;
     }
 
@@ -397,7 +396,7 @@
     }
 
     .swap-overlay::after {
-      content: '↖ Click to Swap Focus';
+      content: '↖ Click to Focus';
       position: absolute;
       top: 50%;
       left: 50%;
@@ -529,7 +528,7 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.1.3</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.2.0</span>
       </div>
 
       <!-- Single System Toggle Button -->
@@ -540,10 +539,10 @@
       <!-- Audio Selector Checkboxes -->
       <div class="ch-selector-group">
         <span>AUDIO:</span>
-        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-1" checked onclick="handleSingleAudioSelect(1)"> CH1</label>
-        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-2" onclick="handleSingleAudioSelect(2)"> CH2</label>
-        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-3" onclick="handleSingleAudioSelect(3)"> CH3</label>
-        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-4" onclick="handleSingleAudioSelect(4)"> CH4</label>
+        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-1" checked onclick="handleUserCheckboxClick(1)"> CH1</label>
+        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-2" onclick="handleUserCheckboxClick(2)"> CH2</label>
+        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-3" onclick="handleUserCheckboxClick(3)"> CH3</label>
+        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-4" onclick="handleUserCheckboxClick(4)"> CH4</label>
       </div>
 
       <!-- Real-time Hourly Countdown Badge -->
@@ -609,7 +608,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-1"></div>
-              <div class="swap-overlay" id="overlay-sys1-1" onclick="handleOverlaySwap(1)"></div>
+              <div class="swap-overlay" id="overlay-sys1-1" onclick="handleCardVideoClick(1)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-1" placeholder="Paste YouTube URL or Video ID">
@@ -629,7 +628,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-2"></div>
-              <div class="swap-overlay" id="overlay-sys1-2" onclick="handleOverlaySwap(2)"></div>
+              <div class="swap-overlay" id="overlay-sys1-2" onclick="handleCardVideoClick(2)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-2" placeholder="Paste YouTube URL or Video ID">
@@ -649,7 +648,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-3"></div>
-              <div class="swap-overlay" id="overlay-sys1-3" onclick="handleOverlaySwap(3)"></div>
+              <div class="swap-overlay" id="overlay-sys1-3" onclick="handleCardVideoClick(3)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-3" placeholder="Paste YouTube URL or Video ID">
@@ -669,7 +668,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-4"></div>
-              <div class="swap-overlay" id="overlay-sys1-4" onclick="handleOverlaySwap(4)"></div>
+              <div class="swap-overlay" id="overlay-sys1-4" onclick="handleCardVideoClick(4)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-4" placeholder="Paste YouTube URL or Video ID">
@@ -694,7 +693,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-5"></div>
-              <div class="swap-overlay" id="overlay-sys1-5" onclick="handleOverlaySwap(5)"></div>
+              <div class="swap-overlay" id="overlay-sys1-5" onclick="handleCardVideoClick(5)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-5" placeholder="Paste YouTube URL or Video ID">
@@ -714,7 +713,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-6"></div>
-              <div class="swap-overlay" id="overlay-sys1-6" onclick="handleOverlaySwap(6)"></div>
+              <div class="swap-overlay" id="overlay-sys1-6" onclick="handleCardVideoClick(6)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-6" placeholder="Paste YouTube URL or Video ID">
@@ -734,7 +733,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-7"></div>
-              <div class="swap-overlay" id="overlay-sys1-7" onclick="handleOverlaySwap(7)"></div>
+              <div class="swap-overlay" id="overlay-sys1-7" onclick="handleCardVideoClick(7)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-7" placeholder="Paste YouTube URL or Video ID">
@@ -754,7 +753,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-8"></div>
-              <div class="swap-overlay" id="overlay-sys1-8" onclick="handleOverlaySwap(8)"></div>
+              <div class="swap-overlay" id="overlay-sys1-8" onclick="handleCardVideoClick(8)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-8" placeholder="Paste YouTube URL or Video ID">
@@ -781,7 +780,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-1" controls playsinline muted></video>
-              <div class="swap-overlay" id="overlay-sys2-1" onclick="handleOverlaySwap(1)"></div>
+              <div class="swap-overlay" id="overlay-sys2-1" onclick="handleCardVideoClick(1)"></div>
             </div>
           </div>
 
@@ -797,7 +796,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-2" controls playsinline muted></video>
-              <div class="swap-overlay" id="overlay-sys2-2" onclick="handleOverlaySwap(2)"></div>
+              <div class="swap-overlay" id="overlay-sys2-2" onclick="handleCardVideoClick(2)"></div>
             </div>
           </div>
 
@@ -813,7 +812,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-3" controls playsinline muted></video>
-              <div class="swap-overlay" id="overlay-sys2-3" onclick="handleOverlaySwap(3)"></div>
+              <div class="swap-overlay" id="overlay-sys2-3" onclick="handleCardVideoClick(3)"></div>
             </div>
           </div>
 
@@ -829,7 +828,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-4" controls playsinline muted></video>
-              <div class="swap-overlay" id="overlay-sys2-4" onclick="handleOverlaySwap(4)"></div>
+              <div class="swap-overlay" id="overlay-sys2-4" onclick="handleCardVideoClick(4)"></div>
             </div>
           </div>
         </div>
@@ -849,7 +848,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-5" controls playsinline muted></video>
-              <div class="swap-overlay" id="overlay-sys2-5" onclick="handleOverlaySwap(5)"></div>
+              <div class="swap-overlay" id="overlay-sys2-5" onclick="handleCardVideoClick(5)"></div>
             </div>
           </div>
 
@@ -865,7 +864,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-6" controls playsinline muted></video>
-              <div class="swap-overlay" id="overlay-sys2-6" onclick="handleOverlaySwap(6)"></div>
+              <div class="swap-overlay" id="overlay-sys2-6" onclick="handleCardVideoClick(6)"></div>
             </div>
           </div>
 
@@ -881,7 +880,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-7" controls playsinline muted></video>
-              <div class="swap-overlay" id="overlay-sys2-7" onclick="handleOverlaySwap(7)"></div>
+              <div class="swap-overlay" id="overlay-sys2-7" onclick="handleCardVideoClick(7)"></div>
             </div>
           </div>
 
@@ -897,7 +896,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-8" controls playsinline muted></video>
-              <div class="swap-overlay" id="overlay-sys2-8" onclick="handleOverlaySwap(8)"></div>
+              <div class="swap-overlay" id="overlay-sys2-8" onclick="handleCardVideoClick(8)"></div>
             </div>
           </div>
         </div>
@@ -990,31 +989,57 @@
       setLayout(currentLayout);
     }
 
-    /* PAGE TOGGLE ENGINE (v2.1.3) */
+    /* PAGE TOGGLE ENGINE */
     function togglePage() {
       const nextPage = currentPage === 1 ? 2 : 1;
       switchPage(nextPage);
     }
 
-    function handleSingleAudioSelect(selectedCh) {
+    /* BIDIRECTIONAL AUDIO CHECKBOX SYNC ENGINE */
+    function syncAudioCheckboxesWithFocus(focusCh) {
+      const checkboxIndex = focusCh > 4 ? focusCh - 4 : focusCh;
       for (let ch = 1; ch <= 4; ch++) {
         const chk = document.getElementById(`chk-audio-${ch}`);
-        if (ch !== selectedCh) chk.checked = false;
+        if (chk) chk.checked = (ch === checkboxIndex);
       }
-      document.getElementById(`chk-audio-${selectedCh}`).checked = true;
     }
 
-    /* PURE CSS GRID AREA SWAP ENGINE */
-    function handleOverlaySwap(clickedCh) {
-      if (currentLayout !== 'focus') return;
+    function handleUserCheckboxClick(selectedCh) {
+      for (let ch = 1; ch <= 4; ch++) {
+        const chk = document.getElementById(`chk-audio-${ch}`);
+        if (chk && ch !== selectedCh) chk.checked = false;
+      }
+      document.getElementById(`chk-audio-${selectedCh}`).checked = true;
 
-      const page = clickedCh <= 4 ? 1 : 2;
-      const currentFocusCh = pageFocusChannel[page];
+      // Calculate Target Channel based on Current Page
+      const targetCh = currentPage === 1 ? selectedCh : selectedCh + 4;
+      
+      // Auto-set focus layout and unmute this selected channel
+      setFocusChannelAndUnmute(targetCh);
+    }
 
-      if (clickedCh === currentFocusCh) return; 
+    /* CLICK TO FOCUS & DYNAMIC SWAP ENGINE (WORKS IN BOTH 2x2 & 1+3 MODES) */
+    function handleCardVideoClick(clickedCh) {
+      if (currentLayout === 'grid') {
+        // From 2x2 Mode -> Switch to 1+3 Focus Mode immediately
+        setLayout('focus');
+      }
+      setFocusChannelAndUnmute(clickedCh);
+    }
 
-      pageFocusChannel[page] = clickedCh;
+    function setFocusChannelAndUnmute(targetCh) {
+      const page = targetCh <= 4 ? 1 : 2;
+      pageFocusChannel[page] = targetCh;
+
       renderFocusLayoutOrder(page);
+      syncAudioCheckboxesWithFocus(targetCh);
+
+      // Unmute target channel and mute others
+      if (activeSystem === 1) {
+        toggleSolo(targetCh);
+      } else {
+        toggleSoloHLS(targetCh);
+      }
     }
 
     function renderFocusLayoutOrder(page) {
@@ -1049,7 +1074,11 @@
       const overlay1 = document.getElementById(`overlay-sys1-${ch}`);
       const overlay2 = document.getElementById(`overlay-sys2-${ch}`);
 
-      const displayVal = showOverlay ? 'block' : 'none';
+      // In 2x2 Mode all overlays show "Click to Focus", in 1+3 Focus Mode big card overlay is hidden
+      let displayVal = 'block';
+      if (currentLayout === 'focus' && !showOverlay) {
+        displayVal = 'none';
+      }
 
       if (overlay1) overlay1.style.display = displayVal;
       if (overlay2) overlay2.style.display = displayVal;
@@ -1069,8 +1098,8 @@
 
             const o1 = document.getElementById(`overlay-sys1-${ch}`);
             const o2 = document.getElementById(`overlay-sys2-${ch}`);
-            if (o1) o1.style.display = 'none';
-            if (o2) o2.style.display = 'none';
+            if (o1) o1.style.display = 'block';
+            if (o2) o2.style.display = 'block';
           }
         } else {
           renderFocusLayoutOrder(page);
@@ -1198,27 +1227,22 @@
     }
 
     function toggleSolo(ch) {
-      const isSoloActive = document.getElementById(`solo-${ch}`).classList.contains('active');
       const targetPage = ch <= 4 ? 1 : 2;
       const startCh = targetPage === 1 ? 1 : 5;
       const endCh = targetPage === 1 ? 4 : 8;
 
-      if (isSoloActive) {
-        if (players[ch] && playerReadyStatus[ch]) players[ch].mute();
-        updateSoloButtonUI(ch, false, 1);
-      } else {
-        for (let i = startCh; i <= endCh; i++) {
-          if (players[i] && playerReadyStatus[i]) {
-            if (i === ch) {
-              players[i].unMute();
-              updateSoloButtonUI(i, true, 1);
-            } else {
-              players[i].mute();
-              updateSoloButtonUI(i, false, 1);
-            }
+      for (let i = startCh; i <= endCh; i++) {
+        if (players[i] && playerReadyStatus[i]) {
+          if (i === ch) {
+            players[i].unMute();
+            updateSoloButtonUI(i, true, 1);
+          } else {
+            players[i].mute();
+            updateSoloButtonUI(i, false, 1);
           }
         }
       }
+      syncAudioCheckboxesWithFocus(ch);
     }
 
     function muteAllCurrentPageSYS1() {
@@ -1272,28 +1296,22 @@
     }
 
     function toggleSoloHLS(ch) {
-      const btn = document.getElementById(`sys2-solo-${ch}`);
-      const isSoloActive = btn.classList.contains('active');
       const targetPage = ch <= 4 ? 1 : 2;
       const startCh = targetPage === 1 ? 1 : 5;
       const endCh = targetPage === 1 ? 4 : 8;
 
-      if (isSoloActive) {
-        if (hlsVideoElements[ch]) hlsVideoElements[ch].muted = true;
-        updateSoloButtonUI(ch, false, 2);
-      } else {
-        for (let i = startCh; i <= endCh; i++) {
-          if (hlsVideoElements[i]) {
-            if (i === ch) {
-              hlsVideoElements[i].muted = false;
-              updateSoloButtonUI(i, true, 2);
-            } else {
-              hlsVideoElements[i].muted = true;
-              updateSoloButtonUI(i, false, 2);
-            }
+      for (let i = startCh; i <= endCh; i++) {
+        if (hlsVideoElements[i]) {
+          if (i === ch) {
+            hlsVideoElements[i].muted = false;
+            updateSoloButtonUI(i, true, 2);
+          } else {
+            hlsVideoElements[i].muted = true;
+            updateSoloButtonUI(i, false, 2);
           }
         }
       }
+      syncAudioCheckboxesWithFocus(ch);
     }
 
     function muteAllHLS() {
@@ -1338,7 +1356,6 @@
       document.getElementById('sys2-page-1').classList.toggle('active', pageNum === 1);
       document.getElementById('sys2-page-2').classList.toggle('active', pageNum === 2);
 
-      // Single Page Toggle Button UI Update
       const pageBtn = document.getElementById('btn-single-page-toggle');
       if (pageBtn) {
         pageBtn.textContent = pageNum === 1 ? '[ Page 1 (CH1-4) ]' : '[ Page 2 (CH5-8) ]';
@@ -1417,7 +1434,7 @@
 
       if (!thaipbsWindowRef || thaipbsWindowRef.closed || typeof thaipbsWindowRef.closed === 'undefined') {
         manualBtn.style.display = 'inline-block';
-        descText.innerHTML = `⚠️️ <b>ThaiPBS News Time!</b> Browser blocked automatic popup.<br>Click the orange button below to launch ThaiPBS Live.`;
+        descText.innerHTML = `⚠️ <b>ThaiPBS News Time!</b> Browser blocked automatic popup.<br>Click the orange button below to launch ThaiPBS Live.`;
       } else {
         manualBtn.style.display = 'none';
         descText.innerHTML = `4-Streams have been paused to minimize bandwidth & system resource usage.<br>ThaiPBS Live stream is playing in a popup window.`;
@@ -1509,7 +1526,7 @@
       }, 1000);
     }
 
-    /* REAL-TIME HOURLY AUTOMATION ENGINE */
+    /* REAL-TIME HOURLY AUTOMATION ENGINE (EXACT XX:00:00 TRIGGER) */
     let audioCtx = null;
     let timerInterval = null;
     let lastHourlyTriggerKey = null;
@@ -1549,13 +1566,9 @@
       playBeep(1200, 'sine', 0.25, 0.4);  
     }
 
-    function getNextTargetTime5930() {
+    function getNextTargetTime0000() {
       const now = new Date();
-      let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 59, 30, 0);
-
-      if (now.getTime() >= target.getTime()) {
-        target.setHours(target.getHours() + 1);
-      }
+      let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 0, 0, 0);
       return target;
     }
 
@@ -1564,7 +1577,7 @@
 
       timerInterval = setInterval(() => {
         const now = new Date();
-        const target = getNextTargetTime5930();
+        const target = getNextTargetTime0000();
 
         const diffMs = target.getTime() - now.getTime();
         const totalDiffSec = Math.floor(diffMs / 1000);
@@ -1578,54 +1591,43 @@
         const statusEl = document.getElementById('timer-status');
         statusEl.textContent = `⏳ Next: ${formattedMins}:${formattedSecs}`;
 
-        if (now.getMinutes() === 59 && now.getSeconds() === 30) {
-          const triggerKey = `${now.getHours()}:59:30`;
+        // Exact Match Trigger at xx:00:00
+        if (now.getMinutes() === 0 && now.getSeconds() === 0) {
+          const triggerKey = `${now.getHours()}:00:00`;
           if (lastHourlyTriggerKey !== triggerKey) {
             lastHourlyTriggerKey = triggerKey;
-            executeHourlyAutomationAt5930();
+            executeHourlyAutomationAt0000();
           }
         }
       }, 1000);
     }
 
-    function executeHourlyAutomationAt5930() {
+    function executeHourlyAutomationAt0000() {
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.1.3] Executed accurately at xx:59:30 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.2.0] Executed accurately at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
+      // Always switch to Page 1 on top of the hour
       if (currentPage !== 1) {
         switchPage(1);
       }
 
+      // Switch to Focus [ 1+3 ] Layout
       setLayout('focus');
 
+      // Find which AUDIO checkbox CH1..CH4 is checked
+      let selectedCh = 1;
       for (let ch = 1; ch <= 4; ch++) {
-        const isChecked = document.getElementById(`chk-audio-${ch}`).checked;
-
-        if (activeSystem === 1) {
-          if (players[ch] && playerReadyStatus[ch]) {
-            if (isChecked) {
-              players[ch].unMute();
-              updateSoloButtonUI(ch, true, 1);
-            } else {
-              players[ch].mute();
-              updateSoloButtonUI(ch, false, 1);
-            }
-          }
-        } else {
-          if (hlsVideoElements[ch]) {
-            if (isChecked) {
-              hlsVideoElements[ch].muted = false;
-              updateSoloButtonUI(ch, true, 2);
-            } else {
-              hlsVideoElements[ch].muted = true;
-              updateSoloButtonUI(ch, false, 2);
-            }
-          }
+        if (document.getElementById(`chk-audio-${ch}`).checked) {
+          selectedCh = ch;
+          break;
         }
       }
+
+      // Set that selected channel as focus main channel and unmute
+      setFocusChannelAndUnmute(selectedCh);
     }
 
     document.addEventListener('click', () => {
