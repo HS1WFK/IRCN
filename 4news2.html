@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.2.0</title>
+  <title>HS1WFK 4 STREAMS v2.2.1</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -36,34 +36,32 @@
       overflow-x: hidden;
     }
 
-    /* Top Navigation Header */
+    /* Top Navigation Header Balanced Layout for iPad & Mobile */
     header {
       background-color: var(--header-bg);
       border-bottom: 1px solid var(--border-color);
-      padding: 0.5rem 1rem;
+      padding: 0.5rem 0.75rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: nowrap;
-      gap: 0.75rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
       z-index: 100;
-      overflow-x: auto;
-      white-space: nowrap;
     }
 
     .header-left, .header-right {
       display: flex;
       align-items: center;
-      gap: 0.65rem;
-      flex-shrink: 0;
+      gap: 0.45rem;
+      flex-wrap: wrap;
     }
 
     .brand-title {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.25rem;
       color: #ffffff;
       flex-shrink: 0;
     }
@@ -77,7 +75,7 @@
     /* Single Toggle Buttons (System & Page) */
     .btn-sys-toggle, .btn-page-toggle {
       font-weight: 700;
-      padding: 0.35rem 0.75rem;
+      padding: 0.35rem 0.65rem;
       border-radius: 6px;
       cursor: pointer;
       font-size: 0.75rem;
@@ -108,25 +106,25 @@
       color: #ffffff;
     }
 
-    /* Audio Selector Checkboxes */
+    /* Audio Selector Checkboxes (Renamed to CUE) */
     .ch-selector-group {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.35rem;
       background: rgba(0, 0, 0, 0.25);
       border: 1px solid var(--border-color);
-      padding: 0.2rem 0.5rem;
+      padding: 0.2rem 0.45rem;
       border-radius: 6px;
       font-size: 0.75rem;
       font-weight: 700;
-      color: var(--text-muted);
+      color: var(--accent-gold);
       flex-shrink: 0;
     }
 
     .ch-checkbox-label {
       display: flex;
       align-items: center;
-      gap: 0.2rem;
+      gap: 0.15rem;
       cursor: pointer;
       color: var(--text-main);
       font-size: 0.75rem;
@@ -152,7 +150,7 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 0.35rem 0.65rem;
+      padding: 0.35rem 0.6rem;
       font-size: 0.75rem;
       font-weight: 600;
       border-radius: 4px;
@@ -179,10 +177,9 @@
       color: #ffffff;
       font-weight: 600;
       font-size: 0.75rem;
-      padding: 0.35rem 0.75rem;
+      padding: 0.35rem 0.65rem;
       border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.2);
-      min-width: 165px;
       text-align: center;
       white-space: nowrap;
     }
@@ -205,7 +202,7 @@
 
     main {
       flex: 1;
-      padding: 0.75rem;
+      padding: 0.5rem;
       display: flex;
       flex-direction: column;
       position: relative;
@@ -237,7 +234,7 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-template-rows: repeat(2, 1fr);
-      gap: 0.75rem;
+      gap: 0.5rem;
       height: calc(100vh - 65px);
     }
 
@@ -250,18 +247,22 @@
         "focus side1"
         "focus side2"
         "focus side3";
-      gap: 0.75rem;
+      gap: 0.5rem;
       height: calc(100vh - 65px);
     }
 
     @media (max-width: 900px) {
+      header {
+        gap: 0.4rem;
+        padding: 0.4rem;
+      }
       .grid-2x2, .grid-focus {
         display: flex;
         flex-direction: column;
         height: auto;
       }
       .screen-card {
-        height: 280px;
+        height: 260px;
       }
     }
 
@@ -444,7 +445,7 @@
       font-family: monospace;
       color: var(--accent-gold);
       background: rgba(245, 158, 11, 0.15);
-      padding: 0.3rem 0.65rem;
+      padding: 0.3rem 0.5rem;
       border-radius: 6px;
       border: 1px solid rgba(245, 158, 11, 0.3);
       display: flex;
@@ -528,17 +529,17 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.2.0</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.2.1</span>
       </div>
 
-      <!-- Single System Toggle Button -->
+      <!-- Single System Toggle Button (Renamed to System 1 / System 2) -->
       <button class="btn-sys-toggle sys1-mode" id="btn-single-sys-toggle" onclick="toggleSystem()">
-        [ System 1 (YouTube) ]
+        System 1
       </button>
 
-      <!-- Audio Selector Checkboxes -->
+      <!-- CUE Selector Checkboxes (Renamed from AUDIO to CUE) -->
       <div class="ch-selector-group">
-        <span>AUDIO:</span>
+        <span>CUE:</span>
         <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-1" checked onclick="handleUserCheckboxClick(1)"> CH1</label>
         <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-2" onclick="handleUserCheckboxClick(2)"> CH2</label>
         <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-3" onclick="handleUserCheckboxClick(3)"> CH3</label>
@@ -548,9 +549,9 @@
       <!-- Real-time Hourly Countdown Badge -->
       <div class="timer-badge" id="timer-status">⏳ Next: --:--</div>
 
-      <!-- Global Action: Mute All -->
+      <!-- Global Action: Mute (Renamed from Mute All) -->
       <button class="btn" onclick="muteAllCurrentPage()" style="border: 1px solid var(--border-color);">
-        Mute All
+        Mute
       </button>
     </div>
 
@@ -560,9 +561,9 @@
         ThaiPBS
       </button>
 
-      <!-- Single Page Toggle Button -->
+      <!-- Single Page Toggle Button (Renamed to Page 1 / Page 2) -->
       <button class="btn-page-toggle" id="btn-single-page-toggle" onclick="togglePage()">
-        [ Page 1 (CH1-4) ]
+        Page 1
       </button>
 
       <!-- Layout Switcher -->
@@ -972,11 +973,11 @@
       const toggleBtn = document.getElementById('btn-single-sys-toggle');
 
       if (activeSystem === 1) {
-        toggleBtn.textContent = '[ System 1 (YouTube) ]';
+        toggleBtn.textContent = 'System 1';
         toggleBtn.className = 'btn-sys-toggle sys1-mode';
         muteAllHLS(); 
       } else {
-        toggleBtn.textContent = '[ System 2 (Direct HLS) ]';
+        toggleBtn.textContent = 'System 2';
         toggleBtn.className = 'btn-sys-toggle sys2-mode';
         muteAllCurrentPageSYS1(); 
 
@@ -995,7 +996,7 @@
       switchPage(nextPage);
     }
 
-    /* BIDIRECTIONAL AUDIO CHECKBOX SYNC ENGINE */
+    /* BIDIRECTIONAL AUDIO/CUE CHECKBOX SYNC ENGINE */
     function syncAudioCheckboxesWithFocus(focusCh) {
       const checkboxIndex = focusCh > 4 ? focusCh - 4 : focusCh;
       for (let ch = 1; ch <= 4; ch++) {
@@ -1011,17 +1012,13 @@
       }
       document.getElementById(`chk-audio-${selectedCh}`).checked = true;
 
-      // Calculate Target Channel based on Current Page
       const targetCh = currentPage === 1 ? selectedCh : selectedCh + 4;
-      
-      // Auto-set focus layout and unmute this selected channel
       setFocusChannelAndUnmute(targetCh);
     }
 
-    /* CLICK TO FOCUS & DYNAMIC SWAP ENGINE (WORKS IN BOTH 2x2 & 1+3 MODES) */
+    /* CLICK TO FOCUS & DYNAMIC SWAP ENGINE */
     function handleCardVideoClick(clickedCh) {
       if (currentLayout === 'grid') {
-        // From 2x2 Mode -> Switch to 1+3 Focus Mode immediately
         setLayout('focus');
       }
       setFocusChannelAndUnmute(clickedCh);
@@ -1034,7 +1031,6 @@
       renderFocusLayoutOrder(page);
       syncAudioCheckboxesWithFocus(targetCh);
 
-      // Unmute target channel and mute others
       if (activeSystem === 1) {
         toggleSolo(targetCh);
       } else {
@@ -1074,7 +1070,6 @@
       const overlay1 = document.getElementById(`overlay-sys1-${ch}`);
       const overlay2 = document.getElementById(`overlay-sys2-${ch}`);
 
-      // In 2x2 Mode all overlays show "Click to Focus", in 1+3 Focus Mode big card overlay is hidden
       let displayVal = 'block';
       if (currentLayout === 'focus' && !showOverlay) {
         displayVal = 'none';
@@ -1358,7 +1353,7 @@
 
       const pageBtn = document.getElementById('btn-single-page-toggle');
       if (pageBtn) {
-        pageBtn.textContent = pageNum === 1 ? '[ Page 1 (CH1-4) ]' : '[ Page 2 (CH5-8) ]';
+        pageBtn.textContent = pageNum === 1 ? 'Page 1' : 'Page 2';
       }
 
       muteAllCurrentPage();
@@ -1591,7 +1586,6 @@
         const statusEl = document.getElementById('timer-status');
         statusEl.textContent = `⏳ Next: ${formattedMins}:${formattedSecs}`;
 
-        // Exact Match Trigger at xx:00:00
         if (now.getMinutes() === 0 && now.getSeconds() === 0) {
           const triggerKey = `${now.getHours()}:00:00`;
           if (lastHourlyTriggerKey !== triggerKey) {
@@ -1605,19 +1599,16 @@
     function executeHourlyAutomationAt0000() {
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.2.0] Executed accurately at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.2.1] Executed accurately at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
-      // Always switch to Page 1 on top of the hour
       if (currentPage !== 1) {
         switchPage(1);
       }
 
-      // Switch to Focus [ 1+3 ] Layout
       setLayout('focus');
 
-      // Find which AUDIO checkbox CH1..CH4 is checked
       let selectedCh = 1;
       for (let ch = 1; ch <= 4; ch++) {
         if (document.getElementById(`chk-audio-${ch}`).checked) {
@@ -1626,7 +1617,6 @@
         }
       }
 
-      // Set that selected channel as focus main channel and unmute
       setFocusChannelAndUnmute(selectedCh);
     }
 
