@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bangkok BMA Radar Live Monitor - v.1.1.0</title>
+    <title>Bangkok BMA Radar Live Monitor - v.2.0.5</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -29,7 +29,6 @@
             color: #f8fafc;
         }
 
-        /* Iframe Box Styles */
         .radar-box {
             position: relative;
             width: 100%;
@@ -71,11 +70,10 @@
             overflow: hidden;
         }
 
-        /* Custom Radio */
         .radar-radio input[type="radio"] { display: none; }
         .radar-radio label {
             cursor: pointer;
-            padding: 2px 6px; /* ปรับลด padding เพื่อให้ 5 ปุ่มเรียงกันพอดีบน Desktop */
+            padding: 2px 6px;
             border-radius: 4px;
             font-size: 11px;
             font-weight: 600;
@@ -105,12 +103,32 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Button hover animations */
         .launch-btn {
             transition: transform 0.1s, box-shadow 0.2s;
         }
         .launch-btn:active {
             transform: scale(0.96);
+        }
+
+        .ios-radar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .widget-iframe {
+            width: 100%;
+            height: 280px;
+            border: none;
+            background-color: #ffffff;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        /* Modal Styles */
+        #img-modal {
+            transition: opacity 0.2s ease-in-out;
         }
     </style>
 </head>
@@ -125,11 +143,11 @@
             <div>
                 <h1 class="text-xs md:text-sm font-semibold text-slate-100 flex items-center gap-2">
                     <span class="truncate max-w-[120px] sm:max-w-none">ศูนย์เรดาร์ กทม.</span>
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] md:text-xs font-mono bg-slate-800 text-slate-400 border border-slate-700 cursor-default">
-                        v.1.1.0
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] md:text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-default">
+                        v.2.0.5
                     </span>
                 </h1>
-                <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">ตรวจสอบระบบปฏิบัติการ...</p>
+                <p id="os-status-text" class="text-[10px] md:text-xs text-slate-400 hidden sm:block">กำลังเชื่อมต่อระบบ...</p>
             </div>
         </div>
 
@@ -162,138 +180,75 @@
     <!-- Main Content Area -->
     <main class="flex-1 relative overflow-hidden bg-slate-950 p-2">
         
-        <!-- ================= 1. DESKTOP LAYOUT (2 กรอบ) ================= -->
-        <div id="layout-desktop" class="hidden grid-cols-2 gap-2 h-full w-full">
+        <div id="layout-container" class="grid grid-cols-1 md:grid-cols-2 gap-2 h-full w-full">
             
-            <!-- Left: Radar Animation -->
+            <!-- Left Screen: Animation / 7 days Forecast -->
             <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
                 <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
                     <div class="flex items-center gap-2 text-sky-400">
-                        <i class="fa-solid fa-circle-play"></i>
-                        <span class="text-slate-200">ภาพเคลื่อนไหว</span>
+                        <i class="fa-solid fa-cloud-sun-rain"></i>
+                        <span class="text-slate-200">เรดาร์ / พยากรณ์</span>
                         <div class="flex items-center gap-1 ml-2">
-                            <div class="radar-radio"><input type="radio" id="d-left-nk" name="d-left" value="nk" checked onchange="changeDeskLeft('nk')"><label for="d-left-nk">NK</label></div>
-                            <div class="radar-radio"><input type="radio" id="d-left-nj" name="d-left" value="nj" onchange="changeDeskLeft('nj')"><label for="d-left-nj">NJ</label></div>
+                            <div class="radar-radio"><input type="radio" id="radio-left-nk" name="left-rad" value="nk" checked onchange="changeLeftRadar('nk')"><label for="radio-left-nk">NK</label></div>
+                            <div class="radar-radio"><input type="radio" id="radio-left-nj" name="left-rad" value="nj" onchange="changeLeftRadar('nj')"><label for="radio-left-nj">NJ</label></div>
+                            <!-- แก้ไขปุ่มเป็น 7 days -->
+                            <div class="radar-radio"><input type="radio" id="radio-left-fc" name="left-rad" value="fc" onchange="changeLeftRadar('fc')"><label for="radio-left-fc">7 days</label></div>
                         </div>
                     </div>
-                    <a id="link-desk-left" href="#" target="_blank" class="text-slate-400 hover:text-sky-300"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    <a id="link-left" href="#" target="_blank" class="text-slate-400 hover:text-sky-300"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                 </div>
-                <div id="box-desk-left" class="radar-box flex-1">
-                    <div id="loader-desk-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
+                <div id="box-left" class="radar-box flex-1 p-1">
+                    <div id="loader-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
                         <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูล...</p>
                     </div>
-                    <div class="scaler-wrapper">
-                        <div id="scaler-desk-left" class="iframe-crop">
-                            <iframe id="iframe-desk-left" class="radar-iframe" scrolling="no" onload="hideLoader('loader-desk-left')"></iframe>
-                        </div>
-                    </div>
+                    <div id="content-left" class="w-full h-full flex flex-col items-center justify-start overflow-y-auto gap-2"></div>
                 </div>
             </section>
 
-            <!-- Right: High Res + Satellite Button -->
+            <!-- Right Screen: High Res -->
             <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
                 <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-2 sm:px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
                     <div class="flex items-center gap-2 text-indigo-400 truncate">
                         <i class="fa-solid fa-crosshairs hidden lg:inline-block"></i>
-                        <span class="text-slate-200 hidden xl:inline-block">High Res Fit</span>
+                        <span class="text-slate-200 hidden xl:inline-block">High Res</span>
                         <div class="flex items-center gap-1 xl:ml-2">
-                            <!-- เพิ่ม 3 ปุ่มใหม่ (รวม 5 ปุ่ม) -->
-                            <div class="radar-radio"><input type="radio" id="d-right-bkk" name="d-right" value="bkk" checked onchange="changeDeskRight('bkk')"><label for="d-right-bkk">BKK</label></div>
-                            <div class="radar-radio"><input type="radio" id="d-right-svp" name="d-right" value="svp" onchange="changeDeskRight('svp')"><label for="d-right-svp">SVP</label></div>
-                            <div class="radar-radio"><input type="radio" id="d-right-chn" name="d-right" value="chn" onchange="changeDeskRight('chn')"><label for="d-right-chn">CHN</label></div>
-                            <div class="radar-radio"><input type="radio" id="d-right-skm" name="d-right" value="skm" onchange="changeDeskRight('skm')"><label for="d-right-skm">SKM</label></div>
-                            <div class="radar-radio"><input type="radio" id="d-right-ryg" name="d-right" value="ryg" onchange="changeDeskRight('ryg')"><label for="d-right-ryg">RYG</label></div>
+                            <div class="radar-radio"><input type="radio" id="radio-right-bkk" name="right-rad" value="bkk" checked onchange="changeRightRadar('bkk')"><label for="radio-right-bkk">BKK</label></div>
+                            <div class="radar-radio"><input type="radio" id="radio-right-svp" name="right-rad" value="svp" onchange="changeRightRadar('svp')"><label for="radio-right-svp">SVP</label></div>
+                            <div class="radar-radio"><input type="radio" id="radio-right-chn" name="right-rad" value="chn" onchange="changeRightRadar('chn')"><label for="radio-right-chn">CHN</label></div>
+                            <div class="radar-radio"><input type="radio" id="radio-right-skm" name="right-rad" value="skm" onchange="changeRightRadar('skm')"><label for="radio-right-skm">SKM</label></div>
+                            <div class="radar-radio"><input type="radio" id="radio-right-ryg" name="right-rad" value="ryg" onchange="changeRightRadar('ryg')"><label for="radio-right-ryg">RYG</label></div>
                         </div>
                     </div>
                     
                     <div class="flex items-center gap-1 sm:gap-2 shrink-0 pl-2">
-                        <!-- ปุ่มเปิดดาวเทียมแท็บใหม่ (Desktop) -->
                         <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="px-2 py-1 bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30 text-emerald-400 rounded flex items-center gap-1.5 transition-colors text-[10px] sm:text-[11px] launch-btn shadow-sm whitespace-nowrap">
                             <i class="fa-solid fa-satellite"></i>
                             <span class="font-medium hidden md:inline">ดาวเทียม</span>
                         </a>
-                        
-                        <a id="link-desk-right" href="#" target="_blank" class="text-slate-400 hover:text-indigo-300 text-[11px]"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                        <a id="link-right" href="#" target="_blank" class="text-slate-400 hover:text-indigo-300 text-[11px]"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                     </div>
                 </div>
-                <div id="box-desk-right" class="radar-box flex-1">
-                    <div id="loader-desk-right" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
-                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูล...</p>
+                <div id="box-right" class="radar-box flex-1">
+                    <div id="loader-right" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
+                        <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูลผ่าน Proxy...</p>
                     </div>
-                    <div class="scaler-wrapper">
-                        <div id="scaler-desk-right" class="iframe-crop">
-                            <iframe id="iframe-desk-right" class="radar-iframe" scrolling="no" onload="hideLoader('loader-desk-right')"></iframe>
-                        </div>
-                    </div>
+                    <div id="content-right" class="w-full h-full flex items-center justify-center"></div>
                 </div>
             </section>
         </div>
 
-        <!-- ================= 2. iOS / MOBILE LAYOUT (Launchpad Menu) ================= -->
-        <div id="layout-mobile" class="hidden w-full h-full bg-slate-900 rounded-xl border border-slate-800 flex-col items-center p-4 sm:p-6 shadow-lg overflow-y-auto relative">
-            <div class="mb-5 flex flex-col items-center shrink-0">
-                <div class="w-14 h-14 rounded-full bg-sky-500/10 flex items-center justify-center mb-3 border border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.2)]">
-                    <i class="fa-solid fa-mobile-screen text-sky-400 text-2xl"></i>
-                </div>
-                <h2 class="text-sm font-semibold text-slate-200">iOS Launchpad Mode</h2>
-                <p class="text-[11px] text-slate-400 text-center max-w-[280px] mt-1">เลือกเปิดหน้าจอที่คุณต้องการ (แท็บใหม่)</p>
-            </div>
-
-            <div class="w-full max-w-sm flex flex-col gap-4 pb-4">
-                
-                <!-- Satellite Button (เปิดแท็บใหม่) -->
-                <a href="http://www.sattmet.tmd.go.th/satmet/thai/loop/enh/anigif.mp4" target="_blank" class="launch-btn w-full bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-3.5 flex items-center justify-between hover:bg-emerald-600/30 shrink-0">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><i class="fa-solid fa-globe text-emerald-400 text-lg"></i></div>
-                        <div class="text-left">
-                            <h3 class="text-emerald-400 text-sm font-semibold">ดาวเทียม Himawari</h3>
-                            <p class="text-[10px] text-slate-400">ภาพสแกนกลุ่มเมฆล่าสุด</p>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-emerald-500/50"></i>
-                </a>
-
-                <div class="h-px w-full bg-slate-800 shrink-0"></div>
-
-                <!-- Radar Animation -->
-                <div class="shrink-0">
-                    <h3 class="text-xs font-semibold text-sky-400 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-circle-play"></i> เรดาร์เคลื่อนไหว</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <a href="https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-sky-500/50">
-                            <i class="fa-solid fa-cloud-showers-heavy text-sky-400"></i><span class="text-xs text-slate-200">หนองแขม (NK)</span>
-                        </a>
-                        <a href="https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-sky-500/50">
-                            <i class="fa-solid fa-cloud-rain text-sky-400"></i><span class="text-xs text-slate-200">หนองจอก (NJ)</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- High Res (มี 5 ปุ่ม จึงใช้ Grid 2 คอลัมน์ที่สวยงาม) -->
-                <div class="shrink-0">
-                    <h3 class="text-xs font-semibold text-indigo-400 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-crosshairs"></i> High Res Fit</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <a href="https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
-                            <i class="fa-solid fa-map-location-dot text-indigo-400"></i><span class="text-xs text-slate-200">BKK</span>
-                        </a>
-                        <a href="https://weather.tmd.go.th/svp240loop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
-                            <i class="fa-solid fa-layer-group text-indigo-400"></i><span class="text-xs text-slate-200">SVP</span>
-                        </a>
-                        <a href="https://weather.tmd.go.th/chnloop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
-                            <i class="fa-solid fa-layer-group text-indigo-400"></i><span class="text-xs text-slate-200">CHN</span>
-                        </a>
-                        <a href="https://weather.tmd.go.th/skm240loop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
-                            <i class="fa-solid fa-layer-group text-indigo-400"></i><span class="text-xs text-slate-200">SKM</span>
-                        </a>
-                        <a href="https://weather.tmd.go.th/rygloop.php" target="_blank" class="launch-btn bg-slate-800 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-1.5 hover:border-indigo-500/50">
-                            <i class="fa-solid fa-layer-group text-indigo-400"></i><span class="text-xs text-slate-200">RYG</span>
-                        </a>
-                    </div>
-                </div>
-                
-            </div>
-        </div>
-
     </main>
+
+    <!-- Modal Popup for High-Res Daily Graphic -->
+    <div id="img-modal" onclick="closeModal()" class="fixed inset-0 bg-black/90 z-50 hidden opacity-0 flex items-center justify-center p-2 sm:p-4 cursor-zoom-out">
+        <div class="relative max-w-full max-h-full flex flex-col items-center justify-center">
+            <button onclick="closeModal()" class="absolute -top-10 right-0 text-white bg-slate-800/80 hover:bg-slate-700 px-3 py-1 rounded-full text-xs flex items-center gap-1 border border-slate-600 shadow-lg">
+                <i class="fa-solid fa-xmark"></i> ปิดหน้าต่าง
+            </button>
+            <img id="modal-img" src="" class="max-h-[90vh] max-w-[95vw] object-contain rounded-lg shadow-2xl border border-slate-700">
+            <p class="text-[11px] text-slate-400 mt-2"><i class="fa-solid fa-info-circle"></i> แตะที่ใดก็ได้เพื่อปิด</p>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="h-7 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between text-[10px] md:text-[11px] text-slate-400 shrink-0">
@@ -304,23 +259,25 @@
             <span class="hidden sm:inline">อัปเดต: <span id="last-updated-time" class="text-slate-300 font-mono">-</span></span>
         </div>
         <div class="text-slate-400 flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
-            <span>กทม. & กรมอุตุฯ</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span>Cloudflare Proxy Stream Engine</span>
         </div>
     </footer>
 
     <script>
+        const WORKER_PROXY = "https://little-mountain-ab23.hs1wfk.workers.dev/?url=";
+
         const REFRESH_SECONDS = 180;
         let countdown = REFRESH_SECONDS;
         let timerId = null;
         let rightScaleUserOffset = 0;
-        let isMobileDevice = false;
+        let isIOS = false;
 
-        // อัปเดต Object URLS ให้ครอบคลุมทุกจุด
-        const URLS = {
+        const RAW_URLS = {
             anim: { 
                 nk: "https://weather.bangkok.go.th/Radar/RadarAnimationNk.aspx", 
-                nj: "https://weather.bangkok.go.th/Radar/RadarAnimation.aspx" 
+                nj: "https://weather.bangkok.go.th/Radar/RadarAnimation.aspx",
+                fc: "https://www.tmd.go.th/weatherForecast7DaysWidget?province=กรุงเทพมหานคร"
             },
             hires: { 
                 bkk: "https://weather.bangkok.go.th/Radar/RadarHighResolutionNk.aspx", 
@@ -331,96 +288,185 @@
             }
         };
 
-        let deskLeftType = 'nk';
-        let deskRightType = 'bkk';
+        let currentLeftType = 'nk';
+        let currentRightType = 'bkk';
 
-        function detectDevice() {
-            const isMob = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document) || window.innerWidth < 768;
-            document.getElementById('os-status-text').textContent = isMob ? "โหมดการแสดงผล: Mobile / iOS Launchpad" : "โหมดการแสดงผล: Desktop";
-            return isMob;
+        function detectIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+        }
+
+        // ฟังก์ชันสร้าง Dynamic Daily Graphic URL ตามวันที่ปัจจุบัน
+        function getDailyGraphicUrl() {
+            const now = new Date();
+            const day = now.getDate();
+            const monthNames = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+            const month = monthNames[now.getMonth()];
+            const year = now.getFullYear();
+            
+            return `https://www.tmd.go.th/media/forecast/daily-graphic/daily-${day}-${month}-${year}-0600.png`;
         }
 
         function executeLoad() {
             const timestamp = new Date().getTime();
             
-            if (isMobileDevice) {
-                document.getElementById('layout-desktop').style.display = 'none';
-                document.getElementById('layout-mobile').style.display = 'flex';
+            document.getElementById('link-left').href = RAW_URLS.anim[currentLeftType];
+            document.getElementById('link-right').href = RAW_URLS.hires[currentRightType];
+
+            const containerLeft = document.getElementById('content-left');
+            const containerRight = document.getElementById('content-right');
+
+            // --- ฝั่งซ้าย ---
+            if (currentLeftType === 'fc') {
+                const dailyGraphicUrl = getDailyGraphicUrl();
+                const displayImgUrl = isIOS ? WORKER_PROXY + encodeURIComponent(dailyGraphicUrl) : dailyGraphicUrl;
+
+                containerLeft.innerHTML = `
+                    <div class="w-full flex flex-col items-center gap-2 p-1">
+                        <!-- Widget บน -->
+                        <iframe src="https://www.tmd.go.th/weatherForecast7DaysWidget?province=กรุงเทพมหานคร" 
+                                class="widget-iframe shadow-md" 
+                                scrolling="no" 
+                                frameborder="0" 
+                                onload="hideLoader('loader-left')">
+                        </iframe>
+                        
+                        <!-- Daily Graphic ล่าง -->
+                        <div class="w-full relative bg-slate-950/80 rounded-lg p-2 border border-slate-800 flex flex-col items-center">
+                            <div class="w-full flex items-center justify-between mb-1.5 px-1">
+                                <span class="text-[11px] font-semibold text-sky-400 flex items-center gap-1">
+                                    <i class="fa-solid fa-image"></i> พยากรณ์อากาศประจำวัน (กรมอุตุฯ)
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-mono"><i class="fa-solid fa-magnifying-glass-plus"></i> แตะที่ภาพเพื่อขยาย</span>
+                            </div>
+                            <div class="relative w-full cursor-zoom-in group overflow-hidden rounded border border-slate-700/60 bg-slate-900" onclick="openModal('${displayImgUrl}')">
+                                <img src="${displayImgUrl}" 
+                                     class="w-full h-auto max-h-[300px] object-contain transition-transform duration-300 group-hover:scale-105" 
+                                     alt="พยากรณ์อากาศประจำวัน" 
+                                     onerror="this.onerror=null; this.src='https://www.tmd.go.th/media/forecast/daily-graphic/daily-5-october-2026-0600.png';">
+                            </div>
+                        </div>
+                    </div>`;
+            } else if (isIOS) {
+                const leftImgProxy = WORKER_PROXY + encodeURIComponent(RAW_URLS.anim[currentLeftType]) + `&t=${timestamp}`;
+                containerLeft.innerHTML = `<img src="${leftImgProxy}" class="ios-radar-img" onload="hideLoader('loader-left')" onerror="hideLoader('loader-left')">`;
             } else {
-                document.getElementById('layout-mobile').style.display = 'none';
-                document.getElementById('layout-desktop').style.display = 'grid';
                 document.getElementById('desktop-zoom-controls').style.display = 'flex';
+                const leftIframeUrl = RAW_URLS.anim[currentLeftType] + `?t=${timestamp}`;
 
-                document.getElementById('link-desk-left').href = URLS.anim[deskLeftType];
-                document.getElementById('link-desk-right').href = URLS.hires[deskRightType];
+                containerLeft.innerHTML = `
+                    <div class="scaler-wrapper">
+                        <div id="scaler-desk-left" class="iframe-crop">
+                            <iframe id="iframe-desk-left" src="${leftIframeUrl}" class="radar-iframe" scrolling="no" onload="hideLoader('loader-left')"></iframe>
+                        </div>
+                    </div>`;
+            }
 
-                document.getElementById('iframe-desk-left').src = `${URLS.anim[deskLeftType]}?t=${timestamp}`;
-                document.getElementById('iframe-desk-right').src = `${URLS.hires[deskRightType]}?t=${timestamp}`;
-                
-                applyDynamicTransforms();
+            // --- ฝั่งขวา ---
+            if (isIOS) {
+                const rightImgProxy = WORKER_PROXY + encodeURIComponent(RAW_URLS.hires[currentRightType]) + `&t=${timestamp}`;
+                containerRight.innerHTML = `<img src="${rightImgProxy}" class="ios-radar-img" onload="hideLoader('loader-right')" onerror="hideLoader('loader-right')">`;
+            } else {
+                document.getElementById('desktop-zoom-controls').style.display = 'flex';
+                const rightIframeUrl = RAW_URLS.hires[currentRightType] + `?t=${timestamp}`;
+
+                containerRight.innerHTML = `
+                    <div class="scaler-wrapper">
+                        <div id="scaler-desk-right" class="iframe-crop">
+                            <iframe id="iframe-desk-right" src="${rightIframeUrl}" class="radar-iframe" scrolling="no" onload="hideLoader('loader-right')"></iframe>
+                        </div>
+                    </div>`;
+            }
+
+            if (!isIOS) {
+                setTimeout(applyDynamicTransforms, 100);
             }
         }
 
-        // --- Iframe Transform Engine (Desktop) ---
-        function applyDynamicTransforms() {
-            if (isMobileDevice) return; 
+        // Modal Functions
+        function openModal(imgSrc) {
+            const modal = document.getElementById('img-modal');
+            const modalImg = document.getElementById('modal-img');
+            modalImg.src = imgSrc;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+            }, 10);
+        }
 
-            const boxLeft = document.getElementById('box-desk-left');
-            const boxRight = document.getElementById('box-desk-right');
+        function closeModal() {
+            const modal = document.getElementById('img-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function applyDynamicTransforms() {
+            if (isIOS) return;
+
+            const boxLeft = document.getElementById('box-left');
+            const boxRight = document.getElementById('box-right');
             const scalerLeft = document.getElementById('scaler-desk-left');
             const scalerRight = document.getElementById('scaler-desk-right');
 
-            if (!boxLeft || !boxRight || !scalerLeft || !scalerRight) return;
-
-            scalerLeft.style.width = '1000px';
-            scalerLeft.style.height = '900px';
-            const leftW = boxLeft.clientWidth;
-            const leftH = boxLeft.clientHeight;
-            let leftScale = Math.min(leftW / 920, leftH / 850) * 1.15;
-            scalerLeft.style.transform = `scale(${leftScale}) translate(0px, -90px)`;
-
-            const rightW = boxRight.clientWidth;
-            const rightH = boxRight.clientHeight;
-            let baseRightScale, rightYOffset;
-
-            // ตรรกะรองรับทั้ง bkk และ tmd sites (svp, chn, skm, ryg)
-            if (deskRightType === 'bkk') {
-                scalerRight.style.width = '1850px';
-                scalerRight.style.height = '1650px';
-                baseRightScale = Math.min(rightW / 1850, rightH / 1650);
-                rightYOffset = -120;
-            } else {
-                scalerRight.style.width = '850px';
-                scalerRight.style.height = '850px';
-                baseRightScale = Math.min(rightW / 850, rightH / 850);
-                rightYOffset = 20;
+            if (scalerLeft && boxLeft && currentLeftType !== 'fc') {
+                scalerLeft.style.width = '1000px';
+                scalerLeft.style.height = '900px';
+                const leftW = boxLeft.clientWidth;
+                const leftH = boxLeft.clientHeight;
+                let leftScale = Math.min(leftW / 920, leftH / 850) * 1.15;
+                scalerLeft.style.transform = `scale(${leftScale}) translate(0px, -90px)`;
             }
 
-            const finalRightScale = Math.max(0.15, baseRightScale + rightScaleUserOffset);
-            scalerRight.style.transform = `scale(${finalRightScale}) translate(0px, ${rightYOffset}px)`;
+            if (scalerRight && boxRight) {
+                const rightW = boxRight.clientWidth;
+                const rightH = boxRight.clientHeight;
+                let baseRightScale, rightYOffset;
+
+                if (currentRightType === 'bkk') {
+                    scalerRight.style.width = '1850px';
+                    scalerRight.style.height = '1650px';
+                    baseRightScale = Math.min(rightW / 1850, rightH / 1650);
+                    rightYOffset = -120;
+                } else {
+                    scalerRight.style.width = '850px';
+                    scalerRight.style.height = '850px';
+                    baseRightScale = Math.min(rightW / 850, rightH / 850);
+                    rightYOffset = 20;
+                }
+
+                const finalRightScale = Math.max(0.15, baseRightScale + rightScaleUserOffset);
+                scalerRight.style.transform = `scale(${finalRightScale}) translate(0px, ${rightYOffset}px)`;
+            }
         }
 
         function adjustScale(delta) { rightScaleUserOffset += delta; applyDynamicTransforms(); }
         function resetScale() { rightScaleUserOffset = 0; applyDynamicTransforms(); }
 
-        function changeDeskLeft(type) { 
-            deskLeftType = type; 
-            document.getElementById('loader-desk-left').style.display = 'flex';
+        function changeLeftRadar(type) { 
+            currentLeftType = type; 
+            showLoader('loader-left');
             executeLoad(); 
         }
-        function changeDeskRight(type) { 
-            deskRightType = type; 
+        function changeRightRadar(type) { 
+            currentRightType = type; 
             rightScaleUserOffset = 0; 
-            document.getElementById('loader-desk-right').style.display = 'flex';
+            showLoader('loader-right');
             executeLoad(); 
         }
 
-        // --- Timer and Utility ---
         function hideLoader(id) {
             const el = document.getElementById(id);
             if(el) {
                 el.style.opacity = '0';
                 setTimeout(() => el.style.display = 'none', 300);
+            }
+        }
+        function showLoader(id) {
+            const el = document.getElementById(id);
+            if(el) {
+                el.style.display = 'flex';
+                el.style.opacity = '1';
             }
         }
 
@@ -448,13 +494,8 @@
             const icon = document.getElementById('refresh-icon');
             if (icon) icon.classList.add('fa-spin');
             countdown = REFRESH_SECONDS;
-            
-            if(!isMobileDevice) {
-                document.getElementById('loader-desk-left').style.display = 'flex';
-                document.getElementById('loader-desk-right').style.display = 'flex';
-                document.getElementById('loader-desk-left').style.opacity = '1';
-                document.getElementById('loader-desk-right').style.opacity = '1';
-            }
+            showLoader('loader-left');
+            showLoader('loader-right');
             executeLoad();
             updateTimestamp();
             setTimeout(() => { if (icon) icon.classList.remove('fa-spin'); }, 800);
@@ -465,19 +506,15 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            isMobileDevice = detectDevice();
+            isIOS = detectIOS();
+            document.getElementById('os-status-text').textContent = isIOS ? "โหมด: iOS Proxy Stream Enabled" : "โหมด: Desktop Dynamic Scale Engine";
             updateTimestamp();
             updateTimerUI();
             startCountdown();
             executeLoad();
         });
 
-        window.addEventListener('resize', () => {
-            const wasMobile = isMobileDevice;
-            isMobileDevice = detectDevice();
-            if(wasMobile !== isMobileDevice) executeLoad(); 
-            else applyDynamicTransforms();
-        });
+        window.addEventListener('resize', applyDynamicTransforms);
     </script>
 </body>
 </html>
