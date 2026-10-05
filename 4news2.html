@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.1.2</title>
+  <title>HS1WFK 4 STREAMS v2.1.3</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -74,8 +74,8 @@
       color: var(--text-muted);
     }
 
-    /* Single System Toggle Button */
-    .btn-sys-toggle {
+    /* Single Toggle Buttons (System & Page) */
+    .btn-sys-toggle, .btn-page-toggle {
       font-weight: 700;
       padding: 0.35rem 0.75rem;
       border-radius: 6px;
@@ -95,6 +95,17 @@
       background-color: var(--accent-purple);
       color: #ffffff;
       border: 1px solid var(--accent-purple);
+    }
+
+    .btn-page-toggle {
+      background-color: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    .btn-page-toggle:hover {
+      background-color: var(--accent-green);
+      color: #ffffff;
     }
 
     /* Audio Selector Checkboxes */
@@ -518,7 +529,7 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.1.2</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.1.3</span>
       </div>
 
       <!-- Single System Toggle Button -->
@@ -550,11 +561,10 @@
         ThaiPBS
       </button>
 
-      <!-- Page Switcher -->
-      <div class="btn-group">
-        <button class="btn active" id="btn-page1" onclick="switchPage(1)">Page 1 (CH1-4)</button>
-        <button class="btn" id="btn-page2" onclick="switchPage(2)">Page 2 (CH5-8)</button>
-      </div>
+      <!-- Single Page Toggle Button -->
+      <button class="btn-page-toggle" id="btn-single-page-toggle" onclick="togglePage()">
+        [ Page 1 (CH1-4) ]
+      </button>
 
       <!-- Layout Switcher -->
       <div class="btn-group">
@@ -980,6 +990,12 @@
       setLayout(currentLayout);
     }
 
+    /* PAGE TOGGLE ENGINE (v2.1.3) */
+    function togglePage() {
+      const nextPage = currentPage === 1 ? 2 : 1;
+      switchPage(nextPage);
+    }
+
     function handleSingleAudioSelect(selectedCh) {
       for (let ch = 1; ch <= 4; ch++) {
         const chk = document.getElementById(`chk-audio-${ch}`);
@@ -988,7 +1004,7 @@
       document.getElementById(`chk-audio-${selectedCh}`).checked = true;
     }
 
-    /* PURE CSS GRID AREA SWAP ENGINE (NO DOM REMOUNTING - PREVENTS YOUTUBE RESET) */
+    /* PURE CSS GRID AREA SWAP ENGINE */
     function handleOverlaySwap(clickedCh) {
       if (currentLayout !== 'focus') return;
 
@@ -1016,10 +1032,8 @@
 
       const areas = ['side1', 'side2', 'side3'];
 
-      // Assign Focus Area to big screen
       setCardGridArea(focusCh, 'focus', false);
 
-      // Assign Side Areas to right small screens in ascending order
       rightChannels.forEach((ch, idx) => {
         setCardGridArea(ch, areas[idx], true);
       });
@@ -1324,8 +1338,11 @@
       document.getElementById('sys2-page-1').classList.toggle('active', pageNum === 1);
       document.getElementById('sys2-page-2').classList.toggle('active', pageNum === 2);
 
-      document.getElementById('btn-page1').classList.toggle('active', pageNum === 1);
-      document.getElementById('btn-page2').classList.toggle('active', pageNum === 2);
+      // Single Page Toggle Button UI Update
+      const pageBtn = document.getElementById('btn-single-page-toggle');
+      if (pageBtn) {
+        pageBtn.textContent = pageNum === 1 ? '[ Page 1 (CH1-4) ]' : '[ Page 2 (CH5-8) ]';
+      }
 
       muteAllCurrentPage();
       updateOverlayVisibilityAll();
@@ -1400,7 +1417,7 @@
 
       if (!thaipbsWindowRef || thaipbsWindowRef.closed || typeof thaipbsWindowRef.closed === 'undefined') {
         manualBtn.style.display = 'inline-block';
-        descText.innerHTML = `⚠️ <b>ThaiPBS News Time!</b> Browser blocked automatic popup.<br>Click the orange button below to launch ThaiPBS Live.`;
+        descText.innerHTML = `⚠️️ <b>ThaiPBS News Time!</b> Browser blocked automatic popup.<br>Click the orange button below to launch ThaiPBS Live.`;
       } else {
         manualBtn.style.display = 'none';
         descText.innerHTML = `4-Streams have been paused to minimize bandwidth & system resource usage.<br>ThaiPBS Live stream is playing in a popup window.`;
@@ -1574,7 +1591,7 @@
     function executeHourlyAutomationAt5930() {
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.1.2] Executed accurately at xx:59:30 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.1.3] Executed accurately at xx:59:30 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
