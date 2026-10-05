@@ -119,10 +119,16 @@
 
         .widget-iframe {
             width: 100%;
-            height: 100%;
+            height: 280px;
             border: none;
             background-color: #ffffff;
             border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        /* Modal Styles */
+        #img-modal {
+            transition: opacity 0.2s ease-in-out;
         }
     </style>
 </head>
@@ -176,7 +182,7 @@
         
         <div id="layout-container" class="grid grid-cols-1 md:grid-cols-2 gap-2 h-full w-full">
             
-            <!-- Left Screen: Animation / Weather Forecast Widget -->
+            <!-- Left Screen: Animation / 7 days Forecast -->
             <section class="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
                 <div class="h-9 bg-slate-800/90 border-b border-slate-700/60 px-3 flex items-center justify-between text-xs font-medium z-20 shrink-0">
                     <div class="flex items-center gap-2 text-sky-400">
@@ -185,7 +191,8 @@
                         <div class="flex items-center gap-1 ml-2">
                             <div class="radar-radio"><input type="radio" id="radio-left-nk" name="left-rad" value="nk" checked onchange="changeLeftRadar('nk')"><label for="radio-left-nk">NK</label></div>
                             <div class="radar-radio"><input type="radio" id="radio-left-nj" name="left-rad" value="nj" onchange="changeLeftRadar('nj')"><label for="radio-left-nj">NJ</label></div>
-                            <div class="radar-radio"><input type="radio" id="radio-left-fc" name="left-rad" value="fc" onchange="changeLeftRadar('fc')"><label for="radio-left-fc">FC</label></div>
+                            <!-- แก้ไขปุ่มเป็น 7 days -->
+                            <div class="radar-radio"><input type="radio" id="radio-left-fc" name="left-rad" value="fc" onchange="changeLeftRadar('fc')"><label for="radio-left-fc">7 days</label></div>
                         </div>
                     </div>
                     <a id="link-left" href="#" target="_blank" class="text-slate-400 hover:text-sky-300"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
@@ -194,7 +201,7 @@
                     <div id="loader-left" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center gap-2 transition-opacity">
                         <div class="spinner"></div><p class="text-xs text-slate-400">กำลังดึงข้อมูล...</p>
                     </div>
-                    <div id="content-left" class="w-full h-full flex items-center justify-center"></div>
+                    <div id="content-left" class="w-full h-full flex flex-col items-center justify-start overflow-y-auto gap-2"></div>
                 </div>
             </section>
 
@@ -231,6 +238,17 @@
         </div>
 
     </main>
+
+    <!-- Modal Popup for High-Res Daily Graphic -->
+    <div id="img-modal" onclick="closeModal()" class="fixed inset-0 bg-black/90 z-50 hidden opacity-0 flex items-center justify-center p-2 sm:p-4 cursor-zoom-out">
+        <div class="relative max-w-full max-h-full flex flex-col items-center justify-center">
+            <button onclick="closeModal()" class="absolute -top-10 right-0 text-white bg-slate-800/80 hover:bg-slate-700 px-3 py-1 rounded-full text-xs flex items-center gap-1 border border-slate-600 shadow-lg">
+                <i class="fa-solid fa-xmark"></i> ปิดหน้าต่าง
+            </button>
+            <img id="modal-img" src="" class="max-h-[90vh] max-w-[95vw] object-contain rounded-lg shadow-2xl border border-slate-700">
+            <p class="text-[11px] text-slate-400 mt-2"><i class="fa-solid fa-info-circle"></i> แตะที่ใดก็ได้เพื่อปิด</p>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="h-7 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between text-[10px] md:text-[11px] text-slate-400 shrink-0">
@@ -277,6 +295,17 @@
             return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
         }
 
+        // ฟังก์ชันสร้าง Dynamic Daily Graphic URL ตามวันที่ปัจจุบัน
+        function getDailyGraphicUrl() {
+            const now = new Date();
+            const day = now.getDate();
+            const monthNames = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+            const month = monthNames[now.getMonth()];
+            const year = now.getFullYear();
+            
+            return `https://www.tmd.go.th/media/forecast/daily-graphic/daily-${day}-${month}-${year}-0600.png`;
+        }
+
         function executeLoad() {
             const timestamp = new Date().getTime();
             
@@ -288,13 +317,35 @@
 
             // --- ฝั่งซ้าย ---
             if (currentLeftType === 'fc') {
+                const dailyGraphicUrl = getDailyGraphicUrl();
+                const displayImgUrl = isIOS ? WORKER_PROXY + encodeURIComponent(dailyGraphicUrl) : dailyGraphicUrl;
+
                 containerLeft.innerHTML = `
-                    <iframe src="https://www.tmd.go.th/weatherForecast7DaysWidget?province=กรุงเทพมหานคร" 
-                            class="widget-iframe" 
-                            scrolling="no" 
-                            frameborder="0" 
-                            onload="hideLoader('loader-left')">
-                    </iframe>`;
+                    <div class="w-full flex flex-col items-center gap-2 p-1">
+                        <!-- Widget บน -->
+                        <iframe src="https://www.tmd.go.th/weatherForecast7DaysWidget?province=กรุงเทพมหานคร" 
+                                class="widget-iframe shadow-md" 
+                                scrolling="no" 
+                                frameborder="0" 
+                                onload="hideLoader('loader-left')">
+                        </iframe>
+                        
+                        <!-- Daily Graphic ล่าง -->
+                        <div class="w-full relative bg-slate-950/80 rounded-lg p-2 border border-slate-800 flex flex-col items-center">
+                            <div class="w-full flex items-center justify-between mb-1.5 px-1">
+                                <span class="text-[11px] font-semibold text-sky-400 flex items-center gap-1">
+                                    <i class="fa-solid fa-image"></i> พยากรณ์อากาศประจำวัน (กรมอุตุฯ)
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-mono"><i class="fa-solid fa-magnifying-glass-plus"></i> แตะที่ภาพเพื่อขยาย</span>
+                            </div>
+                            <div class="relative w-full cursor-zoom-in group overflow-hidden rounded border border-slate-700/60 bg-slate-900" onclick="openModal('${displayImgUrl}')">
+                                <img src="${displayImgUrl}" 
+                                     class="w-full h-auto max-h-[300px] object-contain transition-transform duration-300 group-hover:scale-105" 
+                                     alt="พยากรณ์อากาศประจำวัน" 
+                                     onerror="this.onerror=null; this.src='https://www.tmd.go.th/media/forecast/daily-graphic/daily-5-october-2026-0600.png';">
+                            </div>
+                        </div>
+                    </div>`;
             } else if (isIOS) {
                 const leftImgProxy = WORKER_PROXY + encodeURIComponent(RAW_URLS.anim[currentLeftType]) + `&t=${timestamp}`;
                 containerLeft.innerHTML = `<img src="${leftImgProxy}" class="ios-radar-img" onload="hideLoader('loader-left')" onerror="hideLoader('loader-left')">`;
@@ -329,6 +380,25 @@
             if (!isIOS) {
                 setTimeout(applyDynamicTransforms, 100);
             }
+        }
+
+        // Modal Functions
+        function openModal(imgSrc) {
+            const modal = document.getElementById('img-modal');
+            const modalImg = document.getElementById('modal-img');
+            modalImg.src = imgSrc;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('img-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
         }
 
         function applyDynamicTransforms() {
@@ -437,7 +507,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             isIOS = detectIOS();
-            document.getElementById('os-status-text').textContent = isIOS ? "โหมด: iOS Image Proxy Enabled" : "โหมด: Desktop Iframe Scale";
+            document.getElementById('os-status-text').textContent = isIOS ? "โหมด: iOS Proxy Stream Enabled" : "โหมด: Desktop Dynamic Scale Engine";
             updateTimestamp();
             updateTimerUI();
             startCountdown();
