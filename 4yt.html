@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v1.4.2</title>
+  <title>HS1WFK 4 STREAMS v1.4.3</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -35,28 +35,42 @@
       overflow-x: hidden;
     }
 
-    /* Single-Row Top Navigation Bar */
+    /* Single-Row Balanced Top Navigation Bar */
     header {
       background-color: var(--header-bg);
       border-bottom: 1px solid var(--border-color);
       padding: 0.5rem 1rem;
       display: flex;
-      justify-content: flex-start;
+      justify-content: space-between;
       align-items: center;
       flex-wrap: nowrap;
-      gap: 0.75rem;
+      gap: 1rem;
       z-index: 100;
       overflow-x: auto;
       white-space: nowrap;
     }
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
     .brand-title {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 700;
       letter-spacing: 0.5px;
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.35rem;
       color: #ffffff;
       flex-shrink: 0;
     }
@@ -100,13 +114,6 @@
       height: 13px;
     }
 
-    .controls-main {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      flex-shrink: 0;
-    }
-
     .btn-group {
       display: flex;
       background-color: rgba(0, 0, 0, 0.3);
@@ -119,7 +126,7 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 0.35rem 0.7rem;
+      padding: 0.35rem 0.65rem;
       font-size: 0.75rem;
       font-weight: 600;
       border-radius: 4px;
@@ -148,7 +155,7 @@
       color: #ffffff;
       font-weight: 600;
       font-size: 0.75rem;
-      padding: 0.35rem 0.7rem;
+      padding: 0.35rem 0.75rem;
       border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.2);
       min-width: 170px;
@@ -368,7 +375,7 @@
       font-family: monospace;
       color: var(--accent-gold);
       background: rgba(245, 158, 11, 0.15);
-      padding: 0.35rem 0.65rem;
+      padding: 0.3rem 0.65rem;
       border-radius: 6px;
       border: 1px solid rgba(245, 158, 11, 0.3);
       display: flex;
@@ -464,20 +471,32 @@
 
   <!-- Single-Row Header Navigation -->
   <header>
-    <div class="brand-title">
-      HS1WFK 4 STREAMS <span class="version-text">v1.4.2</span>
+    <!-- Left Section: Title + Audio Checkboxes + Timer + Mute All -->
+    <div class="header-left">
+      <div class="brand-title">
+        HS1WFK 4 STREAMS <span class="version-text">v1.4.3</span>
+      </div>
+
+      <!-- Audio Selector Checkboxes (Radio-like behavior) -->
+      <div class="ch-selector-group">
+        <span>AUDIO:</span>
+        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-1" checked onclick="handleSingleAudioSelect(1)"> CH1</label>
+        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-2" onclick="handleSingleAudioSelect(2)"> CH2</label>
+        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-3" onclick="handleSingleAudioSelect(3)"> CH3</label>
+        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-4" onclick="handleSingleAudioSelect(4)"> CH4</label>
+      </div>
+
+      <!-- Real-time Hourly Countdown Badge -->
+      <div class="timer-badge" id="timer-status">⏳ Next: --:--</div>
+
+      <!-- Global Action: Mute All -->
+      <button class="btn" onclick="muteAllCurrentPage()" style="border: 1px solid var(--border-color);">
+        Mute All
+      </button>
     </div>
 
-    <!-- Audio Selector Checkboxes (Radio-like behavior) -->
-    <div class="ch-selector-group">
-      <span>AUDIO:</span>
-      <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-1" checked onclick="handleSingleAudioSelect(1)"> CH1</label>
-      <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-2" onclick="handleSingleAudioSelect(2)"> CH2</label>
-      <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-3" onclick="handleSingleAudioSelect(3)"> CH3</label>
-      <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-4" onclick="handleSingleAudioSelect(4)"> CH4</label>
-    </div>
-
-    <div class="controls-main">
+    <!-- Right Section: ThaiPBS + Page Switcher + Layout Switcher -->
+    <div class="header-right">
       <!-- ThaiPBS Custom Button -->
       <button class="btn btn-thaipbs" id="btn-thaipbs-live" onclick="openThaiPBSLive(true)">
         ThaiPBS
@@ -494,14 +513,6 @@
         <button class="btn active" id="btn-grid" onclick="setLayout('grid')">[ 2x2 ]</button>
         <button class="btn" id="btn-focus" onclick="setLayout('focus')">[ 1+3 ]</button>
       </div>
-
-      <!-- Real-time Hourly Countdown Badge -->
-      <div class="timer-badge" id="timer-status">⏳ Next: --:--</div>
-
-      <!-- Global Actions -->
-      <button class="btn" onclick="muteAllCurrentPage()" style="border: 1px solid var(--border-color);">
-        Mute All
-      </button>
     </div>
   </header>
 
@@ -737,7 +748,6 @@
           chk.checked = false;
         }
       }
-      // Keep selected channel checked
       document.getElementById(`chk-audio-${selectedCh}`).checked = true;
     }
 
@@ -955,7 +965,7 @@
     }
 
     /* ==========================================================================
-       THAIPBS OFFICIAL BROADCAST SCHEDULE REGISTRY & COUNTDOWN (v1.4.2)
+       THAIPBS OFFICIAL BROADCAST SCHEDULE REGISTRY & COUNTDOWN (v1.4.3)
        ========================================================================== */
 
     const THAIPBS_SCHEDULE = {
@@ -1103,7 +1113,7 @@
     }
 
     /* ==========================================================================
-       REAL-TIME HOURLY AUTOMATION ENGINE (v1.4.2)
+       REAL-TIME HOURLY AUTOMATION ENGINE (v1.4.3)
        - xx:59:30 -> Switch layout to [ 1+3 ], Beep & Unmute selected CH1-4
        ========================================================================== */
 
