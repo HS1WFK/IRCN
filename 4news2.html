@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.0.0</title>
+  <title>HS1WFK 4 STREAMS v2.1.0</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -83,24 +83,27 @@
       margin-left: 0.1rem;
     }
 
-    /* System Toggle Button Group */
-    .btn-system-toggle {
-      background-color: rgba(139, 92, 246, 0.15);
-      border: 1px solid rgba(139, 92, 246, 0.4);
-      color: #c4b5fd;
+    /* Single Toggle System Button */
+    .btn-sys-toggle {
       font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: all 0.2s ease;
+      white-space: nowrap;
     }
 
-    .btn-system-toggle.active-sys1 {
+    .btn-sys-toggle.sys1-mode {
       background-color: var(--accent-blue);
       color: #ffffff;
-      border-color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
     }
 
-    .btn-system-toggle.active-sys2 {
+    .btn-sys-toggle.sys2-mode {
       background-color: var(--accent-purple);
       color: #ffffff;
-      border-color: var(--accent-purple);
+      border: 1px solid var(--accent-purple);
     }
 
     /* Hourly Audio Selection Checkboxes Container */
@@ -251,18 +254,11 @@
       height: calc(100vh - 65px);
     }
 
-    .grid-focus .screen-card:nth-child(1) {
-      grid-row: span 3;
-    }
-
     @media (max-width: 900px) {
       .grid-2x2, .grid-focus {
         grid-template-columns: 1fr;
         grid-template-rows: auto;
         height: auto;
-      }
-      .grid-focus .screen-card:nth-child(1) {
-        grid-row: auto;
       }
       .screen-card {
         height: 280px;
@@ -293,6 +289,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 0.5rem;
+      z-index: 10;
     }
 
     .ch-tag {
@@ -367,7 +364,7 @@
       border-color: var(--accent-green);
     }
 
-    /* Video Frame Container */
+    /* Video Frame Container & Option 2 Transparent Overlay Layer */
     .video-wrapper {
       flex: 1;
       position: relative;
@@ -386,6 +383,46 @@
       object-fit: contain;
     }
 
+    /* Option 2: Transparent Clickable Overlay for Dynamic Swap in [ 1+3 ] Mode */
+    .swap-overlay {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.001);
+      cursor: pointer;
+      z-index: 20;
+      transition: background 0.2s ease;
+    }
+
+    .swap-overlay:hover {
+      background: rgba(59, 130, 246, 0.15);
+    }
+
+    .swap-overlay::after {
+      content: '↖ Click to Swap Focus';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(17, 24, 39, 0.85);
+      color: var(--accent-gold);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: 1px solid var(--accent-gold);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+
+    .swap-overlay:hover::after {
+      opacity: 1;
+    }
+
     /* Screen Footer Overlay for Manual URL Input */
     .screen-footer {
       background-color: rgba(10, 15, 25, 0.95);
@@ -394,6 +431,7 @@
       display: flex;
       align-items: center;
       gap: 0.4rem;
+      z-index: 10;
     }
 
     .url-input {
@@ -517,17 +555,16 @@
 
   <!-- Single-Row Header Navigation -->
   <header>
-    <!-- Left Section: Title + System Toggle + Audio Checkboxes + Timer + Mute All -->
+    <!-- Left Section: Title + Single Toggle System + Audio Checkboxes + Timer + Mute All -->
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.0.0</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.1.0</span>
       </div>
 
-      <!-- System Toggle Buttons -->
-      <div class="btn-group">
-        <button class="btn btn-system-toggle active-sys1" id="btn-sys-1" onclick="switchSystem(1)">[ System 1 ]</button>
-        <button class="btn btn-system-toggle" id="btn-sys-2" onclick="switchSystem(2)">[ System 2 ]</button>
-      </div>
+      <!-- Single System Toggle Button -->
+      <button class="btn-sys-toggle sys1-mode" id="btn-single-sys-toggle" onclick="toggleSystem()">
+        [ System 1 (YouTube) ]
+      </button>
 
       <!-- Audio Selector Checkboxes (Radio-like behavior) -->
       <div class="ch-selector-group">
@@ -606,6 +643,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-1"></div>
+              <div class="swap-overlay" id="overlay-sys1-1" onclick="handleOverlaySwap(1)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-1" placeholder="Paste YouTube URL or Video ID">
@@ -625,6 +663,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-2"></div>
+              <div class="swap-overlay" id="overlay-sys1-2" onclick="handleOverlaySwap(2)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-2" placeholder="Paste YouTube URL or Video ID">
@@ -644,6 +683,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-3"></div>
+              <div class="swap-overlay" id="overlay-sys1-3" onclick="handleOverlaySwap(3)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-3" placeholder="Paste YouTube URL or Video ID">
@@ -663,6 +703,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-4"></div>
+              <div class="swap-overlay" id="overlay-sys1-4" onclick="handleOverlaySwap(4)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-4" placeholder="Paste YouTube URL or Video ID">
@@ -687,6 +728,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-5"></div>
+              <div class="swap-overlay" id="overlay-sys1-5" onclick="handleOverlaySwap(5)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-5" placeholder="Paste YouTube URL or Video ID">
@@ -706,6 +748,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-6"></div>
+              <div class="swap-overlay" id="overlay-sys1-6" onclick="handleOverlaySwap(6)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-6" placeholder="Paste YouTube URL or Video ID">
@@ -725,6 +768,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-7"></div>
+              <div class="swap-overlay" id="overlay-sys1-7" onclick="handleOverlaySwap(7)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-7" placeholder="Paste YouTube URL or Video ID">
@@ -744,6 +788,7 @@
             </div>
             <div class="video-wrapper">
               <div id="player-8"></div>
+              <div class="swap-overlay" id="overlay-sys1-8" onclick="handleOverlaySwap(8)"></div>
             </div>
             <div class="screen-footer">
               <input type="text" class="url-input" id="input-8" placeholder="Paste YouTube URL or Video ID">
@@ -773,6 +818,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-1" controls playsinline muted></video>
+              <div class="swap-overlay" id="overlay-sys2-1" onclick="handleOverlaySwap(1)"></div>
             </div>
           </div>
 
@@ -788,6 +834,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-2" controls playsinline muted></video>
+              <div class="swap-overlay" id="overlay-sys2-2" onclick="handleOverlaySwap(2)"></div>
             </div>
           </div>
 
@@ -803,6 +850,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-3" controls playsinline muted></video>
+              <div class="swap-overlay" id="overlay-sys2-3" onclick="handleOverlaySwap(3)"></div>
             </div>
           </div>
 
@@ -818,6 +866,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-4" controls playsinline muted></video>
+              <div class="swap-overlay" id="overlay-sys2-4" onclick="handleOverlaySwap(4)"></div>
             </div>
           </div>
         </div>
@@ -838,6 +887,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-5" controls playsinline muted></video>
+              <div class="swap-overlay" id="overlay-sys2-5" onclick="handleOverlaySwap(5)"></div>
             </div>
           </div>
 
@@ -853,6 +903,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-6" controls playsinline muted></video>
+              <div class="swap-overlay" id="overlay-sys2-6" onclick="handleOverlaySwap(6)"></div>
             </div>
           </div>
 
@@ -868,6 +919,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-7" controls playsinline muted></video>
+              <div class="swap-overlay" id="overlay-sys2-7" onclick="handleOverlaySwap(7)"></div>
             </div>
           </div>
 
@@ -883,6 +935,7 @@
             </div>
             <div class="video-wrapper">
               <video id="hls-player-8" controls playsinline muted></video>
+              <div class="swap-overlay" id="overlay-sys2-8" onclick="handleOverlaySwap(8)"></div>
             </div>
           </div>
         </div>
@@ -898,6 +951,9 @@
     let activeSystem = 1; // 1 = YouTube API System, 2 = Direct HLS Stream System
     let currentPage = 1;  // 1 = Page 1 (CH1-4), 2 = Page 2 (CH5-8)
     let currentLayout = 'grid'; // 'grid' = 2x2, 'focus' = 1+3
+
+    // Dynamic Focus Screen Registry per Page
+    let pageFocusChannel = { 1: 1, 2: 5 }; // Default Focus Channels: Page 1 = CH1, Page 2 = CH5
 
     // Master Registry for System 1 YouTube Stations
     const STATION_REGISTRY = [
@@ -952,25 +1008,25 @@
     let thaipbsWindowRef = null;
 
     /* ==========================================================================
-       SYSTEM SWITCHING ENGINE (System 1 <-> System 2)
+       SINGLE BUTTON SYSTEM TOGGLE ENGINE
        ========================================================================== */
 
-    function switchSystem(sysNum) {
-      activeSystem = sysNum;
+    function toggleSystem() {
+      const nextSystem = activeSystem === 1 ? 2 : 1;
+      activeSystem = nextSystem;
 
-      document.getElementById('system-1-container').classList.toggle('active-system', sysNum === 1);
-      document.getElementById('system-2-container').classList.toggle('active-system', sysNum === 2);
+      document.getElementById('system-1-container').classList.toggle('active-system', activeSystem === 1);
+      document.getElementById('system-2-container').classList.toggle('active-system', activeSystem === 2);
 
-      const btn1 = document.getElementById('btn-sys-1');
-      const btn2 = document.getElementById('btn-sys-2');
+      const toggleBtn = document.getElementById('btn-single-sys-toggle');
 
-      if (sysNum === 1) {
-        btn1.className = 'btn btn-system-toggle active-sys1';
-        btn2.className = 'btn btn-system-toggle';
+      if (activeSystem === 1) {
+        toggleBtn.textContent = '[ System 1 (YouTube) ]';
+        toggleBtn.className = 'btn-sys-toggle sys1-mode';
         muteAllHLS(); // Mute System 2
       } else {
-        btn1.className = 'btn btn-system-toggle';
-        btn2.className = 'btn btn-system-toggle active-sys2';
+        toggleBtn.textContent = '[ System 2 (Direct HLS) ]';
+        toggleBtn.className = 'btn-sys-toggle sys2-mode';
         muteAllCurrentPageSYS1(); // Mute System 1
 
         if (!hlsInitialized) {
@@ -991,6 +1047,94 @@
         }
       }
       document.getElementById(`chk-audio-${selectedCh}`).checked = true;
+    }
+
+    /* ==========================================================================
+       DYNAMIC SCREEN SWAP & ORDERING ENGINE ([ 1+3 ] Focus Mode)
+       ========================================================================== */
+
+    function handleOverlaySwap(clickedCh) {
+      if (currentLayout !== 'focus') return;
+
+      const page = clickedCh <= 4 ? 1 : 2;
+      const currentFocusCh = pageFocusChannel[page];
+
+      if (clickedCh === currentFocusCh) return; // Already on focus
+
+      // Set clicked channel as new focus channel
+      pageFocusChannel[page] = clickedCh;
+
+      // Re-order screens for this page
+      renderFocusLayoutOrder(page);
+    }
+
+    function renderFocusLayoutOrder(page) {
+      if (currentLayout !== 'focus') return;
+
+      const focusCh = pageFocusChannel[page];
+      const startCh = page === 1 ? 1 : 5;
+      const endCh = page === 1 ? 4 : 8;
+
+      // Right side channels arranged in Ascending Order (น้อยไปมาก)
+      let rightChannels = [];
+      for (let ch = startCh; ch <= endCh; ch++) {
+        if (ch !== focusCh) {
+          rightChannels.push(ch);
+        }
+      }
+      rightChannels.sort((a, b) => a - b);
+
+      // Final ordered list of channel IDs for this page: [FocusChannel, Right1, Right2, Right3]
+      const orderedChannels = [focusCh, ...rightChannels];
+
+      // Update DOM elements order for both System 1 and System 2
+      const sys1Grid = document.getElementById(`sys1-grid-p${page}`);
+      const sys2Grid = document.getElementById(`sys2-grid-p${page}`);
+
+      orderedChannels.forEach((ch, index) => {
+        // System 1 Card
+        const card1 = document.getElementById(`card-${ch}`);
+        if (card1 && sys1Grid) {
+          sys1Grid.appendChild(card1);
+        }
+
+        // System 2 Card
+        const card2 = document.getElementById(`sys2-card-${ch}`);
+        if (card2 && sys2Grid) {
+          sys2Grid.appendChild(card2);
+        }
+
+        // Manage Transparent Overlay Visibility
+        const overlay1 = document.getElementById(`overlay-sys1-${ch}`);
+        const overlay2 = document.getElementById(`overlay-sys2-${ch}`);
+
+        // Position 0 = Big Focus Screen (Left) -> Hide Overlay
+        // Position 1, 2, 3 = Small Side Screens (Right) -> Show Overlay
+        const overlayDisplay = (index === 0) ? 'none' : 'block';
+
+        if (overlay1) overlay1.style.display = overlayDisplay;
+        if (overlay2) overlay2.style.display = overlayDisplay;
+      });
+    }
+
+    function updateOverlayVisibilityAll() {
+      for (let page = 1; page <= 2; page++) {
+        const startCh = page === 1 ? 1 : 5;
+        const endCh = page === 1 ? 4 : 8;
+
+        if (currentLayout === 'grid') {
+          // Hide all overlays in 2x2 mode
+          for (let ch = startCh; ch <= endCh; ch++) {
+            const o1 = document.getElementById(`overlay-sys1-${ch}`);
+            const o2 = document.getElementById(`overlay-sys2-${ch}`);
+            if (o1) o1.style.display = 'none';
+            if (o2) o2.style.display = 'none';
+          }
+        } else {
+          // Apply Focus Mode ordering & overlay rule
+          renderFocusLayoutOrder(page);
+        }
+      }
     }
 
     /* ==========================================================================
@@ -1180,7 +1324,6 @@
           videoEl.play().catch(() => {});
         });
       } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-        // Native HLS Support for Safari / iOS
         videoEl.src = streamUrl;
         videoEl.muted = true;
         videoEl.play().catch(() => {});
@@ -1275,6 +1418,7 @@
       document.getElementById('btn-page2').classList.toggle('active', pageNum === 2);
 
       muteAllCurrentPage();
+      updateOverlayVisibilityAll();
     }
 
     function setLayout(mode) {
@@ -1291,10 +1435,12 @@
 
       document.getElementById('btn-grid').classList.toggle('active', mode === 'grid');
       document.getElementById('btn-focus').classList.toggle('active', mode === 'focus');
+
+      updateOverlayVisibilityAll();
     }
 
     /* ==========================================================================
-       THAIPBS OFFICIAL BROADCAST SCHEDULE REGISTRY & COUNTDOWN (v2.0.0)
+       THAIPBS OFFICIAL BROADCAST SCHEDULE REGISTRY & COUNTDOWN (v2.1.0)
        ========================================================================== */
 
     const THAIPBS_SCHEDULE = {
@@ -1443,7 +1589,7 @@
     }
 
     /* ==========================================================================
-       REAL-TIME HOURLY AUTOMATION ENGINE (v2.0.0)
+       REAL-TIME HOURLY AUTOMATION ENGINE (v2.1.0)
        - xx:59:30 -> Switch layout to [ 1+3 ], Beep & Unmute selected CH1-4
        ========================================================================== */
 
@@ -1527,7 +1673,7 @@
     function executeHourlyAutomationAt5930() {
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.0.0] Triggered at xx:59:30 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.1.0] Triggered at xx:59:30 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
