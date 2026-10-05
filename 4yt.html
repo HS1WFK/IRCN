@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS yt v1.4.1</title>
+  <title>HS1WFK 4 STREAMS v1.4.2</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -35,41 +35,52 @@
       overflow-x: hidden;
     }
 
-    /* Top Navigation Bar */
+    /* Single-Row Top Navigation Bar */
     header {
       background-color: var(--header-bg);
       border-bottom: 1px solid var(--border-color);
-      padding: 0.75rem 1.25rem;
+      padding: 0.5rem 1rem;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       gap: 0.75rem;
       z-index: 100;
+      overflow-x: auto;
+      white-space: nowrap;
     }
 
     .brand-title {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
       letter-spacing: 0.5px;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.4rem;
       color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .version-text {
+      font-size: 0.55rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-left: 0.1rem;
     }
 
     /* Hourly Audio Selection Checkboxes Container */
     .ch-selector-group {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.4rem;
       background: rgba(0, 0, 0, 0.25);
       border: 1px solid var(--border-color);
-      padding: 0.25rem 0.6rem;
+      padding: 0.2rem 0.5rem;
       border-radius: 6px;
       font-size: 0.75rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-muted);
+      flex-shrink: 0;
     }
 
     .ch-checkbox-label {
@@ -79,6 +90,7 @@
       cursor: pointer;
       color: var(--text-main);
       font-size: 0.75rem;
+      font-weight: 600;
     }
 
     .ch-checkbox-label input[type="checkbox"] {
@@ -91,8 +103,8 @@
     .controls-main {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
+      gap: 0.6rem;
+      flex-shrink: 0;
     }
 
     .btn-group {
@@ -107,8 +119,8 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 0.4rem 0.8rem;
-      font-size: 0.8rem;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.75rem;
       font-weight: 600;
       border-radius: 4px;
       cursor: pointer;
@@ -117,6 +129,7 @@
       align-items: center;
       justify-content: center;
       gap: 0.3rem;
+      white-space: nowrap;
     }
 
     .btn:hover {
@@ -134,13 +147,14 @@
       background-color: var(--accent-thaipbs);
       color: #ffffff;
       font-weight: 600;
-      font-size: 0.8rem;
-      padding: 0.4rem 0.8rem;
+      font-size: 0.75rem;
+      padding: 0.35rem 0.7rem;
       border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.2);
-      min-width: 185px;
+      min-width: 170px;
       text-align: center;
       font-family: inherit;
+      white-space: nowrap;
     }
 
     .btn-thaipbs:hover {
@@ -187,7 +201,7 @@
       grid-template-columns: repeat(2, 1fr);
       grid-template-rows: repeat(2, 1fr);
       gap: 0.75rem;
-      height: calc(100vh - 75px);
+      height: calc(100vh - 65px);
     }
 
     .grid-focus {
@@ -195,7 +209,7 @@
       grid-template-columns: 2.8fr 1fr;
       grid-template-rows: repeat(3, 1fr);
       gap: 0.75rem;
-      height: calc(100vh - 75px);
+      height: calc(100vh - 65px);
     }
 
     .grid-focus .screen-card:nth-child(1) {
@@ -354,16 +368,17 @@
       font-family: monospace;
       color: var(--accent-gold);
       background: rgba(245, 158, 11, 0.15);
-      padding: 0.35rem 0.75rem;
+      padding: 0.35rem 0.65rem;
       border-radius: 6px;
       border: 1px solid rgba(245, 158, 11, 0.3);
       display: flex;
       align-items: center;
       gap: 0.4rem;
       font-weight: 700;
+      white-space: nowrap;
     }
 
-    /* Phase 2: ThaiPBS Standby Control Overlay */
+    /* ThaiPBS Standby Control Overlay */
     .thaipbs-mode-overlay {
       display: none;
       position: absolute;
@@ -447,19 +462,19 @@
 </head>
 <body>
 
-  <!-- Top Navigation -->
+  <!-- Single-Row Header Navigation -->
   <header>
     <div class="brand-title">
-      HS1WFK 4 STREAMS yt v1.4.1
-      
-      <!-- Audio Selector Checkboxes for Hourly xx:59:30 Trigger -->
-      <div class="ch-selector-group">
-        <span>Audio (xx:59:30):</span>
-        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-1" checked> CH1</label>
-        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-2"> CH2</label>
-        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-3"> CH3</label>
-        <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-4"> CH4</label>
-      </div>
+      HS1WFK 4 STREAMS <span class="version-text">v1.4.2</span>
+    </div>
+
+    <!-- Audio Selector Checkboxes (Radio-like behavior) -->
+    <div class="ch-selector-group">
+      <span>AUDIO:</span>
+      <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-1" checked onclick="handleSingleAudioSelect(1)"> CH1</label>
+      <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-2" onclick="handleSingleAudioSelect(2)"> CH2</label>
+      <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-3" onclick="handleSingleAudioSelect(3)"> CH3</label>
+      <label class="ch-checkbox-label"><input type="checkbox" id="chk-audio-4" onclick="handleSingleAudioSelect(4)"> CH4</label>
     </div>
 
     <div class="controls-main">
@@ -492,7 +507,7 @@
 
   <!-- Main View Area -->
   <main>
-    <!-- Phase 2: ThaiPBS Standby Control Overlay -->
+    <!-- ThaiPBS Standby Control Overlay -->
     <div class="thaipbs-mode-overlay" id="thaipbs-overlay">
       <div class="overlay-title">📺 ThaiPBS Live News Mode</div>
       <div class="overlay-desc" id="overlay-desc-text">
@@ -714,6 +729,18 @@
     let screenConfigs = JSON.parse(JSON.stringify(DEFAULT_CONFIGS));
     let thaipbsWindowRef = null;
 
+    // Single Selection Behavior for AUDIO Checkboxes (Radio-like)
+    function handleSingleAudioSelect(selectedCh) {
+      for (let ch = 1; ch <= 4; ch++) {
+        const chk = document.getElementById(`chk-audio-${ch}`);
+        if (ch !== selectedCh) {
+          chk.checked = false;
+        }
+      }
+      // Keep selected channel checked
+      document.getElementById(`chk-audio-${selectedCh}`).checked = true;
+    }
+
     // YouTube API Ready Callback
     function onYouTubeIframeAPIReady() {
       populateDropdowns();
@@ -928,19 +955,16 @@
     }
 
     /* ==========================================================================
-       PHASE 2: THAIPBS OFFICIAL BROADCAST SCHEDULE REGISTRY & COUNTDOWN (v1.4.1)
+       THAIPBS OFFICIAL BROADCAST SCHEDULE REGISTRY & COUNTDOWN (v1.4.2)
        ========================================================================== */
 
-    // ThaiPBS Official News Broadcast Schedule
     const THAIPBS_SCHEDULE = {
-      // Weekdays: Monday (1) to Friday (5)
       weekdays: [
         { start: '05:00', end: '06:59' },
         { start: '10:30', end: '11:59' },
         { start: '18:02', end: '20:29' },
         { start: '23:00', end: '23:29' }
       ],
-      // Weekend: Saturday (6) and Sunday (0)
       weekend: [
         { start: '08:30', end: '09:59' },
         { start: '12:00', end: '12:59' },
@@ -951,7 +975,6 @@
     let thaipbsScheduleInterval = null;
     let lastAutoTriggeredSlotKey = null;
 
-    // Stop all YouTube streams to save network bandwidth and system resources
     function stopAllStreamsToSaveResources() {
       for (let i = 1; i <= 8; i++) {
         if (players[i] && playerReadyStatus[i] && typeof players[i].stopVideo === 'function') {
@@ -961,7 +984,6 @@
       }
     }
 
-    // Resume all YouTube streams when exiting ThaiPBS mode
     function resumeAllStreams() {
       for (let i = 1; i <= 8; i++) {
         if (players[i] && playerReadyStatus[i] && typeof players[i].playVideo === 'function') {
@@ -971,7 +993,6 @@
       }
     }
 
-    // Open ThaiPBS Live Window
     function openThaiPBSLive(isUserClick = false) {
       stopAllStreamsToSaveResources();
       playTripleBeep();
@@ -996,7 +1017,6 @@
       document.getElementById('thaipbs-overlay').classList.add('active');
     }
 
-    // Close ThaiPBS Window & Resume 4-Streams
     function closeThaiPBSAndResume() {
       if (thaipbsWindowRef && !thaipbsWindowRef.closed) {
         thaipbsWindowRef.close();
@@ -1009,7 +1029,6 @@
       toggleSolo(1);
     }
 
-    // Helper: Convert "HH:MM" time string to today's Date object
     function parseTimeStringToDate(timeStr, baseDate = new Date()) {
       const [h, m] = timeStr.split(':').map(Number);
       const d = new Date(baseDate);
@@ -1017,20 +1036,18 @@
       return d;
     }
 
-    // Real-Time Schedule Engine: Calculates next news slot & updates ThaiPBS button countdown
     function startThaiPBSScheduleTimer() {
       if (thaipbsScheduleInterval) clearInterval(thaipbsScheduleInterval);
 
       thaipbsScheduleInterval = setInterval(() => {
         const now = new Date();
-        const dayOfWeek = now.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+        const dayOfWeek = now.getDay();
         const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
         const scheduleList = isWeekend ? THAIPBS_SCHEDULE.weekend : THAIPBS_SCHEDULE.weekdays;
 
         let activeSlot = null;
         let nextSlotStart = null;
 
-        // Check current status against today's slots
         for (const slot of scheduleList) {
           const slotStart = parseTimeStringToDate(slot.start, now);
           const slotEnd = parseTimeStringToDate(slot.end, now);
@@ -1045,7 +1062,6 @@
           }
         }
 
-        // If no more slots today, find the first slot for tomorrow
         if (!activeSlot && !nextSlotStart) {
           const tomorrow = new Date(now);
           tomorrow.setDate(tomorrow.getDate() + 1);
@@ -1059,17 +1075,14 @@
         const btnThaiPBS = document.getElementById('btn-thaipbs-live');
 
         if (activeSlot) {
-          // Currently in a news broadcast window -> Selective Blinking Text
           btnThaiPBS.innerHTML = `ThaiPBS <span class="live-blink">(Live Now!)</span>`;
 
-          // Trigger popup once when starting slot if not already open
           const slotKey = `${now.toDateString()}_${activeSlot.start}`;
           if (lastAutoTriggeredSlotKey !== slotKey) {
             lastAutoTriggeredSlotKey = slotKey;
             openThaiPBSLive(false);
           }
         } else if (nextSlotStart) {
-          // Outside news window -> Countdown to next slot
           const diffMs = nextSlotStart - now;
           const totalSecs = Math.floor(diffMs / 1000);
 
@@ -1090,7 +1103,7 @@
     }
 
     /* ==========================================================================
-       REAL-TIME HOURLY AUTOMATION ENGINE (v1.4.1)
+       REAL-TIME HOURLY AUTOMATION ENGINE (v1.4.2)
        - xx:59:30 -> Switch layout to [ 1+3 ], Beep & Unmute selected CH1-4
        ========================================================================== */
 
@@ -1098,7 +1111,6 @@
     let timerInterval = null;
     let lastHourlyTriggerKey = null;
 
-    // Web Audio API Engine for Generating Beep Sounds
     function initAudioContext() {
       if (!audioCtx) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -1134,7 +1146,6 @@
       playBeep(1200, 'sine', 0.25, 0.4);  // Beep 3 (Higher Pitch Ending)
     }
 
-    // Main Timer System: Real-Time Clock Sync & Countdown
     function startHourlyTimer() {
       if (timerInterval) clearInterval(timerInterval);
 
@@ -1143,7 +1154,6 @@
         const mins = now.getMinutes();
         const secs = now.getSeconds();
 
-        // Calculate next xx:59:30 target
         let target = new Date(now);
         if (mins > 59 || (mins === 59 && secs >= 30)) {
           target.setHours(target.getHours() + 1);
@@ -1161,11 +1171,9 @@
         const formattedMins = remMins < 10 ? `0${remMins}` : remMins;
         const formattedSecs = remSecs < 10 ? `0${remSecs}` : remSecs;
 
-        // Update Header Badge Text -> Next: MM:SS
         const statusEl = document.getElementById('timer-status');
         statusEl.textContent = `⏳ Next: ${formattedMins}:${formattedSecs}`;
 
-        // Single Unified Event Trigger at xx:59:30
         if (mins === 59 && secs === 30) {
           const triggerKey = `${now.getHours()}:59:30`;
           if (lastHourlyTriggerKey !== triggerKey) {
@@ -1176,24 +1184,19 @@
       }, 1000);
     }
 
-    // Unified Automation Action at xx:59:30
     function executeHourlyAutomationAt5930() {
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
       console.log(`[Hourly Automation] Triggered at xx:59:30 - Time: ${new Date().toLocaleTimeString()}`);
 
-      // 1. Play Alert Sound
       playTripleBeep();
 
-      // 2. Switch Page to Page 1 if currently on Page 2
       if (currentPage !== 1) {
         switchPage(1);
       }
 
-      // 3. Switch Layout to [ 1+3 ] (Focus Mode)
       setLayout('focus');
 
-      // 4. Unmute only channels (CH1-4) that have their checkbox ticked
       for (let ch = 1; ch <= 4; ch++) {
         const isChecked = document.getElementById(`chk-audio-${ch}`).checked;
         if (players[ch] && playerReadyStatus[ch]) {
@@ -1208,7 +1211,6 @@
       }
     }
 
-    // Global Listener to Wake AudioContext on First Interaction
     document.addEventListener('click', () => {
       initAudioContext();
     }, { once: true });
