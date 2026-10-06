@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini API Workbench - Fixed Model Version</title>
+    <title>Gemini API Workbench - GitHub Pages Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
@@ -50,13 +50,13 @@
                 </button>
             </div>
 
-            <!-- Model Selection (Updated to 2026 Current Active Models) -->
+            <!-- Model Selection -->
             <div class="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5">
                 <label for="modelSelect" class="text-xs text-slate-400 font-medium">Model:</label>
                 <select id="modelSelect" class="bg-transparent text-sm text-emerald-400 font-mono focus:outline-none cursor-pointer">
-                    <option value="gemini-3.8-flash" class="bg-slate-900 text-slate-200">gemini-3.8-flash (แนะนำหลัก)</option>
-                    <option value="gemini-3.5-flash" class="bg-slate-900 text-slate-200">gemini-3.5-flash</option>
-                    <option value="gemini-3.0-flash" class="bg-slate-900 text-slate-200">gemini-3.0-flash</option>
+                    <option value="gemini-2.5-flash" class="bg-slate-900 text-slate-200">gemini-2.5-flash (เสถียร/แนะนำ)</option>
+                    <option value="gemini-2.5-pro" class="bg-slate-900 text-slate-200">gemini-2.5-pro</option>
+                    <option value="gemini-1.5-flash" class="bg-slate-900 text-slate-200">gemini-1.5-flash</option>
                 </select>
             </div>
         </div>
@@ -84,7 +84,7 @@
                 </div>
             </div>
 
-            <!-- Output Container (Text Code Box Format) -->
+            <!-- Output Container -->
             <div class="flex-1 bg-slate-900/90 border border-slate-800 rounded-xl p-5 overflow-auto shadow-inner relative">
                 <pre id="mainOutput" class="text-lg leading-relaxed text-slate-100 whitespace-pre-wrap break-words selection:bg-indigo-500 selection:text-white">รอรับคำตอบจาก Gemini...</pre>
             </div>
@@ -104,7 +104,7 @@
                             📋 Copy
                         </button>
                         <button type="button" onclick="clearBox('secondaryOutput')" class="text-xs bg-slate-800 hover:bg-slate-700 text-red-400 px-2 py-1 rounded border border-slate-700">
-                            🗑️️
+                            🗑️
                         </button>
                     </div>
                 </div>
@@ -164,7 +164,7 @@
                     updateUIStatus(true, 'API Key พร้อมใช้งาน');
                 }
             } catch (e) {
-                console.warn('LocalStorage Access Warning:', e);
+                console.warn('LocalStorage Warning:', e);
             }
 
             document.getElementById('promptInput').addEventListener('keydown', (e) => {
@@ -176,29 +176,24 @@
         });
 
         function handleSaveKey() {
-            try {
-                const inputVal = document.getElementById('directApiKey').value.trim();
-                if (!inputVal) {
-                    alert('กรุณาป้อน API Key ก่อนกดบันทึกครับ');
-                    return;
-                }
-                
-                currentApiKey = inputVal;
-                try {
-                    localStorage.setItem('gemini_workbench_key', inputVal);
-                } catch (e) {
-                    console.warn('Unable to write to LocalStorage:', e);
-                }
-
-                updateUIStatus(true, 'บันทึก API Key แล้ว');
-                
-                const saveBtn = document.getElementById('saveBtn');
-                saveBtn.innerText = '✅ สำเร็จ';
-                setTimeout(() => { saveBtn.innerText = '💾 บันทึก Key'; }, 1500);
-
-            } catch (err) {
-                alert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
+            const inputVal = document.getElementById('directApiKey').value.trim();
+            if (!inputVal) {
+                alert('กรุณาป้อน API Key ก่อนกดบันทึกครับ');
+                return;
             }
+            
+            currentApiKey = inputVal;
+            try {
+                localStorage.setItem('gemini_workbench_key', inputVal);
+            } catch (e) {
+                console.warn('LocalStorage Save Error:', e);
+            }
+
+            updateUIStatus(true, 'บันทึก API Key แล้ว');
+            
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.innerText = '✅ สำเร็จ';
+            setTimeout(() => { saveBtn.innerText = '💾 บันทึก Key'; }, 1500);
         }
 
         function updateUIStatus(isReady, msg) {
@@ -220,4 +215,105 @@
         }
 
         function copyBoxContent(elementId) {
-            const text = document.getElementById
+            const text = document.getElementById(elementId).innerText;
+            if (!text || text === 'รอรับคำตอบจาก Gemini...' || text === 'พื้นที่ว่าง...') return;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('คัดลอกข้อความสำเร็จ!');
+            }).catch(() => {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+                alert('คัดลอกข้อความสำเร็จ!');
+            });
+        }
+
+        function clearBox(elementId) {
+            document.getElementById(elementId).innerText = 'พื้นที่ว่าง...';
+        }
+
+        async function requestGeminiAPI(modelName, promptText, apiKey) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: promptText }] }]
+                })
+            });
+            return response;
+        }
+
+        async function sendPrompt() {
+            const promptInput = document.getElementById('promptInput');
+            const promptText = promptInput.value.trim();
+            
+            if (!promptText) {
+                alert('กรุณาพิมพ์ข้อความสั่งการก่อนกด Send ครับ');
+                return;
+            }
+
+            if (!currentApiKey) {
+                alert('กรุณากรอก API Key ในช่องด้านบนแล้วกด "💾 บันทึก Key" ก่อนส่งคำสั่งครับ');
+                return;
+            }
+
+            const selectedModel = document.getElementById('modelSelect').value;
+            const target = document.getElementById('targetSelect').value;
+            const sendBtn = document.getElementById('sendBtn');
+
+            const targetIds = [];
+            if (target === 'main' || target === 'both') targetIds.push('mainOutput');
+            if (target === 'secondary' || target === 'both') targetIds.push('secondaryOutput');
+
+            targetIds.forEach(id => {
+                document.getElementById(id).innerText = '⏳ กำลังประมวลผลคำตอบจาก Gemini...';
+            });
+
+            sendBtn.disabled = true;
+            sendBtn.classList.add('opacity-50');
+
+            // Fallback list of models in order of priority
+            const modelList = Array.from(new Set([selectedModel, 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.5-pro']));
+            let success = false;
+            let lastErrorMessage = '';
+
+            for (const model of modelList) {
+                try {
+                    const response = await requestGeminiAPI(model, promptText, currentApiKey);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        
+                        if (replyText) {
+                            targetIds.forEach(id => {
+                                document.getElementById(id).innerText = replyText;
+                            });
+                            success = true;
+                            break; // Stop loop on success
+                        }
+                    } else {
+                        const errJson = await response.json().catch(() => ({}));
+                        lastErrorMessage = errJson.error?.message || `HTTP Error ${response.status}`;
+                    }
+                } catch (fetchErr) {
+                    lastErrorMessage = fetchErr.message;
+                }
+            }
+
+            if (!success) {
+                targetIds.forEach(id => {
+                    document.getElementById(id).innerText = `❌ [Gemini API Error]\n${lastErrorMessage}\n\nคำแนะนำ: ตรวจสอบความถูกต้องของ API Key หรือสิทธิ์การใช้งานใน Google AI Studio`;
+                });
+            }
+
+            sendBtn.disabled = false;
+            sendBtn.classList.remove('opacity-50');
+        }
+    </script>
+</body>
+</html>
