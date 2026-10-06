@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini API Workbench - Fixed Model Version</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        pre, textarea {
+            font-family: 'Sarabun', 'JetBrains Mono', monospace;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col">
+
+    <!-- TOP HEADER BAR -->
+    <header class="h-16 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+            <div id="statusDot" class="w-3.5 h-3.5 rounded-full bg-amber-500"></div>
+            <h1 class="text-xl font-bold tracking-wide text-white">Gemini API Workbench</h1>
+            <span id="statusBadge" class="text-xs font-mono bg-slate-800 text-amber-400 px-2.5 py-1 rounded border border-slate-700">รอการระบุ API Key</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Direct API Key Input -->
+            <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5">
+                <span class="text-xs text-slate-400 font-medium">🔑 Key:</span>
+                <input type="password" id="directApiKey" 
+                    class="bg-transparent text-sm text-emerald-400 font-mono w-56 focus:outline-none placeholder-slate-600"
+                    placeholder="วาง API Key (AIzaSy...)">
+                <button type="button" onclick="handleSaveKey()" id="saveBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1 rounded transition-colors font-medium">
+                    💾 บันทึก Key
+                </button>
+            </div>
+
+            <!-- Model Selection (Updated to 2026 Current Active Models) -->
+            <div class="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5">
+                <label for="modelSelect" class="text-xs text-slate-400 font-medium">Model:</label>
+                <select id="modelSelect" class="bg-transparent text-sm text-emerald-400 font-mono focus:outline-none cursor-pointer">
+                    <option value="gemini-3.8-flash" class="bg-slate-900 text-slate-200">gemini-3.8-flash (แนะนำหลัก)</option>
+                    <option value="gemini-3.5-flash" class="bg-slate-900 text-slate-200">gemini-3.5-flash</option>
+                    <option value="gemini-3.0-flash" class="bg-slate-900 text-slate-200">gemini-3.0-flash</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA (2 COLUMNS LAYOUT) -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- LEFT COLUMN: Main Response (70% Width) -->
+        <main class="w-[70%] h-full border-r border-slate-800 flex flex-col bg-slate-950 p-4 relative">
+            <div class="flex items-center justify-between mb-3 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs uppercase tracking-wider bg-indigo-950 text-indigo-300 border border-indigo-800/60 font-semibold px-2.5 py-1 rounded">
+                        Main Display (70%)
+                    </span>
+                    <span id="leftStatus" class="text-xs text-slate-400 font-mono">Status: พร้อมโต้ตอบ</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="copyBoxContent('mainOutput')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded border border-slate-700 transition-colors flex items-center gap-1">
+                        📋 Copy Text
+                    </button>
+                    <button type="button" onclick="clearBox('mainOutput')" class="text-xs bg-slate-800 hover:bg-slate-700 text-red-400 px-3 py-1.5 rounded border border-slate-700 transition-colors">
+                        🗑️ Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Output Container (Text Code Box Format) -->
+            <div class="flex-1 bg-slate-900/90 border border-slate-800 rounded-xl p-5 overflow-auto shadow-inner relative">
+                <pre id="mainOutput" class="text-lg leading-relaxed text-slate-100 whitespace-pre-wrap break-words selection:bg-indigo-500 selection:text-white">รอรับคำตอบจาก Gemini...</pre>
+            </div>
+        </main>
+
+        <!-- RIGHT COLUMN (30% Width, Split Top 70% / Bottom 30%) -->
+        <aside class="w-[30%] h-full flex flex-col bg-slate-900/60 p-4 gap-4">
+            
+            <!-- RIGHT TOP: Secondary Output (70% Height) -->
+            <section class="h-[70%] flex flex-col bg-slate-950 border border-slate-800 rounded-xl p-3 relative">
+                <div class="flex items-center justify-between mb-2 shrink-0">
+                    <span class="text-xs uppercase tracking-wider bg-amber-950 text-amber-300 border border-amber-800/60 font-semibold px-2 py-0.5 rounded">
+                        Secondary Output (70%)
+                    </span>
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="copyBoxContent('secondaryOutput')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700">
+                            📋 Copy
+                        </button>
+                        <button type="button" onclick="clearBox('secondaryOutput')" class="text-xs bg-slate-800 hover:bg-slate-700 text-red-400 px-2 py-1 rounded border border-slate-700">
+                            🗑️️
+                        </button>
+                    </div>
+                </div>
+                <div class="flex-1 bg-slate-900/90 border border-slate-800 rounded-lg p-3 overflow-auto">
+                    <pre id="secondaryOutput" class="text-base leading-relaxed text-slate-200 whitespace-pre-wrap break-words">รอรับคำตอบตัวเลือก/อ้างอิง...</pre>
+                </div>
+            </section>
+
+            <!-- RIGHT BOTTOM: Prompt Input Area (30% Height) -->
+            <section class="h-[30%] flex flex-col bg-slate-950 border border-slate-800 rounded-xl p-3 gap-2">
+                <div class="flex items-center justify-between shrink-0">
+                    <label for="promptInput" class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Prompt Input
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <label for="targetSelect" class="text-xs text-slate-400">Target:</label>
+                        <select id="targetSelect" class="bg-slate-800 text-xs text-indigo-300 border border-slate-700 rounded px-2 py-1 focus:outline-none">
+                            <option value="main">Main (Left)</option>
+                            <option value="secondary">Secondary (Right)</option>
+                            <option value="both">Both</option>
+                        </select>
+                    </div>
+                </div>
+
+                <textarea id="promptInput" 
+                    class="flex-1 w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-base text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none font-sans"
+                    placeholder="พิมพ์คำสั่งทดสอบที่นี่... (กด Ctrl+Enter เพื่อส่ง)"></textarea>
+
+                <div class="flex items-center justify-between shrink-0">
+                    <div class="flex gap-1.5">
+                        <button type="button" onclick="setSamplePrompt('สวัสดีครับ กรุณาแนะนำตัวและทดสอบระบบ')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700">
+                            💬 ทักทาย
+                        </button>
+                        <button type="button" onclick="setSamplePrompt('สรุปหลักการใช้ Context Caching สั้นๆ')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700">
+                            🧠 ทดสอบ
+                        </button>
+                    </div>
+                    <button type="button" onclick="sendPrompt()" id="sendBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-5 py-1.5 rounded-lg transition-all flex items-center gap-1 shadow-md">
+                        <span>Send</span> 🚀
+                    </button>
+                </div>
+            </section>
+
+        </aside>
+    </div>
+
+    <!-- JAVASCRIPT ENGINE -->
+    <script>
+        let currentApiKey = '';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const savedKey = localStorage.getItem('gemini_workbench_key');
+                if (savedKey) {
+                    currentApiKey = savedKey;
+                    document.getElementById('directApiKey').value = savedKey;
+                    updateUIStatus(true, 'API Key พร้อมใช้งาน');
+                }
+            } catch (e) {
+                console.warn('LocalStorage Access Warning:', e);
+            }
+
+            document.getElementById('promptInput').addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    sendPrompt();
+                }
+            });
+        });
+
+        function handleSaveKey() {
+            try {
+                const inputVal = document.getElementById('directApiKey').value.trim();
+                if (!inputVal) {
+                    alert('กรุณาป้อน API Key ก่อนกดบันทึกครับ');
+                    return;
+                }
+                
+                currentApiKey = inputVal;
+                try {
+                    localStorage.setItem('gemini_workbench_key', inputVal);
+                } catch (e) {
+                    console.warn('Unable to write to LocalStorage:', e);
+                }
+
+                updateUIStatus(true, 'บันทึก API Key แล้ว');
+                
+                const saveBtn = document.getElementById('saveBtn');
+                saveBtn.innerText = '✅ สำเร็จ';
+                setTimeout(() => { saveBtn.innerText = '💾 บันทึก Key'; }, 1500);
+
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
+            }
+        }
+
+        function updateUIStatus(isReady, msg) {
+            const dot = document.getElementById('statusDot');
+            const badge = document.getElementById('statusBadge');
+            if (isReady) {
+                dot.className = 'w-3.5 h-3.5 rounded-full bg-emerald-500 animate-pulse';
+                badge.className = 'text-xs font-mono bg-slate-800 text-emerald-400 px-2.5 py-1 rounded border border-slate-700';
+                badge.innerText = msg || 'พร้อมใช้งาน';
+            } else {
+                dot.className = 'w-3.5 h-3.5 rounded-full bg-amber-500';
+                badge.className = 'text-xs font-mono bg-slate-800 text-amber-400 px-2.5 py-1 rounded border border-slate-700';
+                badge.innerText = msg || 'รอการระบุ API Key';
+            }
+        }
+
+        function setSamplePrompt(text) {
+            document.getElementById('promptInput').value = text;
+        }
+
+        function copyBoxContent(elementId) {
+            const text = document.getElementById
