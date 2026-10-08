@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.6.0</title>
+  <title>HS1WFK 4 STREAMS v2.7.0</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -384,7 +384,6 @@
       background: rgba(255, 255, 255, 0.15);
     }
 
-    /* ปุ่ม [Audio] สีฟ้าสด ตัวหนังสือดำเมื่อ ON */
     .action-btn.audio-btn.active {
       background-color: var(--accent-cyan);
       color: #000000;
@@ -486,6 +485,19 @@
       white-space: nowrap;
     }
 
+    /* SYSTEM 3 FULLSCREEN CLEAN-UP STYLES */
+    :fullscreen .screen-card, :-webkit-full-screen .screen-card {
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      background: #000 !important;
+    }
+
+    :fullscreen .screen-header, :-webkit-full-screen .screen-header,
+    :fullscreen .screen-footer, :-webkit-full-screen .screen-footer {
+      display: none !important;
+    }
+
     .thaipbs-mode-overlay {
       display: none;
       position: absolute;
@@ -561,7 +573,7 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.6.0</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.7.0</span>
       </div>
 
       <!-- Triple System Toggle Button -->
@@ -1034,13 +1046,13 @@
     let sys3FullscreenChannel = null;
     let thaipbsWindowRef = null;
 
-    /* TRIPLE SYSTEM TOGGLE ENGINE */
+    /* TRIPLE SYSTEM TOGGLE ENGINE (3 -> 1 -> 2 -> 3) */
     function toggleSystem() {
       if (activeSystem === 3) {
         activeSystem = 1;
       } else if (activeSystem === 1) {
         activeSystem = 2;
-      } else {
+      } else if (activeSystem === 2) {
         activeSystem = 3;
       }
 
@@ -1120,7 +1132,7 @@
       setLayout(nextLayout);
     }
 
-    /* SYSTEM 3 ENGINE WITH FULLSCREEN AUTO-UNMUTE/MUTE */
+    /* SYSTEM 3 ENGINE WITH CLEAN FULLSCREEN AUTO-UNMUTE/MUTE */
     function initSys3Players() {
       populateDropdownsSys3();
       for (let ch = 1; ch <= 2; ch++) {
@@ -1180,7 +1192,7 @@
       }
     }
 
-    // Event Listener ตรวจจับการออกจาก Fullscreen (รวมถึงการกด Esc)
+    // Event Listener ตรวจจับการออกจาก Fullscreen
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
 
@@ -1437,7 +1449,6 @@
       syncAudioCheckboxesWithFocus(targetCh);
 
       if (activeSystem === 1) {
-        // Mute ช่องอื่นในหน้าปัจจุบันแล้วเปิดเสียงเฉพาะช่องที่ Focus
         const startCh = page === 1 ? 1 : 5;
         const endCh = page === 1 ? 4 : 8;
         for (let i = startCh; i <= endCh; i++) {
@@ -2034,7 +2045,7 @@
       if (activeSystem === 3) return; 
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.6.0] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.7.0] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
