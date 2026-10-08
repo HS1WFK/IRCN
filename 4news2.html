@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.5.0</title>
+  <title>HS1WFK 4 STREAMS v2.6.0</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -17,6 +17,7 @@
       --accent-gold: #f59e0b;
       --accent-purple: #8b5cf6;
       --accent-teal: #14b8a6;
+      --accent-cyan: #06b6d4; /* สีฟ้าสดสำหรับปุ่ม Audio ON */
       --accent-thaipbs: #f97316;
       --header-bg: #161e2e;
     }
@@ -305,9 +306,9 @@
       will-change: transform;
     }
 
-    .screen-card.solo-active {
-      border-color: var(--accent-green);
-      box-shadow: 0 0 0 1px var(--accent-green);
+    .screen-card.audio-active {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 1px var(--accent-cyan);
     }
 
     .screen-header {
@@ -383,10 +384,12 @@
       background: rgba(255, 255, 255, 0.15);
     }
 
-    .action-btn.solo-btn.active {
-      background-color: var(--accent-green);
-      color: white;
-      border-color: var(--accent-green);
+    /* ปุ่ม [Audio] สีฟ้าสด ตัวหนังสือดำเมื่อ ON */
+    .action-btn.audio-btn.active {
+      background-color: var(--accent-cyan);
+      color: #000000;
+      font-weight: 800;
+      border-color: var(--accent-cyan);
     }
 
     .video-wrapper {
@@ -444,7 +447,7 @@
     }
 
     .grid-vertical-2ch .swap-overlay::after {
-      content: '⤢ Click to Native Fullscreen / Restore';
+      content: '⤢ Click to Fullscreen & Unmute';
     }
 
     .screen-footer {
@@ -558,7 +561,7 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.5.0</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.6.0</span>
       </div>
 
       <!-- Triple System Toggle Button -->
@@ -582,9 +585,9 @@
       <!-- Real-time Hourly Countdown Badge -->
       <div class="timer-badge" id="timer-status" style="display: none;">Next: --:--</div>
 
-      <!-- Global Action: Mute -->
-      <button class="btn" onclick="muteAllCurrentPage()" style="border: 1px solid var(--border-color);">
-        Mute
+      <!-- Global Action: [Mute All] -->
+      <button class="btn" onclick="muteAllChannelsGlobal()" style="border: 1px solid var(--border-color);">
+        [Mute All]
       </button>
     </div>
 
@@ -633,7 +636,7 @@
           <div class="screen-header">
             <select class="station-select" id="sys3-select-1" onchange="onSelectStationSys3(1)"></select>
             <div class="screen-actions">
-              <button class="action-btn solo-btn" id="sys3-solo-1" onclick="toggleSoloSys3(1)">Solo Audio</button>
+              <button class="action-btn audio-btn" id="sys3-audio-1" onclick="toggleAudioSys3(1)">[Audio]</button>
               <button class="action-btn" onclick="reloadScreenSys3(1)">Reload</button>
             </div>
           </div>
@@ -652,7 +655,7 @@
           <div class="screen-header">
             <select class="station-select" id="sys3-select-2" onchange="onSelectStationSys3(2)"></select>
             <div class="screen-actions">
-              <button class="action-btn solo-btn" id="sys3-solo-2" onclick="toggleSoloSys3(2)">Solo Audio</button>
+              <button class="action-btn audio-btn" id="sys3-audio-2" onclick="toggleAudioSys3(2)">[Audio]</button>
               <button class="action-btn" onclick="reloadScreenSys3(2)">Reload</button>
             </div>
           </div>
@@ -677,7 +680,7 @@
               <span class="ch-tag">CH 1</span>
               <select class="station-select" id="select-1" onchange="onSelectStation(1)"></select>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="solo-1" onclick="toggleSolo(1)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="audio-1" onclick="toggleAudioSys1(1)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreen(1)">Reload</button>
               </div>
             </div>
@@ -696,7 +699,7 @@
               <span class="ch-tag">CH 2</span>
               <select class="station-select" id="select-2" onchange="onSelectStation(2)"></select>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="solo-2" onclick="toggleSolo(2)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="audio-2" onclick="toggleAudioSys1(2)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreen(2)">Reload</button>
               </div>
             </div>
@@ -715,7 +718,7 @@
               <span class="ch-tag">CH 3</span>
               <select class="station-select" id="select-3" onchange="onSelectStation(3)"></select>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="solo-3" onclick="toggleSolo(3)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="audio-3" onclick="toggleAudioSys1(3)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreen(3)">Reload</button>
               </div>
             </div>
@@ -734,7 +737,7 @@
               <span class="ch-tag">CH 4</span>
               <select class="station-select" id="select-4" onchange="onSelectStation(4)"></select>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="solo-4" onclick="toggleSolo(4)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="audio-4" onclick="toggleAudioSys1(4)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreen(4)">Reload</button>
               </div>
             </div>
@@ -758,7 +761,7 @@
               <span class="ch-tag">CH 5</span>
               <select class="station-select" id="select-5" onchange="onSelectStation(5)"></select>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="solo-5" onclick="toggleSolo(5)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="audio-5" onclick="toggleAudioSys1(5)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreen(5)">Reload</button>
               </div>
             </div>
@@ -777,7 +780,7 @@
               <span class="ch-tag">CH 6</span>
               <select class="station-select" id="select-6" onchange="onSelectStation(6)"></select>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="solo-6" onclick="toggleSolo(6)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="audio-6" onclick="toggleAudioSys1(6)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreen(6)">Reload</button>
               </div>
             </div>
@@ -796,7 +799,7 @@
               <span class="ch-tag">CH 7</span>
               <select class="station-select" id="select-7" onchange="onSelectStation(7)"></select>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="solo-7" onclick="toggleSolo(7)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="audio-7" onclick="toggleAudioSys1(7)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreen(7)">Reload</button>
               </div>
             </div>
@@ -815,7 +818,7 @@
               <span class="ch-tag">CH 8</span>
               <select class="station-select" id="select-8" onchange="onSelectStation(8)"></select>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="solo-8" onclick="toggleSolo(8)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="audio-8" onclick="toggleAudioSys1(8)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreen(8)">Reload</button>
               </div>
             </div>
@@ -841,7 +844,7 @@
               <span class="ch-tag">CH 1</span>
               <span class="station-name-display">Al Jazeera English</span>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="sys2-solo-1" onclick="toggleSoloHLS(1)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="sys2-audio-1" onclick="toggleAudioHLS(1)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreenHLS(1)">Reload</button>
               </div>
             </div>
@@ -856,7 +859,7 @@
               <span class="ch-tag">CH 2</span>
               <span class="station-name-display">BBC News HD</span>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="sys2-solo-2" onclick="toggleSoloHLS(2)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="sys2-audio-2" onclick="toggleAudioHLS(2)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreenHLS(2)">Reload</button>
               </div>
             </div>
@@ -871,7 +874,7 @@
               <span class="ch-tag">CH 3</span>
               <span class="station-name-display">CGTN Live</span>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="sys2-solo-3" onclick="toggleSoloHLS(3)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="sys2-audio-3" onclick="toggleAudioHLS(3)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreenHLS(3)">Reload</button>
               </div>
             </div>
@@ -886,7 +889,7 @@
               <span class="ch-tag">CH 4</span>
               <span class="station-name-display">CNA Asia</span>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="sys2-solo-4" onclick="toggleSoloHLS(4)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="sys2-audio-4" onclick="toggleAudioHLS(4)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreenHLS(4)">Reload</button>
               </div>
             </div>
@@ -905,7 +908,7 @@
               <span class="ch-tag">CH 5</span>
               <span class="station-name-display">DW English</span>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="sys2-solo-5" onclick="toggleSoloHLS(5)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="sys2-audio-5" onclick="toggleAudioHLS(5)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreenHLS(5)">Reload</button>
               </div>
             </div>
@@ -920,7 +923,7 @@
               <span class="ch-tag">CH 6</span>
               <span class="station-name-display">NHK World Japan</span>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="sys2-solo-6" onclick="toggleSoloHLS(6)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="sys2-audio-6" onclick="toggleAudioHLS(6)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreenHLS(6)">Reload</button>
               </div>
             </div>
@@ -935,7 +938,7 @@
               <span class="ch-tag">CH 7</span>
               <span class="station-name-display">France 24 English</span>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="sys2-solo-7" onclick="toggleSoloHLS(7)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="sys2-audio-7" onclick="toggleAudioHLS(7)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreenHLS(7)">Reload</button>
               </div>
             </div>
@@ -950,7 +953,7 @@
               <span class="ch-tag">CH 8</span>
               <span class="station-name-display">TPTV (วิทยุและโทรทัศน์รัฐสภา)</span>
               <div class="screen-actions">
-                <button class="action-btn solo-btn" id="sys2-solo-8" onclick="toggleSoloHLS(8)">Solo Audio</button>
+                <button class="action-btn audio-btn" id="sys2-audio-8" onclick="toggleAudioHLS(8)">[Audio]</button>
                 <button class="action-btn" onclick="reloadScreenHLS(8)">Reload</button>
               </div>
             </div>
@@ -1028,6 +1031,7 @@
     let hlsVideoElements = {};   
     let hlsInitialized = false;
 
+    let sys3FullscreenChannel = null;
     let thaipbsWindowRef = null;
 
     /* TRIPLE SYSTEM TOGGLE ENGINE */
@@ -1061,9 +1065,8 @@
         btnPage.style.display = 'none';
         btnLayout.style.display = 'none';
 
-        muteAllCurrentPageSYS1();
+        muteAllChannelsGlobal();
         pauseBackgroundYouTubeSys1();
-        muteAllHLS();
         pauseBackgroundHLSVideo();
         resumeSys3Videos();
       } else if (activeSystem === 1) {
@@ -1076,9 +1079,8 @@
         btnPage.style.display = 'inline-block';
         btnLayout.style.display = 'inline-block';
 
-        muteSys3All();
+        muteAllChannelsGlobal();
         pauseSys3Videos();
-        muteAllHLS();
         pauseBackgroundHLSVideo();
         syncYouTubeSys1PlaybackState();
       } else {
@@ -1091,9 +1093,8 @@
         btnPage.style.display = 'inline-block';
         btnLayout.style.display = 'inline-block';
 
-        muteSys3All();
+        muteAllChannelsGlobal();
         pauseSys3Videos();
-        muteAllCurrentPageSYS1();
         pauseBackgroundYouTubeSys1();
 
         if (!hlsInitialized) {
@@ -1119,7 +1120,7 @@
       setLayout(nextLayout);
     }
 
-    /* SYSTEM 3 ENGINE WITH NATIVE FULLSCREEN API */
+    /* SYSTEM 3 ENGINE WITH FULLSCREEN AUTO-UNMUTE/MUTE */
     function initSys3Players() {
       populateDropdownsSys3();
       for (let ch = 1; ch <= 2; ch++) {
@@ -1157,6 +1158,7 @@
       if (!card) return;
 
       if (!document.fullscreenElement) {
+        sys3FullscreenChannel = ch;
         if (card.requestFullscreen) {
           card.requestFullscreen();
         } else if (card.webkitRequestFullscreen) {
@@ -1164,11 +1166,33 @@
         } else if (card.msRequestFullscreen) {
           card.msRequestFullscreen();
         }
+        // Auto Unmute เมื่อเข้าสู่ Fullscreen
+        if (sys3Players[ch] && sys3ReadyStatus[ch]) {
+          sys3Players[ch].unMute();
+          updateAudioButtonUI(ch, true, 3);
+        }
       } else {
         if (document.exitFullscreen) {
           document.exitFullscreen();
         } else if (document.webkitExitFullscreen) {
           document.webkitExitFullscreen();
+        }
+      }
+    }
+
+    // Event Listener ตรวจจับการออกจาก Fullscreen (รวมถึงการกด Esc)
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    function handleFullscreenChange() {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (sys3FullscreenChannel !== null) {
+          const ch = sys3FullscreenChannel;
+          if (sys3Players[ch] && sys3ReadyStatus[ch]) {
+            sys3Players[ch].mute();
+            updateAudioButtonUI(ch, false, 3);
+          }
+          sys3FullscreenChannel = null;
         }
       }
     }
@@ -1245,7 +1269,7 @@
       if (sys3Players[ch] && typeof sys3Players[ch].loadVideoById === 'function') {
         sys3Players[ch].loadVideoById(videoId);
         sys3Players[ch].mute();
-        updateSoloSys3UI(ch, false);
+        updateAudioButtonUI(ch, false, 3);
       }
     }
 
@@ -1269,39 +1293,97 @@
       }
     }
 
-    function toggleSoloSys3(ch) {
-      for (let i = 1; i <= 2; i++) {
-        if (sys3Players[i] && sys3ReadyStatus[i]) {
-          if (i === ch) {
-            sys3Players[i].unMute();
-            updateSoloSys3UI(i, true);
-          } else {
-            sys3Players[i].mute();
-            updateSoloSys3UI(i, false);
-          }
+    /* INDEPENDENT [Audio] TOGGLE ON/OFF FOR SYSTEM 3 */
+    function toggleAudioSys3(ch) {
+      if (sys3Players[ch] && sys3ReadyStatus[ch]) {
+        const isMuted = sys3Players[ch].isMuted();
+        if (isMuted) {
+          sys3Players[ch].unMute();
+          updateAudioButtonUI(ch, true, 3);
+        } else {
+          sys3Players[ch].mute();
+          updateAudioButtonUI(ch, false, 3);
         }
       }
     }
 
-    function updateSoloSys3UI(ch, active) {
-      const btn = document.getElementById(`sys3-solo-${ch}`);
-      const card = document.getElementById(`sys3-card-${ch}`);
+    /* INDEPENDENT [Audio] TOGGLE ON/OFF FOR SYSTEM 1 */
+    function toggleAudioSys1(ch) {
+      if (players[ch] && playerReadyStatus[ch]) {
+        const isMuted = players[ch].isMuted();
+        if (isMuted) {
+          players[ch].unMute();
+          updateAudioButtonUI(ch, true, 1);
+        } else {
+          players[ch].mute();
+          updateAudioButtonUI(ch, false, 1);
+        }
+      }
+    }
+
+    /* INDEPENDENT [Audio] TOGGLE ON/OFF FOR SYSTEM 2 (HLS) */
+    function toggleAudioHLS(ch) {
+      if (hlsVideoElements[ch]) {
+        const isMuted = hlsVideoElements[ch].muted;
+        if (isMuted) {
+          hlsVideoElements[ch].muted = false;
+          updateAudioButtonUI(ch, true, 2);
+        } else {
+          hlsVideoElements[ch].muted = true;
+          updateAudioButtonUI(ch, false, 2);
+        }
+      }
+    }
+
+    /* UI UPDATE FOR [Audio] BUTTON & CARD HIGHLIGHT */
+    function updateAudioButtonUI(ch, active, sysNum) {
+      let btnId, cardId;
+      if (sysNum === 3) {
+        btnId = `sys3-audio-${ch}`;
+        cardId = `sys3-card-${ch}`;
+      } else if (sysNum === 1) {
+        btnId = `audio-${ch}`;
+        cardId = `card-${ch}`;
+      } else {
+        btnId = `sys2-audio-${ch}`;
+        cardId = `sys2-card-${ch}`;
+      }
+
+      const btn = document.getElementById(btnId);
+      const card = document.getElementById(cardId);
+
       if (btn && card) {
         if (active) {
           btn.classList.add('active');
-          card.classList.add('solo-active');
+          card.classList.add('audio-active');
         } else {
           btn.classList.remove('active');
-          card.classList.remove('solo-active');
+          card.classList.remove('audio-active');
         }
       }
     }
 
-    function muteSys3All() {
+    /* GLOBAL [Mute All] ACTION */
+    function muteAllChannelsGlobal() {
+      // Mute System 3
       for (let i = 1; i <= 2; i++) {
         if (sys3Players[i] && sys3ReadyStatus[i]) {
           sys3Players[i].mute();
-          updateSoloSys3UI(i, false);
+          updateAudioButtonUI(i, false, 3);
+        }
+      }
+      // Mute System 1
+      for (let i = 1; i <= 8; i++) {
+        if (players[i] && playerReadyStatus[i]) {
+          players[i].mute();
+          updateAudioButtonUI(i, false, 1);
+        }
+      }
+      // Mute System 2
+      for (let i = 1; i <= 8; i++) {
+        if (hlsVideoElements[i]) {
+          hlsVideoElements[i].muted = true;
+          updateAudioButtonUI(i, false, 2);
         }
       }
     }
@@ -1331,7 +1413,7 @@
       setFocusChannelAndUnmute(selectedCh);
     }
 
-    /* BIDIRECTIONAL CLICK TO FOCUS & TOGGLE ENGINE (v2.5.0) */
+    /* BIDIRECTIONAL CLICK TO FOCUS & TOGGLE ENGINE */
     function handleCardVideoClick(clickedCh) {
       const page = clickedCh <= 4 ? 1 : 2;
 
@@ -1355,9 +1437,34 @@
       syncAudioCheckboxesWithFocus(targetCh);
 
       if (activeSystem === 1) {
-        toggleSolo(targetCh);
+        // Mute ช่องอื่นในหน้าปัจจุบันแล้วเปิดเสียงเฉพาะช่องที่ Focus
+        const startCh = page === 1 ? 1 : 5;
+        const endCh = page === 1 ? 4 : 8;
+        for (let i = startCh; i <= endCh; i++) {
+          if (players[i] && playerReadyStatus[i]) {
+            if (i === targetCh) {
+              players[i].unMute();
+              updateAudioButtonUI(i, true, 1);
+            } else {
+              players[i].mute();
+              updateAudioButtonUI(i, false, 1);
+            }
+          }
+        }
       } else if (activeSystem === 2) {
-        toggleSoloHLS(targetCh);
+        const startCh = page === 1 ? 1 : 5;
+        const endCh = page === 1 ? 4 : 8;
+        for (let i = startCh; i <= endCh; i++) {
+          if (hlsVideoElements[i]) {
+            if (i === targetCh) {
+              hlsVideoElements[i].muted = false;
+              updateAudioButtonUI(i, true, 2);
+            } else {
+              hlsVideoElements[i].muted = true;
+              updateAudioButtonUI(i, false, 2);
+            }
+          }
+        }
       }
     }
 
@@ -1546,7 +1653,7 @@
       if (players[ch] && typeof players[ch].loadVideoById === 'function') {
         players[ch].loadVideoById(videoId);
         players[ch].mute();
-        updateSoloButtonUI(ch, false, 1);
+        updateAudioButtonUI(ch, false, 1);
       }
     }
 
@@ -1574,34 +1681,6 @@
     function reloadScreen(ch) {
       if (players[ch] && typeof players[ch].loadVideoById === 'function') {
         players[ch].loadVideoById(screenConfigs[ch].videoId);
-      }
-    }
-
-    function toggleSolo(ch) {
-      const targetPage = ch <= 4 ? 1 : 2;
-      const startCh = targetPage === 1 ? 1 : 5;
-      const endCh = targetPage === 1 ? 4 : 8;
-
-      for (let i = startCh; i <= endCh; i++) {
-        if (players[i] && playerReadyStatus[i]) {
-          if (i === ch) {
-            players[i].unMute();
-            updateSoloButtonUI(i, true, 1);
-          } else {
-            players[i].mute();
-            updateSoloButtonUI(i, false, 1);
-          }
-        }
-      }
-      syncAudioCheckboxesWithFocus(ch);
-    }
-
-    function muteAllCurrentPageSYS1() {
-      for (let i = 1; i <= 8; i++) {
-        if (players[i] && playerReadyStatus[i]) {
-          players[i].mute();
-          updateSoloButtonUI(i, false, 1);
-        }
       }
     }
 
@@ -1688,62 +1767,6 @@
       }
     }
 
-    function toggleSoloHLS(ch) {
-      const targetPage = ch <= 4 ? 1 : 2;
-      const startCh = targetPage === 1 ? 1 : 5;
-      const endCh = targetPage === 1 ? 4 : 8;
-
-      for (let i = startCh; i <= endCh; i++) {
-        if (hlsVideoElements[i]) {
-          if (i === ch) {
-            hlsVideoElements[i].muted = false;
-            updateSoloButtonUI(i, true, 2);
-          } else {
-            hlsVideoElements[i].muted = true;
-            updateSoloButtonUI(i, false, 2);
-          }
-        }
-      }
-      syncAudioCheckboxesWithFocus(ch);
-    }
-
-    function muteAllHLS() {
-      for (let i = 1; i <= 8; i++) {
-        if (hlsVideoElements[i]) {
-          hlsVideoElements[i].muted = true;
-          updateSoloButtonUI(i, false, 2);
-        }
-      }
-    }
-
-    /* COMMON CONTROLS */
-    function updateSoloButtonUI(ch, active, sysNum) {
-      const prefix = sysNum === 1 ? '' : 'sys2-';
-      const cardPrefix = sysNum === 1 ? 'card-' : 'sys2-card-';
-
-      const btn = document.getElementById(`${prefix}solo-${ch}`);
-      const card = document.getElementById(`${cardPrefix}${ch}`);
-
-      if (btn && card) {
-        if (active) {
-          btn.classList.add('active');
-          card.classList.add('solo-active');
-        } else {
-          btn.classList.remove('active');
-          card.classList.remove('solo-active');
-        }
-      }
-    }
-
-    function muteAllCurrentPage() {
-      if (activeSystem === 3) {
-        muteSys3All();
-      } else {
-        muteAllCurrentPageSYS1();
-        muteAllHLS();
-      }
-    }
-
     function switchPage(pageNum) {
       currentPage = pageNum;
 
@@ -1759,7 +1782,7 @@
       }
 
       if (activeSystem !== 3) {
-        muteAllCurrentPage();
+        muteAllChannelsGlobal();
         if (activeSystem === 1) {
           syncYouTubeSys1PlaybackState();
         } else {
@@ -1808,8 +1831,7 @@
     let lastAutoTriggeredSlotKey = null;
 
     function stopAllStreamsToSaveResources() {
-      muteSys3All();
-      muteAllCurrentPage();
+      muteAllChannelsGlobal();
       pauseBackgroundYouTubeSys1();
       pauseBackgroundHLSVideo();
       pauseSys3Videos();
@@ -2012,7 +2034,7 @@
       if (activeSystem === 3) return; 
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.5.0] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.6.0] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
