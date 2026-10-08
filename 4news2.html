@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.4.2</title>
+  <title>HS1WFK 4 STREAMS v2.5.0</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -257,15 +257,6 @@
       height: 50%;
     }
 
-    .grid-vertical-2ch .screen-card.fullscreen-card {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 200;
-    }
-
     /* GRID LAYOUT MODES FOR SYS 1 & SYS 2 */
     .grid-2x2 {
       display: grid;
@@ -453,7 +444,7 @@
     }
 
     .grid-vertical-2ch .swap-overlay::after {
-      content: '⤢ Click to Fullscreen / Restore';
+      content: '⤢ Click to Native Fullscreen / Restore';
     }
 
     .screen-footer {
@@ -567,7 +558,7 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.4.2</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.5.0</span>
       </div>
 
       <!-- Triple System Toggle Button -->
@@ -640,7 +631,6 @@
         <!-- CH 1 Top: CNA -->
         <div class="screen-card" id="sys3-card-1">
           <div class="screen-header">
-            <span class="ch-tag">CH 1 (TOP)</span>
             <select class="station-select" id="sys3-select-1" onchange="onSelectStationSys3(1)"></select>
             <div class="screen-actions">
               <button class="action-btn solo-btn" id="sys3-solo-1" onclick="toggleSoloSys3(1)">Solo Audio</button>
@@ -649,7 +639,7 @@
           </div>
           <div class="video-wrapper">
             <div id="sys3-player-1"></div>
-            <div class="swap-overlay" id="overlay-sys3-1" onclick="toggleCardFullscreenSys3(1)"></div>
+            <div class="swap-overlay" id="overlay-sys3-1" onclick="toggleCardNativeFullscreenSys3(1)"></div>
           </div>
           <div class="screen-footer">
             <input type="text" class="url-input" id="sys3-input-1" placeholder="Paste YouTube URL or Video ID">
@@ -660,7 +650,6 @@
         <!-- CH 2 Bottom: Bloomberg -->
         <div class="screen-card" id="sys3-card-2">
           <div class="screen-header">
-            <span class="ch-tag">CH 2 (BOTTOM)</span>
             <select class="station-select" id="sys3-select-2" onchange="onSelectStationSys3(2)"></select>
             <div class="screen-actions">
               <button class="action-btn solo-btn" id="sys3-solo-2" onclick="toggleSoloSys3(2)">Solo Audio</button>
@@ -669,7 +658,7 @@
           </div>
           <div class="video-wrapper">
             <div id="sys3-player-2"></div>
-            <div class="swap-overlay" id="overlay-sys3-2" onclick="toggleCardFullscreenSys3(2)"></div>
+            <div class="swap-overlay" id="overlay-sys3-2" onclick="toggleCardNativeFullscreenSys3(2)"></div>
           </div>
           <div class="screen-footer">
             <input type="text" class="url-input" id="sys3-input-2" placeholder="Paste YouTube URL or Video ID">
@@ -1130,7 +1119,7 @@
       setLayout(nextLayout);
     }
 
-    /* SYSTEM 3 ENGINE */
+    /* SYSTEM 3 ENGINE WITH NATIVE FULLSCREEN API */
     function initSys3Players() {
       populateDropdownsSys3();
       for (let ch = 1; ch <= 2; ch++) {
@@ -1161,6 +1150,27 @@
           }
         }
       });
+    }
+
+    function toggleCardNativeFullscreenSys3(ch) {
+      const card = document.getElementById(`sys3-card-${ch}`);
+      if (!card) return;
+
+      if (!document.fullscreenElement) {
+        if (card.requestFullscreen) {
+          card.requestFullscreen();
+        } else if (card.webkitRequestFullscreen) {
+          card.webkitRequestFullscreen();
+        } else if (card.msRequestFullscreen) {
+          card.msRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
     }
 
     function pauseSys3Videos() {
@@ -1296,13 +1306,6 @@
       }
     }
 
-    function toggleCardFullscreenSys3(ch) {
-      const card = document.getElementById(`sys3-card-${ch}`);
-      if (card) {
-        card.classList.toggle('fullscreen-card');
-      }
-    }
-
     /* CUE CHECKBOX SYNC ENGINE */
     function syncAudioCheckboxesWithFocus(focusCh) {
       for (let ch = 1; ch <= 8; ch++) {
@@ -1328,12 +1331,20 @@
       setFocusChannelAndUnmute(selectedCh);
     }
 
-    /* CLICK TO FOCUS & DYNAMIC SWAP ENGINE */
+    /* BIDIRECTIONAL CLICK TO FOCUS & TOGGLE ENGINE (v2.5.0) */
     function handleCardVideoClick(clickedCh) {
+      const page = clickedCh <= 4 ? 1 : 2;
+
       if (currentLayout === 'grid') {
         setLayout('focus');
+        setFocusChannelAndUnmute(clickedCh);
+      } else {
+        if (pageFocusChannel[page] === clickedCh) {
+          setLayout('grid');
+        } else {
+          setFocusChannelAndUnmute(clickedCh);
+        }
       }
-      setFocusChannelAndUnmute(clickedCh);
     }
 
     function setFocusChannelAndUnmute(targetCh) {
@@ -1365,7 +1376,7 @@
 
       const areas = ['side1', 'side2', 'side3'];
 
-      setCardGridArea(focusCh, 'focus', false);
+      setCardGridArea(focusCh, 'focus', true);
 
       rightChannels.forEach((ch, idx) => {
         setCardGridArea(ch, areas[idx], true);
@@ -1382,10 +1393,7 @@
       const overlay1 = document.getElementById(`overlay-sys1-${ch}`);
       const overlay2 = document.getElementById(`overlay-sys2-${ch}`);
 
-      let displayVal = 'block';
-      if (currentLayout === 'focus' && !showOverlay) {
-        displayVal = 'none';
-      }
+      let displayVal = showOverlay ? 'block' : 'none';
 
       if (overlay1) overlay1.style.display = displayVal;
       if (overlay2) overlay2.style.display = displayVal;
@@ -1414,7 +1422,7 @@
       }
     }
 
-    /* SYSTEM 1 ENGINE: YOUTUBE IFRAME PLAYER API WITH LAZY LOADING */
+    /* SYSTEM 1 ENGINE: YOUTUBE IFRAME PLAYER API */
     function onYouTubeIframeAPIReady() {
       populateDropdowns();
       startHourlyTimer();
@@ -1600,13 +1608,17 @@
     /* SYSTEM 2 ENGINE: DIRECT HLS STREAM PLAYER */
     function initSystem2HLS() {
       hlsInitialized = true;
-      for (let ch = 1; ch <= 8; ch++) {
+      const startCh = currentPage === 1 ? 1 : 5;
+      const endCh = currentPage === 1 ? 4 : 8;
+      for (let ch = startCh; ch <= endCh; ch++) {
         initHLSPlayer(ch);
       }
       syncHLSPlaybackState();
     }
 
     function initHLSPlayer(ch) {
+      if (hlsVideoElements[ch]) return;
+
       const videoEl = document.getElementById(`hls-player-${ch}`);
       if (!videoEl) return;
       hlsVideoElements[ch] = videoEl;
@@ -1639,16 +1651,22 @@
     }
 
     function syncHLSPlaybackState() {
-      if (!hlsInitialized || activeSystem !== 2) return;
+      if (activeSystem !== 2) return;
+
+      const startCh = currentPage === 1 ? 1 : 5;
+      const endCh = currentPage === 1 ? 4 : 8;
 
       for (let ch = 1; ch <= 8; ch++) {
-        const videoEl = hlsVideoElements[ch];
-        if (!videoEl) continue;
-
-        if (isChannelOnCurrentPage(ch)) {
-          if (videoEl.paused) videoEl.play().catch(() => {});
+        if (ch >= startCh && ch <= endCh) {
+          if (!hlsVideoElements[ch]) {
+            initHLSPlayer(ch);
+          } else if (hlsVideoElements[ch].paused) {
+            hlsVideoElements[ch].play().catch(() => {});
+          }
         } else {
-          if (!videoEl.paused) videoEl.pause();
+          if (hlsVideoElements[ch] && !hlsVideoElements[ch].paused) {
+            hlsVideoElements[ch].pause();
+          }
         }
       }
     }
@@ -1994,7 +2012,7 @@
       if (activeSystem === 3) return; 
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.4.2] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.5.0] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
