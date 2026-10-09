@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.7.0</title>
+  <title>HS1WFK 4 STREAMS v2.7.1</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -18,6 +18,7 @@
       --accent-purple: #8b5cf6;
       --accent-teal: #14b8a6;
       --accent-cyan: #06b6d4; /* สีฟ้าสดสำหรับปุ่ม Audio ON */
+      --accent-rose: #f43f5e; /* สีปุ่ม System 4 */
       --accent-thaipbs: #f97316;
       --header-bg: #161e2e;
     }
@@ -74,7 +75,7 @@
       color: var(--text-muted);
     }
 
-    /* Triple System Toggle Button */
+    /* Quad System Toggle Button Styles */
     .btn-sys-toggle {
       font-weight: 700;
       padding: 0.3rem 0.55rem;
@@ -83,6 +84,12 @@
       font-size: 0.72rem;
       transition: background-color 0.2s ease, border-color 0.2s ease;
       white-space: nowrap;
+    }
+
+    .btn-sys-toggle.sys4-mode {
+      background-color: var(--accent-rose);
+      color: #ffffff;
+      border: 1px solid var(--accent-rose);
     }
 
     .btn-sys-toggle.sys3-mode {
@@ -245,6 +252,23 @@
       display: block;
     }
 
+    /* SYSTEM 4: SINGLE CHANNEL 16:9 CONTAINER */
+    .grid-single-1ch {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: calc(100vh - 65px);
+    }
+
+    .grid-single-1ch .screen-card {
+      width: 100%;
+      max-width: calc((100vh - 120px) * 16 / 9);
+      height: 100%;
+      max-height: calc(100vw * 9 / 16);
+      margin: auto;
+    }
+
     /* SYSTEM 3: VERTICAL DUAL LAYOUT */
     .grid-vertical-2ch {
       display: flex;
@@ -284,13 +308,14 @@
         gap: 0.3rem;
         padding: 0.35rem;
       }
-      .grid-2x2, .grid-focus, .grid-vertical-2ch {
+      .grid-2x2, .grid-focus, .grid-vertical-2ch, .grid-single-1ch {
         display: flex;
         flex-direction: column;
         height: auto;
       }
       .screen-card {
         height: 260px !important;
+        max-width: 100% !important;
       }
     }
 
@@ -306,7 +331,6 @@
       will-change: transform;
     }
 
-    /* ปรับแต่ง: ไม่แสดงกรอบ Hilight สีฟ้าเมื่อ active */
     .screen-card.audio-active {
       border-color: var(--border-color);
       box-shadow: none;
@@ -385,7 +409,6 @@
       background: rgba(255, 255, 255, 0.15);
     }
 
-    /* ปุ่ม [Audio] สีฟ้าสด ตัวหนังสือดำเมื่อ ON */
     .action-btn.audio-btn.active {
       background-color: var(--accent-cyan);
       color: #000000;
@@ -425,7 +448,6 @@
       transition: background-color 0.2s ease;
     }
 
-    /* ปรับแต่ง: ไม่แสดง overlay สีฟ้าเมื่อ mouse ไปชี้ */
     .swap-overlay:hover {
       background: rgba(0, 0, 0, 0.001);
     }
@@ -450,6 +472,10 @@
 
     .grid-vertical-2ch .swap-overlay::after {
       content: '⤢ Click to Fullscreen & Unmute';
+    }
+
+    .grid-single-1ch .swap-overlay::after {
+      content: '🔊 Click to Toggle Audio';
     }
 
     .screen-footer {
@@ -576,12 +602,12 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.7.0</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.7.1</span>
       </div>
 
-      <!-- Triple System Toggle Button -->
-      <button class="btn-sys-toggle sys3-mode" id="btn-single-sys-toggle" onclick="toggleSystem()">
-        System 3
+      <!-- Quad System Toggle Button -->
+      <button class="btn-sys-toggle sys4-mode" id="btn-single-sys-toggle" onclick="toggleSystem()">
+        System 4
       </button>
 
       <!-- 8-Channel CUE Selector Group -->
@@ -643,10 +669,32 @@
       </div>
     </div>
 
+    <!-- SYSTEM 4 CONTAINER (DEFAULT STARTUP) -->
+    <div id="system-4-container" class="system-container active-system">
+      <div class="grid-single-1ch">
+        <div class="screen-card" id="sys4-card-1">
+          <div class="screen-header">
+            <select class="station-select" id="sys4-select-1" onchange="onSelectStationSys4(1)"></select>
+            <div class="screen-actions">
+              <button class="action-btn audio-btn" id="sys4-audio-1" onclick="toggleAudioSys4(1)">[Audio]</button>
+              <button class="action-btn" onclick="reloadScreenSys4(1)">Reload</button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div id="sys4-player-1"></div>
+            <div class="swap-overlay" id="overlay-sys4-1" onclick="toggleAudioSys4(1)"></div>
+          </div>
+          <div class="screen-footer">
+            <input type="text" class="url-input" id="sys4-input-1" placeholder="Paste YouTube URL or Video ID">
+            <button class="action-btn" onclick="applyCustomInputSys4(1)">Set</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- SYSTEM 3 CONTAINER -->
-    <div id="system-3-container" class="system-container active-system">
+    <div id="system-3-container" class="system-container">
       <div class="grid-vertical-2ch">
-        <!-- CH 1 Top: CNA -->
         <div class="screen-card" id="sys3-card-1">
           <div class="screen-header">
             <select class="station-select" id="sys3-select-1" onchange="onSelectStationSys3(1)"></select>
@@ -665,7 +713,6 @@
           </div>
         </div>
 
-        <!-- CH 2 Bottom: Bloomberg -->
         <div class="screen-card" id="sys3-card-2">
           <div class="screen-header">
             <select class="station-select" id="sys3-select-2" onchange="onSelectStationSys3(2)"></select>
@@ -983,8 +1030,8 @@
   </main>
 
   <script>
-    /* GLOBAL STATE & REGISTRIES */
-    let activeSystem = 3; 
+    /* GLOBAL STATE & REGISTRIES (DEFAULT STARTUP: SYSTEM 4) */
+    let activeSystem = 4; 
     let currentPage = 1;  
     let currentLayout = 'grid'; 
 
@@ -1035,12 +1082,19 @@
       2: { stationId: 'bloomberg', videoId: 'QB5BNdBFujE' }
     };
 
+    const SYS4_CONFIGS = {
+      1: { stationId: 'aljazeera', videoId: 'gCNeDWCI0vo' }
+    };
+
     let players = {};             
     let playerReadyStatus = {};
     let screenConfigs = JSON.parse(JSON.stringify(DEFAULT_CONFIGS));
 
     let sys3Players = {};
     let sys3ReadyStatus = {};
+
+    let sys4Players = {};
+    let sys4ReadyStatus = {};
 
     let hlsInstances = {};        
     let hlsVideoElements = {};   
@@ -1049,16 +1103,19 @@
     let sys3FullscreenChannel = null;
     let thaipbsWindowRef = null;
 
-    /* TRIPLE SYSTEM TOGGLE ENGINE (3 -> 1 -> 2 -> 3) */
+    /* QUAD SYSTEM TOGGLE ENGINE (4 -> 1 -> 2 -> 3 -> 4) */
     function toggleSystem() {
-      if (activeSystem === 3) {
+      if (activeSystem === 4) {
         activeSystem = 1;
       } else if (activeSystem === 1) {
         activeSystem = 2;
       } else if (activeSystem === 2) {
         activeSystem = 3;
+      } else if (activeSystem === 3) {
+        activeSystem = 4;
       }
 
+      document.getElementById('system-4-container').classList.toggle('active-system', activeSystem === 4);
       document.getElementById('system-3-container').classList.toggle('active-system', activeSystem === 3);
       document.getElementById('system-1-container').classList.toggle('active-system', activeSystem === 1);
       document.getElementById('system-2-container').classList.toggle('active-system', activeSystem === 2);
@@ -1070,7 +1127,22 @@
       const btnPage = document.getElementById('btn-single-page-toggle');
       const btnLayout = document.getElementById('btn-single-layout-toggle');
 
-      if (activeSystem === 3) {
+      if (activeSystem === 4) {
+        toggleBtn.textContent = 'System 4';
+        toggleBtn.className = 'btn-sys-toggle sys4-mode';
+
+        cueContainer.style.display = 'none';
+        timerBadge.style.display = 'none';
+        btnThaiPBS.style.display = 'none';
+        btnPage.style.display = 'none';
+        btnLayout.style.display = 'none';
+
+        muteAllChannelsGlobal();
+        pauseSys3Videos();
+        pauseBackgroundYouTubeSys1();
+        pauseBackgroundHLSVideo();
+        resumeSys4Videos();
+      } else if (activeSystem === 3) {
         toggleBtn.textContent = 'System 3';
         toggleBtn.className = 'btn-sys-toggle sys3-mode';
 
@@ -1081,6 +1153,7 @@
         btnLayout.style.display = 'none';
 
         muteAllChannelsGlobal();
+        pauseSys4Videos();
         pauseBackgroundYouTubeSys1();
         pauseBackgroundHLSVideo();
         resumeSys3Videos();
@@ -1095,6 +1168,7 @@
         btnLayout.style.display = 'inline-block';
 
         muteAllChannelsGlobal();
+        pauseSys4Videos();
         pauseSys3Videos();
         pauseBackgroundHLSVideo();
         syncYouTubeSys1PlaybackState();
@@ -1109,6 +1183,7 @@
         btnLayout.style.display = 'inline-block';
 
         muteAllChannelsGlobal();
+        pauseSys4Videos();
         pauseSys3Videos();
         pauseBackgroundYouTubeSys1();
 
@@ -1133,6 +1208,140 @@
     function toggleLayout() {
       const nextLayout = currentLayout === 'grid' ? 'focus' : 'grid';
       setLayout(nextLayout);
+    }
+
+    /* SYSTEM 4 ENGINE (SINGLE CHANNEL 16:9 MODE) */
+    function initSys4Players() {
+      populateDropdownsSys4();
+      initSingleSys4Player(1);
+    }
+
+    function initSingleSys4Player(ch) {
+      if (sys4Players[ch]) return;
+      const vid = SYS4_CONFIGS[ch].videoId;
+      sys4Players[ch] = new YT.Player(`sys4-player-${ch}`, {
+        videoId: vid,
+        playerVars: {
+          autoplay: 1,
+          mute: 1,
+          controls: 1,
+          modestbranding: 1,
+          rel: 0,
+          playsinline: 1
+        },
+        events: {
+          onReady: (e) => {
+            sys4ReadyStatus[ch] = true;
+            e.target.mute();
+            if (activeSystem === 4) {
+              e.target.playVideo();
+            }
+          }
+        }
+      });
+    }
+
+    function pauseSys4Videos() {
+      if (sys4Players[1] && sys4ReadyStatus[1] && typeof sys4Players[1].pauseVideo === 'function') {
+        sys4Players[1].pauseVideo();
+      }
+    }
+
+    function resumeSys4Videos() {
+      if (sys4Players[1] && sys4ReadyStatus[1] && typeof sys4Players[1].playVideo === 'function') {
+        sys4Players[1].playVideo();
+      }
+    }
+
+    function populateDropdownsSys4() {
+      const newsStations = STATION_REGISTRY.filter(s => s.category === 'News');
+      const musicTracks = STATION_REGISTRY.filter(s => s.category === 'Music');
+
+      const select = document.getElementById('sys4-select-1');
+      if (!select) return;
+      select.innerHTML = '';
+
+      const newsGroup = document.createElement('optgroup');
+      newsGroup.label = '--- NEWS CHANNELS ---';
+      newsStations.forEach(st => {
+        const opt = document.createElement('option');
+        opt.value = st.id;
+        opt.textContent = st.name;
+        newsGroup.appendChild(opt);
+      });
+      select.appendChild(newsGroup);
+
+      const musicGroup = document.createElement('optgroup');
+      musicGroup.label = '--- MUSIC & RELAXATION ---';
+      musicTracks.forEach(st => {
+        const opt = document.createElement('option');
+        opt.value = st.id;
+        opt.textContent = st.name;
+        musicGroup.appendChild(opt);
+      });
+      select.appendChild(musicGroup);
+
+      const customOpt = document.createElement('option');
+      customOpt.value = 'custom';
+      customOpt.textContent = 'Custom Video ID';
+      select.appendChild(customOpt);
+
+      select.value = SYS4_CONFIGS[1].stationId;
+    }
+
+    function onSelectStationSys4(ch) {
+      const select = document.getElementById(`sys4-select-${ch}`);
+      const selectedValue = select.value;
+      if (selectedValue === 'custom') return;
+
+      const station = STATION_REGISTRY.find(s => s.id === selectedValue);
+      if (station) {
+        SYS4_CONFIGS[ch].stationId = station.id;
+        SYS4_CONFIGS[ch].videoId = station.videoId;
+        document.getElementById(`sys4-input-${ch}`).value = station.videoId;
+        loadVideoToSys4(ch, station.videoId);
+      }
+    }
+
+    function loadVideoToSys4(ch, videoId) {
+      if (sys4Players[ch] && typeof sys4Players[ch].loadVideoById === 'function') {
+        sys4Players[ch].loadVideoById(videoId);
+        sys4Players[ch].mute();
+        updateAudioButtonUI(ch, false, 4);
+      }
+    }
+
+    function applyCustomInputSys4(ch) {
+      const inputVal = document.getElementById(`sys4-input-${ch}`).value;
+      const vid = extractVideoId(inputVal);
+
+      if (vid) {
+        SYS4_CONFIGS[ch].stationId = 'custom';
+        SYS4_CONFIGS[ch].videoId = vid;
+        document.getElementById(`sys4-select-${ch}`).value = 'custom';
+        loadVideoToSys4(ch, vid);
+      } else {
+        alert('Invalid YouTube URL or Video ID.');
+      }
+    }
+
+    function reloadScreenSys4(ch) {
+      if (sys4Players[ch] && typeof sys4Players[ch].loadVideoById === 'function') {
+        sys4Players[ch].loadVideoById(SYS4_CONFIGS[ch].videoId);
+      }
+    }
+
+    function toggleAudioSys4(ch) {
+      if (sys4Players[ch] && sys4ReadyStatus[ch]) {
+        const isMuted = sys4Players[ch].isMuted();
+        if (isMuted) {
+          sys4Players[ch].unMute();
+          updateAudioButtonUI(ch, true, 4);
+        } else {
+          sys4Players[ch].mute();
+          updateAudioButtonUI(ch, false, 4);
+        }
+      }
     }
 
     /* SYSTEM 3 ENGINE WITH CLEAN FULLSCREEN AUTO-UNMUTE/MUTE */
@@ -1181,7 +1390,6 @@
         } else if (card.msRequestFullscreen) {
           card.msRequestFullscreen();
         }
-        // Auto Unmute เมื่อเข้าสู่ Fullscreen
         if (sys3Players[ch] && sys3ReadyStatus[ch]) {
           sys3Players[ch].unMute();
           updateAudioButtonUI(ch, true, 3);
@@ -1195,7 +1403,6 @@
       }
     }
 
-    // Event Listener ตรวจจับการออกจาก Fullscreen
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
 
@@ -1308,7 +1515,6 @@
       }
     }
 
-    /* INDEPENDENT [Audio] TOGGLE ON/OFF FOR SYSTEM 3 */
     function toggleAudioSys3(ch) {
       if (sys3Players[ch] && sys3ReadyStatus[ch]) {
         const isMuted = sys3Players[ch].isMuted();
@@ -1350,10 +1556,13 @@
       }
     }
 
-    /* UI UPDATE FOR [Audio] BUTTON & CARD HIGHLIGHT */
+    /* UI UPDATE FOR [Audio] BUTTON */
     function updateAudioButtonUI(ch, active, sysNum) {
       let btnId, cardId;
-      if (sysNum === 3) {
+      if (sysNum === 4) {
+        btnId = `sys4-audio-${ch}`;
+        cardId = `sys4-card-${ch}`;
+      } else if (sysNum === 3) {
         btnId = `sys3-audio-${ch}`;
         cardId = `sys3-card-${ch}`;
       } else if (sysNum === 1) {
@@ -1380,6 +1589,11 @@
 
     /* GLOBAL [Mute All] ACTION */
     function muteAllChannelsGlobal() {
+      // Mute System 4
+      if (sys4Players[1] && sys4ReadyStatus[1]) {
+        sys4Players[1].mute();
+        updateAudioButtonUI(1, false, 4);
+      }
       // Mute System 3
       for (let i = 1; i <= 2; i++) {
         if (sys3Players[i] && sys3ReadyStatus[i]) {
@@ -1412,7 +1626,7 @@
     }
 
     function handleUserCheckboxClick(selectedCh) {
-      if (activeSystem === 3) return;
+      if (activeSystem === 3 || activeSystem === 4) return;
 
       for (let ch = 1; ch <= 8; ch++) {
         const chk = document.getElementById(`chk-audio-${ch}`);
@@ -1795,7 +2009,7 @@
         pageBtn.textContent = pageNum === 1 ? 'Page 1' : 'Page 2';
       }
 
-      if (activeSystem !== 3) {
+      if (activeSystem !== 3 && activeSystem !== 4) {
         muteAllChannelsGlobal();
         if (activeSystem === 1) {
           syncYouTubeSys1PlaybackState();
@@ -1821,7 +2035,7 @@
         layoutBtn.textContent = mode === 'grid' ? '[ 2x2 ]' : '[ 1+3 ]';
       }
 
-      if (activeSystem !== 3) {
+      if (activeSystem !== 3 && activeSystem !== 4) {
         updateOverlayVisibilityAll();
       }
     }
@@ -1849,10 +2063,13 @@
       pauseBackgroundYouTubeSys1();
       pauseBackgroundHLSVideo();
       pauseSys3Videos();
+      pauseSys4Videos();
     }
 
     function resumeAllStreams() {
-      if (activeSystem === 3) {
+      if (activeSystem === 4) {
+        resumeSys4Videos();
+      } else if (activeSystem === 3) {
         resumeSys3Videos();
       } else if (activeSystem === 1) {
         syncYouTubeSys1PlaybackState();
@@ -1862,7 +2079,7 @@
     }
 
     function openThaiPBSLive(isUserClick = false) {
-      if (activeSystem === 3 && !isUserClick) return;
+      if ((activeSystem === 3 || activeSystem === 4) && !isUserClick) return;
 
       stopAllStreamsToSaveResources();
       playTripleBeep();
@@ -1947,7 +2164,7 @@
           const slotKey = `${now.toDateString()}_${activeSlot.start}`;
           if (lastAutoTriggeredSlotKey !== slotKey) {
             lastAutoTriggeredSlotKey = slotKey;
-            if (activeSystem !== 3) openThaiPBSLive(false);
+            if (activeSystem !== 3 && activeSystem !== 4) openThaiPBSLive(false);
           }
         } else if (nextSlotStart) {
           const diffMs = nextSlotStart - now;
@@ -2045,10 +2262,10 @@
     }
 
     function executeHourlyAutomationAt0000() {
-      if (activeSystem === 3) return; 
+      if (activeSystem === 3 || activeSystem === 4) return; 
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.7.0] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.7.1] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
@@ -2071,6 +2288,7 @@
 
     /* SAFE DOM INITIALIZATION GUARD */
     document.addEventListener('DOMContentLoaded', () => {
+      initSys4Players();
       initSys3Players();
     });
 
