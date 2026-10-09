@@ -306,9 +306,10 @@
       will-change: transform;
     }
 
+    /* ปรับแต่ง: ไม่แสดงกรอบ Hilight สีฟ้าเมื่อ active */
     .screen-card.audio-active {
-      border-color: var(--accent-cyan);
-      box-shadow: 0 0 0 1px var(--accent-cyan);
+      border-color: var(--border-color);
+      box-shadow: none;
     }
 
     .screen-header {
@@ -384,6 +385,7 @@
       background: rgba(255, 255, 255, 0.15);
     }
 
+    /* ปุ่ม [Audio] สีฟ้าสด ตัวหนังสือดำเมื่อ ON */
     .action-btn.audio-btn.active {
       background-color: var(--accent-cyan);
       color: #000000;
@@ -423,8 +425,9 @@
       transition: background-color 0.2s ease;
     }
 
+    /* ปรับแต่ง: ไม่แสดง overlay สีฟ้าเมื่อ mouse ไปชี้ */
     .swap-overlay:hover {
-      background: rgba(59, 130, 246, 0.2);
+      background: rgba(0, 0, 0, 0.001);
     }
 
     .swap-overlay::after {
