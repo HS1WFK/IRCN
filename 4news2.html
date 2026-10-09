@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.7.2</title>
+  <title>HS1WFK 4 STREAMS v2.7.3</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -435,14 +435,14 @@
       transform: translateZ(0);
     }
 
-    /* CLEAR OVERLAY CONTROL PROTECTION (v2.7.2 FIX) */
+    /* 50% LEFT-ALIGNED OVERLAY CONTROL PROTECTION (v2.7.3) */
     .swap-overlay {
       display: block;
       position: absolute;
-      top: 48px;
+      top: 0;
       left: 0;
-      width: 100%;
-      height: calc(100% - 96px);
+      width: 50%;
+      height: calc(100% - 48px);
       background: rgba(0, 0, 0, 0.001);
       cursor: pointer;
       z-index: 25;
@@ -469,14 +469,12 @@
       opacity: 0;
       transition: opacity 0.2s ease;
       pointer-events: none;
+      white-space: nowrap;
     }
 
-    .grid-vertical-2ch .swap-overlay::after {
-      content: '⤢ Click to Fullscreen & Unmute';
-    }
-
+    .grid-vertical-2ch .swap-overlay::after,
     .grid-single-1ch .swap-overlay::after {
-      content: '🔊 Click to Toggle Audio';
+      content: '⤢ Click to Fullscreen & Unmute';
     }
 
     .screen-footer {
@@ -515,7 +513,7 @@
       white-space: nowrap;
     }
 
-    /* SYSTEM 3 FULLSCREEN CLEAN-UP STYLES */
+    /* FULLSCREEN CLEAN-UP STYLES */
     :fullscreen .screen-card, :-webkit-full-screen .screen-card {
       border: none !important;
       box-shadow: none !important;
@@ -603,7 +601,7 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.7.2</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.7.3</span>
       </div>
 
       <!-- Quad System Toggle Button -->
@@ -683,7 +681,7 @@
           </div>
           <div class="video-wrapper">
             <div id="sys4-player-1"></div>
-            <div class="swap-overlay" id="overlay-sys4-1" onclick="toggleAudioSys4(1)"></div>
+            <div class="swap-overlay" id="overlay-sys4-1" onclick="toggleCardNativeFullscreenSys4(1)"></div>
           </div>
           <div class="screen-footer">
             <input type="text" class="url-input" id="sys4-input-1" placeholder="Paste YouTube URL or Video ID">
@@ -1038,6 +1036,7 @@
 
     let pageFocusChannel = { 1: 1, 2: 5 };
 
+    // REMOVED ANN NEWS (JP)
     const STATION_REGISTRY = [
       { id: 'aljazeera', name: 'Al Jazeera', videoId: 'gCNeDWCI0vo', category: 'News' },
       { id: 'skynews', name: 'Sky News', videoId: 'xDWQ3LkccY8', category: 'News' },
@@ -1046,7 +1045,6 @@
       { id: 'dw', name: 'DW English', videoId: 'LuKwFajn37U', category: 'News' },
       { id: 'cgtn', name: 'CGTN English', videoId: '0i7n3r01L2U', category: 'News' },
       { id: 'france24', name: 'France 24 English', videoId: 'HvZt-nh9sGg', category: 'News' },
-      { id: 'ann', name: 'ANN news (Jp)', videoId: 'hADDeXdg_lk', category: 'News' },
       { id: 'euronews', name: 'Euro News', videoId: 'pykpO5kQJ98', category: 'News' },
       { id: 'gbnews', name: 'GB News', videoId: 'O9s2TMny6KQ', category: 'News' },
       { id: 'yahoofinance', name: 'Yahoo Finance 24/7', videoId: 'KQp-e_XQnDE', category: 'News' },
@@ -1075,7 +1073,7 @@
       5: { stationId: 'dw', videoId: 'LuKwFajn37U' },
       6: { stationId: 'cgtn', videoId: '0i7n3r01L2U' },
       7: { stationId: 'france24', videoId: 'HvZt-nh9sGg' },
-      8: { stationId: 'ann', videoId: 'hADDeXdg_lk' }
+      8: { stationId: 'gbnews', videoId: 'O9s2TMny6KQ' }
     };
 
     const SYS3_CONFIGS = {
@@ -1102,6 +1100,7 @@
     let hlsInitialized = false;
 
     let sys3FullscreenChannel = null;
+    let sys4FullscreenChannel = null;
     let thaipbsWindowRef = null;
 
     /* QUAD SYSTEM TOGGLE ENGINE (4 -> 1 -> 2 -> 3 -> 4) */
@@ -1211,7 +1210,7 @@
       setLayout(nextLayout);
     }
 
-    /* SYSTEM 4 ENGINE (SINGLE CHANNEL 16:9 MODE) */
+    /* SYSTEM 4 ENGINE (SINGLE CHANNEL 16:9 MODE WITH FULLSCREEN & UNMUTE) */
     function initSys4Players() {
       populateDropdownsSys4();
       initSingleSys4Player(1);
@@ -1240,6 +1239,32 @@
           }
         }
       });
+    }
+
+    function toggleCardNativeFullscreenSys4(ch) {
+      const card = document.getElementById(`sys4-card-${ch}`);
+      if (!card) return;
+
+      if (!document.fullscreenElement) {
+        sys4FullscreenChannel = ch;
+        if (card.requestFullscreen) {
+          card.requestFullscreen();
+        } else if (card.webkitRequestFullscreen) {
+          card.webkitRequestFullscreen();
+        } else if (card.msRequestFullscreen) {
+          card.msRequestFullscreen();
+        }
+        if (sys4Players[ch] && sys4ReadyStatus[ch]) {
+          sys4Players[ch].unMute();
+          updateAudioButtonUI(ch, true, 4);
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
     }
 
     function pauseSys4Videos() {
@@ -1416,6 +1441,15 @@
             updateAudioButtonUI(ch, false, 3);
           }
           sys3FullscreenChannel = null;
+        }
+
+        if (sys4FullscreenChannel !== null) {
+          const ch = sys4FullscreenChannel;
+          if (sys4Players[ch] && sys4ReadyStatus[ch]) {
+            sys4Players[ch].mute();
+            updateAudioButtonUI(ch, false, 4);
+          }
+          sys4FullscreenChannel = null;
         }
       }
     }
@@ -2266,7 +2300,7 @@
       if (activeSystem === 3 || activeSystem === 4) return; 
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.7.2] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.7.3] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
