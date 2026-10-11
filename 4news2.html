@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.7.5</title>
+  <title>HS1WFK 4 STREAMS v2.7.6</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -636,7 +636,7 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.7.5</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.7.6</span>
       </div>
 
       <!-- Quad System Toggle Button -->
@@ -1142,7 +1142,7 @@
     let sys4FullscreenChannel = null;
     let thaipbsWindowRef = null;
 
-    /* DIGITAL WORLD CLOCK ENGINE (v2.7.5: REMOVED HNL & MOS) */
+    /* DIGITAL WORLD CLOCK ENGINE */
     const CITY_TIMEZONES = [
       { code: 'NYC', timeZone: 'America/New_York', hasSec: false },
       { code: 'UTC', timeZone: 'UTC', hasSec: true },
@@ -1175,10 +1175,8 @@
       let activeCities = [];
 
       if (activeSystem === 3 || activeSystem === 4) {
-        // System 3 & 4: 5 Cities
         activeCities = ['NYC', 'UTC', 'BKK', 'LDN', 'TKO'];
       } else {
-        // System 1 & 2: 7 Cities (Removed HNL & MOS)
         activeCities = ['NYC', 'UTC', 'BKK', 'LDN', 'BJS', 'TKO', 'SYD'];
       }
 
@@ -1314,7 +1312,7 @@
       setLayout(nextLayout);
     }
 
-    /* SYSTEM 4 ENGINE (SINGLE CHANNEL 16:9 MODE) */
+    /* SYSTEM 4 ENGINE (SINGLE CHANNEL 16:9 MODE WITH AUTOPLAY FIX) */
     function initSys4Players() {
       if (sys4Initialized) return;
       sys4Initialized = true;
@@ -1339,10 +1337,11 @@
           onReady: (e) => {
             sys4ReadyStatus[ch] = true;
             e.target.mute();
-            if (activeSystem === 4) {
+            e.target.playVideo();
+          },
+          onStateChange: (e) => {
+            if (e.data === YT.PlayerState.PAUSED && activeSystem === 4) {
               e.target.playVideo();
-            } else {
-              e.target.pauseVideo();
             }
           }
         }
@@ -1441,6 +1440,7 @@
       if (sys4Players[ch] && typeof sys4Players[ch].loadVideoById === 'function') {
         sys4Players[ch].loadVideoById(videoId);
         sys4Players[ch].mute();
+        sys4Players[ch].playVideo();
         updateAudioButtonUI(ch, false, 4);
       }
     }
@@ -1462,6 +1462,8 @@
     function reloadScreenSys4(ch) {
       if (sys4Players[ch] && typeof sys4Players[ch].loadVideoById === 'function') {
         sys4Players[ch].loadVideoById(SYS4_CONFIGS[ch].videoId);
+        sys4Players[ch].mute();
+        sys4Players[ch].playVideo();
       }
     }
 
@@ -1478,7 +1480,7 @@
       }
     }
 
-    /* SYSTEM 3 ENGINE WITH CLEAN FULLSCREEN AUTO-UNMUTE/MUTE */
+    /* SYSTEM 3 ENGINE WITH AUTOPLAY FIX */
     function initSys3Players() {
       if (sys3Initialized) return;
       sys3Initialized = true;
@@ -1505,10 +1507,11 @@
           onReady: (e) => {
             sys3ReadyStatus[ch] = true;
             e.target.mute();
-            if (activeSystem === 3) {
+            e.target.playVideo();
+          },
+          onStateChange: (e) => {
+            if (e.data === YT.PlayerState.PAUSED && activeSystem === 3) {
               e.target.playVideo();
-            } else {
-              e.target.pauseVideo();
             }
           }
         }
@@ -1638,6 +1641,7 @@
       if (sys3Players[ch] && typeof sys3Players[ch].loadVideoById === 'function') {
         sys3Players[ch].loadVideoById(videoId);
         sys3Players[ch].mute();
+        sys3Players[ch].playVideo();
         updateAudioButtonUI(ch, false, 3);
       }
     }
@@ -1659,6 +1663,8 @@
     function reloadScreenSys3(ch) {
       if (sys3Players[ch] && typeof sys3Players[ch].loadVideoById === 'function') {
         sys3Players[ch].loadVideoById(SYS3_CONFIGS[ch].videoId);
+        sys3Players[ch].mute();
+        sys3Players[ch].playVideo();
       }
     }
 
@@ -2414,7 +2420,7 @@
       if (activeSystem === 3 || activeSystem === 4) return; 
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.7.5] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.7.6] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
