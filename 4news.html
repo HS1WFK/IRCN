@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.7.3</title>
+  <title>HS1WFK 4 STREAMS v2.7.6</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -193,6 +193,41 @@
     .btn:hover {
       color: var(--text-main);
       background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* DIGITAL WORLD CLOCK BAR */
+    .world-clock-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-left: 0.5rem;
+      padding: 0.15rem 0.4rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      font-family: monospace, -apple-system, BlinkMacSystemFont;
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      flex-wrap: nowrap;
+    }
+
+    .wc-item {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .wc-green {
+      color: #10b981;
+    }
+
+    .wc-red {
+      color: #ef4444;
+    }
+
+    .wc-yellow {
+      color: #f59e0b;
     }
 
     .btn-thaipbs {
@@ -435,7 +470,7 @@
       transform: translateZ(0);
     }
 
-    /* 50% LEFT-ALIGNED OVERLAY CONTROL PROTECTION (v2.7.3) */
+    /* 50% LEFT-ALIGNED OVERLAY CONTROL PROTECTION */
     .swap-overlay {
       display: block;
       position: absolute;
@@ -601,7 +636,7 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.7.3</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.7.6</span>
       </div>
 
       <!-- Quad System Toggle Button -->
@@ -629,6 +664,9 @@
       <button class="btn" onclick="muteAllChannelsGlobal()" style="border: 1px solid var(--border-color);">
         [Mute All]
       </button>
+
+      <!-- Digital World Clock Engine Bar -->
+      <div class="world-clock-bar" id="world-clock-container"></div>
     </div>
 
     <div class="header-right">
@@ -1036,7 +1074,6 @@
 
     let pageFocusChannel = { 1: 1, 2: 5 };
 
-    // REMOVED ANN NEWS (JP)
     const STATION_REGISTRY = [
       { id: 'aljazeera', name: 'Al Jazeera', videoId: 'gCNeDWCI0vo', category: 'News' },
       { id: 'skynews', name: 'Sky News', videoId: 'xDWQ3LkccY8', category: 'News' },
@@ -1091,9 +1128,11 @@
 
     let sys3Players = {};
     let sys3ReadyStatus = {};
+    let sys3Initialized = false;
 
     let sys4Players = {};
     let sys4ReadyStatus = {};
+    let sys4Initialized = false;
 
     let hlsInstances = {};        
     let hlsVideoElements = {};   
@@ -1102,6 +1141,68 @@
     let sys3FullscreenChannel = null;
     let sys4FullscreenChannel = null;
     let thaipbsWindowRef = null;
+
+    /* DIGITAL WORLD CLOCK ENGINE */
+    const CITY_TIMEZONES = [
+      { code: 'NYC', timeZone: 'America/New_York', hasSec: false },
+      { code: 'UTC', timeZone: 'UTC', hasSec: true },
+      { code: 'BKK', timeZone: 'Asia/Bangkok', hasSec: false },
+      { code: 'LDN', timeZone: 'Europe/London', hasSec: false },
+      { code: 'BJS', timeZone: 'Asia/Shanghai', hasSec: false },
+      { code: 'TKO', timeZone: 'Asia/Tokyo', hasSec: false },
+      { code: 'SYD', timeZone: 'Australia/Sydney', hasSec: false }
+    ];
+
+    function formatCityTime(tzObj, date) {
+      const options = {
+        timeZone: tzObj.timeZone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      };
+      if (tzObj.hasSec) {
+        options.second = '2-digit';
+      }
+      const formatter = new Intl.DateTimeFormat('en-US', options);
+      return formatter.format(date);
+    }
+
+    function updateWorldClock() {
+      const clockContainer = document.getElementById('world-clock-container');
+      if (!clockContainer) return;
+
+      const now = new Date();
+      let activeCities = [];
+
+      if (activeSystem === 3 || activeSystem === 4) {
+        activeCities = ['NYC', 'UTC', 'BKK', 'LDN', 'TKO'];
+      } else {
+        activeCities = ['NYC', 'UTC', 'BKK', 'LDN', 'BJS', 'TKO', 'SYD'];
+      }
+
+      const htmlParts = activeCities.map(code => {
+        const tzObj = CITY_TIMEZONES.find(c => c.code === code);
+        if (!tzObj) return '';
+
+        const timeStr = formatCityTime(tzObj, now);
+        let colorClass = 'wc-green';
+
+        if (code === 'UTC') {
+          colorClass = 'wc-red';
+        } else if (code === 'BKK') {
+          colorClass = 'wc-yellow';
+        }
+
+        return `<span class="wc-item ${colorClass}">[${code} ${timeStr}]</span>`;
+      });
+
+      clockContainer.innerHTML = htmlParts.join(' ');
+    }
+
+    function startWorldClockTimer() {
+      updateWorldClock();
+      setInterval(updateWorldClock, 1000);
+    }
 
     /* QUAD SYSTEM TOGGLE ENGINE (4 -> 1 -> 2 -> 3 -> 4) */
     function toggleSystem() {
@@ -1194,6 +1295,7 @@
         }
       }
 
+      updateWorldClock();
       switchPage(currentPage);
       setLayout(currentLayout);
     }
@@ -1210,8 +1312,10 @@
       setLayout(nextLayout);
     }
 
-    /* SYSTEM 4 ENGINE (SINGLE CHANNEL 16:9 MODE WITH FULLSCREEN & UNMUTE) */
+    /* SYSTEM 4 ENGINE (SINGLE CHANNEL 16:9 MODE WITH AUTOPLAY FIX) */
     function initSys4Players() {
+      if (sys4Initialized) return;
+      sys4Initialized = true;
       populateDropdownsSys4();
       initSingleSys4Player(1);
     }
@@ -1233,7 +1337,10 @@
           onReady: (e) => {
             sys4ReadyStatus[ch] = true;
             e.target.mute();
-            if (activeSystem === 4) {
+            e.target.playVideo();
+          },
+          onStateChange: (e) => {
+            if (e.data === YT.PlayerState.PAUSED && activeSystem === 4) {
               e.target.playVideo();
             }
           }
@@ -1333,6 +1440,7 @@
       if (sys4Players[ch] && typeof sys4Players[ch].loadVideoById === 'function') {
         sys4Players[ch].loadVideoById(videoId);
         sys4Players[ch].mute();
+        sys4Players[ch].playVideo();
         updateAudioButtonUI(ch, false, 4);
       }
     }
@@ -1354,6 +1462,8 @@
     function reloadScreenSys4(ch) {
       if (sys4Players[ch] && typeof sys4Players[ch].loadVideoById === 'function') {
         sys4Players[ch].loadVideoById(SYS4_CONFIGS[ch].videoId);
+        sys4Players[ch].mute();
+        sys4Players[ch].playVideo();
       }
     }
 
@@ -1370,8 +1480,10 @@
       }
     }
 
-    /* SYSTEM 3 ENGINE WITH CLEAN FULLSCREEN AUTO-UNMUTE/MUTE */
+    /* SYSTEM 3 ENGINE WITH AUTOPLAY FIX */
     function initSys3Players() {
+      if (sys3Initialized) return;
+      sys3Initialized = true;
       populateDropdownsSys3();
       for (let ch = 1; ch <= 2; ch++) {
         initSingleSys3Player(ch);
@@ -1395,7 +1507,10 @@
           onReady: (e) => {
             sys3ReadyStatus[ch] = true;
             e.target.mute();
-            if (activeSystem === 3) {
+            e.target.playVideo();
+          },
+          onStateChange: (e) => {
+            if (e.data === YT.PlayerState.PAUSED && activeSystem === 3) {
               e.target.playVideo();
             }
           }
@@ -1526,6 +1641,7 @@
       if (sys3Players[ch] && typeof sys3Players[ch].loadVideoById === 'function') {
         sys3Players[ch].loadVideoById(videoId);
         sys3Players[ch].mute();
+        sys3Players[ch].playVideo();
         updateAudioButtonUI(ch, false, 3);
       }
     }
@@ -1547,6 +1663,8 @@
     function reloadScreenSys3(ch) {
       if (sys3Players[ch] && typeof sys3Players[ch].loadVideoById === 'function') {
         sys3Players[ch].loadVideoById(SYS3_CONFIGS[ch].videoId);
+        sys3Players[ch].mute();
+        sys3Players[ch].playVideo();
       }
     }
 
@@ -1792,9 +1910,11 @@
       }
     }
 
-    /* SYSTEM 1 ENGINE: YOUTUBE IFRAME PLAYER API */
+    /* YOUTUBE IFRAME PLAYER API READY CALLBACK (CENTRALIZED INITIALIZATION) */
     function onYouTubeIframeAPIReady() {
       populateDropdowns();
+      initSys4Players();
+      initSys3Players();
       startHourlyTimer();
       startThaiPBSScheduleTimer();
     }
@@ -2300,7 +2420,7 @@
       if (activeSystem === 3 || activeSystem === 4) return; 
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.7.3] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.7.6] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
@@ -2323,8 +2443,7 @@
 
     /* SAFE DOM INITIALIZATION GUARD */
     document.addEventListener('DOMContentLoaded', () => {
-      initSys4Players();
-      initSys3Players();
+      startWorldClockTimer();
     });
 
     document.addEventListener('click', () => {
