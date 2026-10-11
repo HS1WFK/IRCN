@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.7.4</title>
+  <title>HS1WFK 4 STREAMS v2.7.5</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -195,7 +195,7 @@
       background-color: rgba(255, 255, 255, 0.05);
     }
 
-    /* DIGITAL WORLD CLOCK BAR (v2.7.4) */
+    /* DIGITAL WORLD CLOCK BAR */
     .world-clock-bar {
       display: flex;
       align-items: center;
@@ -636,7 +636,7 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.7.4</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.7.5</span>
       </div>
 
       <!-- Quad System Toggle Button -->
@@ -1128,9 +1128,11 @@
 
     let sys3Players = {};
     let sys3ReadyStatus = {};
+    let sys3Initialized = false;
 
     let sys4Players = {};
     let sys4ReadyStatus = {};
+    let sys4Initialized = false;
 
     let hlsInstances = {};        
     let hlsVideoElements = {};   
@@ -1140,14 +1142,12 @@
     let sys4FullscreenChannel = null;
     let thaipbsWindowRef = null;
 
-    /* DIGITAL WORLD CLOCK ENGINE (v2.7.4) */
+    /* DIGITAL WORLD CLOCK ENGINE (v2.7.5: REMOVED HNL & MOS) */
     const CITY_TIMEZONES = [
-      { code: 'HNL', timeZone: 'Pacific/Honolulu', hasSec: false },
       { code: 'NYC', timeZone: 'America/New_York', hasSec: false },
       { code: 'UTC', timeZone: 'UTC', hasSec: true },
       { code: 'BKK', timeZone: 'Asia/Bangkok', hasSec: false },
       { code: 'LDN', timeZone: 'Europe/London', hasSec: false },
-      { code: 'MOS', timeZone: 'Europe/Moscow', hasSec: false },
       { code: 'BJS', timeZone: 'Asia/Shanghai', hasSec: false },
       { code: 'TKO', timeZone: 'Asia/Tokyo', hasSec: false },
       { code: 'SYD', timeZone: 'Australia/Sydney', hasSec: false }
@@ -1178,8 +1178,8 @@
         // System 3 & 4: 5 Cities
         activeCities = ['NYC', 'UTC', 'BKK', 'LDN', 'TKO'];
       } else {
-        // System 1 & 2: Full 9 Cities
-        activeCities = ['HNL', 'NYC', 'UTC', 'BKK', 'LDN', 'MOS', 'BJS', 'TKO', 'SYD'];
+        // System 1 & 2: 7 Cities (Removed HNL & MOS)
+        activeCities = ['NYC', 'UTC', 'BKK', 'LDN', 'BJS', 'TKO', 'SYD'];
       }
 
       const htmlParts = activeCities.map(code => {
@@ -1314,8 +1314,10 @@
       setLayout(nextLayout);
     }
 
-    /* SYSTEM 4 ENGINE (SINGLE CHANNEL 16:9 MODE WITH FULLSCREEN & UNMUTE) */
+    /* SYSTEM 4 ENGINE (SINGLE CHANNEL 16:9 MODE) */
     function initSys4Players() {
+      if (sys4Initialized) return;
+      sys4Initialized = true;
       populateDropdownsSys4();
       initSingleSys4Player(1);
     }
@@ -1339,6 +1341,8 @@
             e.target.mute();
             if (activeSystem === 4) {
               e.target.playVideo();
+            } else {
+              e.target.pauseVideo();
             }
           }
         }
@@ -1476,6 +1480,8 @@
 
     /* SYSTEM 3 ENGINE WITH CLEAN FULLSCREEN AUTO-UNMUTE/MUTE */
     function initSys3Players() {
+      if (sys3Initialized) return;
+      sys3Initialized = true;
       populateDropdownsSys3();
       for (let ch = 1; ch <= 2; ch++) {
         initSingleSys3Player(ch);
@@ -1501,6 +1507,8 @@
             e.target.mute();
             if (activeSystem === 3) {
               e.target.playVideo();
+            } else {
+              e.target.pauseVideo();
             }
           }
         }
@@ -1896,9 +1904,11 @@
       }
     }
 
-    /* SYSTEM 1 ENGINE: YOUTUBE IFRAME PLAYER API */
+    /* YOUTUBE IFRAME PLAYER API READY CALLBACK (CENTRALIZED INITIALIZATION) */
     function onYouTubeIframeAPIReady() {
       populateDropdowns();
+      initSys4Players();
+      initSys3Players();
       startHourlyTimer();
       startThaiPBSScheduleTimer();
     }
@@ -2404,7 +2414,7 @@
       if (activeSystem === 3 || activeSystem === 4) return; 
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.7.4] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.7.5] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
@@ -2427,8 +2437,6 @@
 
     /* SAFE DOM INITIALIZATION GUARD */
     document.addEventListener('DOMContentLoaded', () => {
-      initSys4Players();
-      initSys3Players();
       startWorldClockTimer();
     });
 
