@@ -3,48 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.8.1</title>
+  <title>Exchange Times v1.8.2</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
     
-    /* Top Header */
-    .header-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 8px 12px; border-radius: 6px; border: 1px solid #333; margin-bottom: 6px; gap: 8px; }
-    .app-title { font-size: 24px; font-weight: bold; color: #00d2ff; }
-    .utc-clock { font-size: 22px; font-weight: bold; color: #ffffff; }
-    .controls { display: flex; gap: 12px; font-size: 18px; align-items: center; flex-wrap: wrap; }
+    /* Top Header (Font Scaled +30%) */
+    .header-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 10px 14px; border-radius: 6px; border: 1px solid #333; margin-bottom: 8px; gap: 8px; }
+    .app-title { font-size: 31px; font-weight: bold; color: #00d2ff; }
+    .utc-clock { font-size: 28px; font-weight: bold; color: #ffffff; }
+    .controls { display: flex; gap: 14px; font-size: 23px; align-items: center; flex-wrap: wrap; }
     .controls label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
     
-    /* Dynamic Audio Button Styles */
-    .audio-btn { background: #f44336; color: #ffffff; border: none; padding: 6px 14px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 18px; transition: background 0.3s; }
+    /* Dynamic Audio Button Styles (Font Scaled +30%) */
+    .audio-btn { background: #f44336; color: #ffffff; border: none; padding: 8px 18px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 23px; transition: background 0.3s; }
     .audio-btn.active { background: #4caf50; color: #ffffff; }
 
-    /* Table Container - Fixed Heights for Compact Layout */
-    .table-container { width: 100%; overflow-x: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; max-height: calc(100vh - 75px); }
-    .market-table { width: 100%; border-collapse: collapse; background: #181818; border-radius: 6px; overflow: hidden; table-layout: fixed; }
+    /* Table Container - Equal Row Distribution via Browser Engine */
+    .table-container { width: 100%; overflow-x: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; max-height: calc(100vh - 85px); }
+    .market-table { width: 100%; border-collapse: collapse; background: #181818; border-radius: 6px; overflow: hidden; }
     
-    /* Global Compact Row Style (บังคับชิดเท่า ASIA) */
-    .market-table th, .market-table td { padding: 2px 8px; text-align: left; border-bottom: 1px solid #2a2a2a; vertical-align: middle; line-height: 1.1; }
-    .market-table th { background: #252525; color: #888; font-size: 16px; text-transform: uppercase; position: sticky; top: 0; z-index: 10; padding: 4px 8px; }
+    /* Global Row Style (Font Scaled +30%) */
+    .market-table th, .market-table td { padding: 5px 10px; text-align: left; border-bottom: 1px solid #2a2a2a; vertical-align: middle; }
+    .market-table th { background: #252525; color: #888; font-size: 21px; text-transform: uppercase; position: sticky; top: 0; z-index: 10; padding: 6px 10px; }
     
-    /* Thailand Specific Spacing (โปร่ง เด่น ชัด) */
-    .row-thailand td { padding: 7px 8px !important; line-height: 1.3 !important; }
+    .zone-header { background: #1f2d3d !important; color: #00d2ff !important; font-weight: bold; font-size: 23px; text-transform: uppercase; padding: 5px 10px !important; }
     
-    .zone-header { background: #1f2d3d !important; color: #00d2ff !important; font-weight: bold; font-size: 18px; text-transform: uppercase; padding: 3px 8px !important; line-height: 1.2 !important; }
-    
-    .ex-name-container { display: flex; align-items: center; gap: 8px; }
-    .ex-name { font-weight: bold; font-size: 19px; }
-    .ex-time { font-size: 18px; color: #aaa; font-weight: 500; }
+    .ex-name-container { display: flex; align-items: center; gap: 10px; }
+    .ex-name { font-weight: bold; font-size: 25px; }
+    .ex-time { font-size: 23px; color: #aaa; font-weight: 500; }
     .blinking-name { animation: blink-red 1s infinite; color: #ff5252 !important; }
 
-    /* Candle Stick Counter Badge */
-    .candle-counter { font-size: 18px; color: #aaa; font-weight: 500; margin-left: 6px; display: inline-block; }
+    /* Candle Stick Counter Badge (Font Scaled +30%) */
+    .candle-counter { font-size: 23px; color: #aaa; font-weight: 500; margin-left: 8px; display: inline-block; }
 
     /* LED Status Indicator */
-    .led-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-    .led-green { background-color: #4caf50; box-shadow: 0 0 6px #4caf50; }
-    .led-red { background-color: #f44336; box-shadow: 0 0 6px #f44336; }
-    .led-orange { background-color: #ff9800; box-shadow: 0 0 6px #ff9800; }
+    .led-dot { width: 15px; height: 15px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .led-green { background-color: #4caf50; box-shadow: 0 0 8px #4caf50; }
+    .led-red { background-color: #f44336; box-shadow: 0 0 8px #f44336; }
+    .led-orange { background-color: #ff9800; box-shadow: 0 0 8px #ff9800; }
 
     /* Responsive Display Logic */
     .name-full { display: inline; }
@@ -53,17 +50,16 @@
     @media screen and (max-width: 480px) {
       .name-full { display: none; }
       .name-short { display: inline; }
-      .market-table th, .market-table td { padding: 2px 4px; }
-      .row-thailand td { padding: 5px 4px !important; }
+      .market-table th, .market-table td { padding: 4px 6px; }
     }
 
-    /* Indicator Bar (IB) Styles */
-    .ib-container { position: relative; width: 100%; height: 30px; background-color: #2a2a2a; border-radius: 4px; overflow: hidden; }
+    /* Indicator Bar (IB) Styles (Height Scaled) */
+    .ib-container { position: relative; width: 100%; height: 38px; background-color: #2a2a2a; border-radius: 4px; overflow: hidden; }
     .ib-fill { height: 100%; background-color: #00d2ff; width: 0%; -webkit-transition: width 0.5s linear; transition: width 0.5s linear; }
     .ib-fill.ib-gray { background-color: #808080 !important; }
     .ib-fill.warning { background-color: #ff9800 !important; }
     
-    /* Dynamic Contrast Text Overlay */
+    /* Dynamic Contrast Text Overlay (Font Scaled +30%) */
     .ib-overlay-text { 
       position: absolute; 
       top: 0; 
@@ -73,8 +69,8 @@
       display: flex; 
       align-items: center; 
       justify-content: flex-start; 
-      padding-left: 10px; 
-      font-size: 19px; 
+      padding-left: 12px; 
+      font-size: 25px; 
       font-weight: bold; 
       color: #ffffff; 
       mix-blend-mode: difference; 
@@ -82,14 +78,14 @@
       z-index: 2; 
     }
 
-    /* Statuses */
-    .status-open { color: #4caf50; font-weight: bold; font-size: 19px; }
-    .status-close { color: #f44336; font-weight: bold; font-size: 19px; }
-    .status-close-dark { color: #7f1d1d; font-weight: bold; font-size: 19px; }
+    /* Statuses (Font Scaled +30%) */
+    .status-open { color: #4caf50; font-weight: bold; font-size: 25px; }
+    .status-close { color: #f44336; font-weight: bold; font-size: 25px; }
+    .status-close-dark { color: #7f1d1d; font-weight: bold; font-size: 25px; }
 
-    /* Tomorrow Status Styles */
-    .tomorrow-normal { color: #2e7d32; font-weight: bold; font-size: 15px; }
-    .tomorrow-close { color: #f44336; font-weight: bold; font-size: 15px; }
+    /* Tomorrow Status Styles (Font Scaled +30%) */
+    .tomorrow-normal { color: #2e7d32; font-weight: bold; font-size: 20px; }
+    .tomorrow-close { color: #f44336; font-weight: bold; font-size: 20px; }
 
     .blinking-text { animation: blink-anim 1s infinite; }
 
@@ -101,8 +97,8 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 15px; color: #888;">v1.8.1</span></div>
-    <div class="utc-clock" id="utcClock">UTC Now: --:--:--</div>
+    <div class="app-title">Exchange Times <span style="font-size: 18px; color: #888;">v1.8.2</span></div>
+    <div class="utc-clock" id="utcClock">UTC: --:--:--</div>
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
       <label><input type="checkbox" id="muteExchange" checked> Exchange</label>
@@ -116,8 +112,8 @@
       <thead>
         <tr>
           <th style="width: 15%;">TIME</th>
-          <th style="width: 32%;">EXCHANGE / ASSET</th>
-          <th style="width: 38%;">STATUS</th>
+          <th style="width: 34%;">EXCHANGE / ASSET</th>
+          <th style="width: 36%;">STATUS</th>
           <th style="width: 15%;">TOMORROW</th>
         </tr>
       </thead>
@@ -268,9 +264,8 @@
           tbody.innerHTML += '<tr><td colspan="4" class="zone-header">' + currentZone + '</td></tr>';
         }
 
-        const isThailandRow = (m.zone === "THAILAND");
         tbody.innerHTML += `
-          <tr id="row-${m.code}" class="${isThailandRow ? 'row-thailand' : ''}">
+          <tr id="row-${m.code}">
             <td class="ex-time" id="time-${m.code}">--:--</td>
             <td class="ex-name" id="name-${m.code}">
               <div class="ex-name-container">
@@ -286,7 +281,7 @@
 
         if (m.code === 'TFEX') {
           tbody.innerHTML += `
-            <tr id="row-TFEX-1M" class="row-thailand">
+            <tr id="row-TFEX-1M">
               <td class="ex-time" id="time-TFEX-1M">--:--</td>
               <td class="ex-name">
                 <div class="ex-name-container">
@@ -299,7 +294,7 @@
               <td id="status-TFEX-1M">--</td>
               <td class="tomorrow-normal">Normal</td>
             </tr>
-            <tr id="row-TFEX-5M" class="row-thailand">
+            <tr id="row-TFEX-5M">
               <td class="ex-time" id="time-TFEX-5M">--:--</td>
               <td class="ex-name">
                 <div class="ex-name-container">
@@ -324,7 +319,7 @@
       const now = new Date();
 
       const utcHM = now.toISOString().substr(11, 8);
-      document.getElementById('utcClock').innerText = 'UTC Now: ' + utcHM;
+      document.getElementById('utcClock').innerText = 'UTC: ' + utcHM;
 
       const muteEx = !document.getElementById('muteExchange').checked;
       const muteTfex = !document.getElementById('muteTFEX').checked;
