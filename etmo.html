@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.5.2</title>
+  <title>Exchange Times v1.5.4</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 12px; }
@@ -18,9 +18,6 @@
     /* Dynamic Audio Button Styles */
     .audio-btn { background: #f44336; color: #ffffff; border: none; padding: 6px 12px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.3s; }
     .audio-btn.active { background: #4caf50; color: #ffffff; }
-    
-    /* Temporary Test Sound Button Style */
-    .test-sound-btn { background: #ff9800; color: #000000; border: none; padding: 6px 10px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 12px; }
 
     /* Table Container */
     .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -94,11 +91,10 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 11px; color: #888;">v1.5.2</span></div>
+    <div class="app-title">Exchange Times <span style="font-size: 11px; color: #888;">v1.5.4</span></div>
     <div class="utc-clock" id="utcClock">UTC Now: --:--:--</div>
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
-      <button id="btnTestSound" class="test-sound-btn" onclick="testBeepSound()">[ Test Sound ]</button>
       <label><input type="checkbox" id="muteExchange" checked> Exchange</label>
       <label><input type="checkbox" id="muteTFEX" checked> TFEX</label>
     </div>
@@ -123,7 +119,7 @@
 
   <script>
     const markets = [
-      // THAILAND (TOP) - Fixed Session 2 Open to 14:00 (SET) & 13:45 (TFEX)
+      // THAILAND (TOP)
       { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:00", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
       { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX (Thailand Futures)", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
 
@@ -162,11 +158,6 @@
       const btn = document.getElementById('btnAudio');
       btn.innerText = "Alert On";
       btn.classList.add('active');
-    }
-
-    function testBeepSound() {
-      enableAudio();
-      playBeep(1, 0.4, 0.1, true); // Immediate Beep Test for iOS
     }
 
     document.addEventListener('touchstart', function() {
@@ -303,8 +294,6 @@
     }
 
     const soundStates = {};
-    let isSetTrading = false;
-    let isSetBreak = false;
 
     function updateEngine() {
       const now = new Date();
@@ -314,6 +303,30 @@
 
       const muteEx = !document.getElementById('muteExchange').checked;
       const muteTfex = !document.getElementById('muteTFEX').checked;
+
+      // Direct calculation for TFEX Trading Status in Thailand Zone
+      const thP = getZonedParts(now, "Asia/Bangkok");
+      const thMin = parseInt(thP.hour, 10) * 60 + parseInt(thP.minute, 10);
+      const thDateStr = thP.year + '-' + thP.month + '-' + thP.day;
+      const isThWeekend = (thP.weekday === 'Sat' || thP.weekday === 'Sun');
+      const tfexHolidays = ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"];
+      const isThHoliday = tfexHolidays.indexOf(thDateStr) !== -1;
+
+      let isTfexTrading = false;
+      let isTfexBreak = false;
+
+      if (!isThWeekend && !isThHoliday) {
+        const tfexOpenMin = timeToMin("09:45");
+        const tfexCloseMin = timeToMin("16:55");
+        const tfexLunchStart = timeToMin("12:30");
+        const tfexLunchEnd = timeToMin("13:45");
+
+        if (thMin >= tfexLunchStart && thMin < tfexLunchEnd) {
+          isTfexBreak = true;
+        } else if (thMin >= tfexOpenMin && thMin < tfexCloseMin) {
+          isTfexTrading = true;
+        }
+      }
 
       markets.forEach(m => {
         const p = getZonedParts(now, m.timezone);
@@ -350,7 +363,6 @@
           statusCell.innerHTML = '<span class="status-close">CLOSED (Holiday/Weekend)</span>';
           nameCell.classList.remove('blinking-name');
           setLedState(m.code, 'red');
-          if (m.code === 'SET') { isSetTrading = false; isSetBreak = false; }
           return;
         }
 
@@ -366,7 +378,6 @@
           statusCell.innerHTML = '<span class="' + colorClass + '">Closed, Open in ' + formatHM(diff) + '</span>';
           nameCell.classList.remove('blinking-name');
           setLedState(m.code, 'red');
-          if (m.code === 'SET') { isSetTrading = false; isSetBreak = false; }
         } else if (localMin >= openMin && localMin < closeMin) {
           let isLunch = false;
           if (m.hasLunch) {
@@ -386,14 +397,10 @@
               `;
               nameCell.classList.remove('blinking-name');
               setLedState(m.code, 'orange');
-
-              if (m.code === 'SET') { isSetTrading = false; isSetBreak = true; }
             }
           }
 
           if (!isLunch) {
-            if (m.code === 'SET') { isSetTrading = true; isSetBreak = false; }
-
             const remaining = closeMin - localMin;
             const pct = Math.max(0, Math.min(100, (remaining / totalSession) * 100));
             const isWarning = remaining <= 30;
@@ -423,7 +430,6 @@
           statusCell.innerHTML = '<span class="' + colorClass + '">Closed, Open in ' + formatHM(nextDayOpenDiff) + '</span>';
           nameCell.classList.remove('blinking-name');
           setLedState(m.code, 'red');
-          if (m.code === 'SET') { isSetTrading = false; isSetBreak = false; }
         }
       });
 
@@ -439,12 +445,12 @@
       const tfex1Cell = document.getElementById('status-TFEX-1M');
       const tfex5Cell = document.getElementById('status-TFEX-5M');
 
-      if (isSetBreak) {
+      if (isTfexBreak) {
         tfex1Cell.innerHTML = '<span class="status-close blinking-text">Break</span>';
         tfex5Cell.innerHTML = '<span class="status-close blinking-text">Break</span>';
         setLedState('TFEX-1M', 'orange');
         setLedState('TFEX-5M', 'orange');
-      } else if (!isSetTrading) {
+      } else if (!isTfexTrading) {
         tfex1Cell.innerHTML = '<span class="status-close">Closed</span>';
         tfex5Cell.innerHTML = '<span class="status-close">Closed</span>';
         setLedState('TFEX-1M', 'red');
