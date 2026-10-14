@@ -3,27 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.8.2</title>
+  <title>Exchange Times v1.8.3</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
     
-    /* Top Header (Font Scaled +30%) */
+    /* Top Header Default (iPad / PC) */
     .header-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 10px 14px; border-radius: 6px; border: 1px solid #333; margin-bottom: 8px; gap: 8px; }
     .app-title { font-size: 31px; font-weight: bold; color: #00d2ff; }
     .utc-clock { font-size: 28px; font-weight: bold; color: #ffffff; }
     .controls { display: flex; gap: 14px; font-size: 23px; align-items: center; flex-wrap: wrap; }
     .controls label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
     
-    /* Dynamic Audio Button Styles (Font Scaled +30%) */
     .audio-btn { background: #f44336; color: #ffffff; border: none; padding: 8px 18px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 23px; transition: background 0.3s; }
     .audio-btn.active { background: #4caf50; color: #ffffff; }
 
-    /* Table Container - Equal Row Distribution via Browser Engine */
+    /* Table Container Default (iPad / PC) */
     .table-container { width: 100%; overflow-x: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; max-height: calc(100vh - 85px); }
     .market-table { width: 100%; border-collapse: collapse; background: #181818; border-radius: 6px; overflow: hidden; }
     
-    /* Global Row Style (Font Scaled +30%) */
     .market-table th, .market-table td { padding: 5px 10px; text-align: left; border-bottom: 1px solid #2a2a2a; vertical-align: middle; }
     .market-table th { background: #252525; color: #888; font-size: 21px; text-transform: uppercase; position: sticky; top: 0; z-index: 10; padding: 6px 10px; }
     
@@ -34,32 +32,18 @@
     .ex-time { font-size: 23px; color: #aaa; font-weight: 500; }
     .blinking-name { animation: blink-red 1s infinite; color: #ff5252 !important; }
 
-    /* Candle Stick Counter Badge (Font Scaled +30%) */
     .candle-counter { font-size: 23px; color: #aaa; font-weight: 500; margin-left: 8px; display: inline-block; }
 
-    /* LED Status Indicator */
     .led-dot { width: 15px; height: 15px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
     .led-green { background-color: #4caf50; box-shadow: 0 0 8px #4caf50; }
     .led-red { background-color: #f44336; box-shadow: 0 0 8px #f44336; }
     .led-orange { background-color: #ff9800; box-shadow: 0 0 8px #ff9800; }
 
-    /* Responsive Display Logic */
-    .name-full { display: inline; }
-    .name-short { display: none; }
-
-    @media screen and (max-width: 480px) {
-      .name-full { display: none; }
-      .name-short { display: inline; }
-      .market-table th, .market-table td { padding: 4px 6px; }
-    }
-
-    /* Indicator Bar (IB) Styles (Height Scaled) */
     .ib-container { position: relative; width: 100%; height: 38px; background-color: #2a2a2a; border-radius: 4px; overflow: hidden; }
     .ib-fill { height: 100%; background-color: #00d2ff; width: 0%; -webkit-transition: width 0.5s linear; transition: width 0.5s linear; }
     .ib-fill.ib-gray { background-color: #808080 !important; }
     .ib-fill.warning { background-color: #ff9800 !important; }
     
-    /* Dynamic Contrast Text Overlay (Font Scaled +30%) */
     .ib-overlay-text { 
       position: absolute; 
       top: 0; 
@@ -78,17 +62,50 @@
       z-index: 2; 
     }
 
-    /* Statuses (Font Scaled +30%) */
     .status-open { color: #4caf50; font-weight: bold; font-size: 25px; }
     .status-close { color: #f44336; font-weight: bold; font-size: 25px; }
     .status-close-dark { color: #7f1d1d; font-weight: bold; font-size: 25px; }
 
-    /* Tomorrow Status Styles (Font Scaled +30%) */
     .tomorrow-normal { color: #2e7d32; font-weight: bold; font-size: 20px; }
     .tomorrow-close { color: #f44336; font-weight: bold; font-size: 20px; }
 
-    .blinking-text { animation: blink-anim 1s infinite; }
+    /* Display Responsive Switching */
+    .name-full { display: inline; }
+    .name-short { display: none; }
 
+    /* 📱 MOBILE / IPHONE OVERRIDE (Compact Font & Sizing from Early Versions) */
+    @media screen and (max-width: 600px) {
+      body { padding: 6px; }
+      .header-panel { padding: 8px 10px; margin-bottom: 6px; }
+      .app-title { font-size: 16px; }
+      .utc-clock { font-size: 15px; }
+      .controls { font-size: 12px; gap: 8px; }
+      .audio-btn { font-size: 12px; padding: 4px 8px; }
+
+      .table-container { max-height: calc(100vh - 65px); }
+      .market-table th, .market-table td { padding: 4px 6px; }
+      .market-table th { font-size: 12px; padding: 4px 6px; }
+      
+      .zone-header { font-size: 13px; padding: 3px 6px !important; }
+      
+      .ex-name-container { gap: 5px; }
+      .ex-name { font-size: 13px; }
+      .ex-time { font-size: 12px; }
+
+      .candle-counter { font-size: 12px; margin-left: 4px; }
+      .led-dot { width: 8px; height: 8px; }
+
+      .ib-container { height: 22px; }
+      .ib-overlay-text { font-size: 13px; padding-left: 6px; }
+
+      .status-open, .status-close, .status-close-dark { font-size: 13px; }
+      .tomorrow-normal, .tomorrow-close { font-size: 11px; }
+
+      .name-full { display: none; }
+      .name-short { display: inline; }
+    }
+
+    .blinking-text { animation: blink-anim 1s infinite; }
     @keyframes blink-anim { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     @keyframes blink-red { 0%, 100% { color: #ff5252; } 50% { color: #ffffff; } }
   </style>
@@ -97,7 +114,7 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 18px; color: #888;">v1.8.2</span></div>
+    <div class="app-title">Exchange Times <span style="font-size: 14px; color: #888;">v1.8.3</span></div>
     <div class="utc-clock" id="utcClock">UTC: --:--:--</div>
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
@@ -127,32 +144,32 @@
     const markets = [
       // THAILAND
       { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:00", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
-      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX (Thailand Futures)", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX (Thailand Fut.)", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
 
       // ASIA
       { zone: "ASIA", code: "ASX", shortName: "ASX", name: "Australia ASX", timezone: "Australia/Sydney", open: "10:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-26","2026-04-03","2026-04-06","2026-04-25","2026-06-08","2026-12-25","2026-12-26"] },
       { zone: "ASIA", code: "TSE", shortName: "NIKKEI", name: "NIKKEI (Tokyo)", timezone: "Asia/Tokyo", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "12:30", holidays: ["2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-07-20","2026-09-21","2026-09-23","2026-10-12","2026-11-03","2026-11-23"] },
       { zone: "ASIA", code: "KRX", shortName: "KOSPI", name: "KOSPI (Korea)", timezone: "Asia/Seoul", open: "09:00", close: "15:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-05-05","2026-05-24","2026-06-06","2026-08-15","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-09","2026-12-25","2026-12-31"] },
-      { zone: "ASIA", code: "HKEX", shortName: "HSI", name: "HANG SENG (Hong Kong)", timezone: "Asia/Hong_Kong", open: "09:30", close: "16:00", hasLunch: true, lunchStart: "12:00", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-17","2026-02-18","2026-02-19","2026-04-03","2026-04-06","2026-04-30","2026-05-01","2026-05-25","2026-07-01","2026-09-26","2026-10-01","2026-10-19","2026-12-25","2026-12-26"] },
+      { zone: "ASIA", code: "HKEX", shortName: "HSI", name: "HANG SENG (HKG)", timezone: "Asia/Hong_Kong", open: "09:30", close: "16:00", hasLunch: true, lunchStart: "12:00", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-17","2026-02-18","2026-02-19","2026-04-03","2026-04-06","2026-04-30","2026-05-01","2026-05-25","2026-07-01","2026-09-26","2026-10-01","2026-10-19","2026-12-25","2026-12-26"] },
       { zone: "ASIA", code: "SSE", shortName: "SSE", name: "Shanghai (China)", timezone: "Asia/Shanghai", open: "09:30", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-01","2026-10-02","2026-10-05","2026-10-06","2026-10-07"] },
       { zone: "ASIA", code: "TWSE", shortName: "TWSE", name: "Taiwan Weighted", timezone: "Asia/Taipei", open: "09:00", close: "13:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-28","2026-04-04","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-10"] },
-      { zone: "ASIA", code: "HOSE", shortName: "HOSE", name: "Vietnam (HOSE)", timezone: "Asia/Ho_Chi_Minh", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-26","2026-04-30","2026-05-01","2026-09-02"] },
+      { zone: "ASIA", code: "HOSE", shortName: "HOSE", name: "Vietnam", timezone: "Asia/Ho_Chi_Minh", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-26","2026-04-30","2026-05-01","2026-09-02"] },
       
       // EUROPE
       { zone: "EUROPE", code: "LSE", shortName: "FTSE", name: "FTSE (London)", timezone: "Europe/London", open: "08:00", close: "16:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-04","2026-05-25","2026-08-31","2026-12-25","2026-12-28"] },
       { zone: "EUROPE", code: "XETRA", shortName: "DAX", name: "DAX (Frankfurt)", timezone: "Europe/Berlin", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-24","2026-12-25","2026-12-26","2026-12-31"] },
-      { zone: "EUROPE", code: "PAR", shortName: "CAC", name: "CAC (Euronext Paris)", timezone: "Europe/Paris", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-25","2026-12-26"] },
+      { zone: "EUROPE", code: "PAR", shortName: "CAC", name: "CAC (Paris)", timezone: "Europe/Paris", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-25","2026-12-26"] },
       
       // USA
       { zone: "USA", code: "NYSE", shortName: "NYSE", name: "NYSE (New York)", timezone: "America/New_York", open: "09:30", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"] },
 
       // GLOBAL ASSETS
-      { zone: "GLOBAL ASSETS", code: "TBMA", shortName: "TBMA (BKK)", name: "TBMA - Thai Bonds (BKK)", timezone: "Asia/Bangkok", open: "09:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
-      { zone: "GLOBAL ASSETS", code: "US10Y", shortName: "US10Y (CHI)", name: "US10Y - Treasury (CHI)", timezone: "America/Chicago", open: "17:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "DXY", shortName: "DXY (NYC)", name: "DXY - USD Index (NYC)", timezone: "America/New_York", open: "20:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "TBMA", shortName: "TBMA (BKK)", name: "TBMA - Bonds (BKK)", timezone: "Asia/Bangkok", open: "09:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "GLOBAL ASSETS", code: "US10Y", shortName: "US10Y (CHI)", name: "US10Y - (CHI)", timezone: "America/Chicago", open: "17:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "DXY", shortName: "DXY (NYC)", name: "DXY - (NYC)", timezone: "America/New_York", open: "20:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
       { zone: "GLOBAL ASSETS", code: "BRENT", shortName: "Brent (LON)", name: "Brent - Crude Oil (LON)", timezone: "Europe/London", open: "01:00", close: "23:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
       { zone: "GLOBAL ASSETS", code: "GOLD", shortName: "Gold (NYC)", name: "Gold - Spot (NYC)", timezone: "America/New_York", open: "18:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "VIX", shortName: "VIX (CHI)", name: "VIX - Volatility Index (CHI)", timezone: "America/Chicago", open: "02:15", close: "16:15", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "VIX", shortName: "VIX (CHI)", name: "VIX - (CHI)", timezone: "America/Chicago", open: "02:15", close: "16:15", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
       { zone: "GLOBAL ASSETS", code: "FOREX", shortName: "FOREX (LON)", name: "FOREX - Global FX (LON)", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
       { zone: "GLOBAL ASSETS", code: "MSCI_FX", shortName: "MSCI FX (LON)", name: "MSCI FX (LON)", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
       { zone: "GLOBAL ASSETS", code: "MSCI_WORLD", shortName: "MSCI World (LON)", name: "MSCI World Index (LON)", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] }
