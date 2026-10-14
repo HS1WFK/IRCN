@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.4.2</title>
+  <title>Exchange Times v1.4.3</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 12px; }
@@ -66,6 +66,7 @@
     /* Statuses */
     .status-open { color: #4caf50; font-weight: bold; }
     .status-close { color: #f44336; font-weight: bold; }
+    .status-close-dark { color: #c62828; font-weight: bold; } /* สีแดงทึบสำหรับรอเปิดเกิน 1 ชั่วโมง */
     .blinking-text { animation: blink-anim 1s infinite; }
 
     @keyframes blink-anim { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -76,7 +77,7 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 11px; color: #888;">v1.4.2</span></div>
+    <div class="app-title">Exchange Times <span style="font-size: 11px; color: #888;">v1.4.3</span></div>
     <div class="utc-clock" id="utcClock">UTC Now: --:--:--</div>
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="enableAudio()">เปิดระบบเสียง (Touch)</button>
@@ -229,7 +230,6 @@
           </tr>
         `;
 
-        // Append TFEX Sub-Rows directly below TFEX in THAILAND Section
         if (m.code === 'TFEX') {
           tbody.innerHTML += `
             <tr id="row-TFEX-1M">
@@ -239,7 +239,7 @@
                 <span class="name-short">TFEX 1m</span>
               </td>
               <td id="status-TFEX-1M">--</td>
-              <td>Open</td>
+              <td class="status-open">Open</td>
             </tr>
             <tr id="row-TFEX-5M">
               <td class="ex-time" id="time-TFEX-5M">--:--</td>
@@ -248,7 +248,7 @@
                 <span class="name-short">TFEX 5m</span>
               </td>
               <td id="status-TFEX-5M">--</td>
-              <td>Open</td>
+              <td class="status-open">Open</td>
             </tr>
           `;
         }
@@ -312,7 +312,8 @@
 
         if (localMin < openMin) {
           const diff = openMin - localMin;
-          statusCell.innerHTML = '<span class="status-close">Closed, Open in ' + formatHM(diff) + '</span>';
+          const colorClass = diff > 60 ? 'status-close-dark' : 'status-close';
+          statusCell.innerHTML = '<span class="' + colorClass + '">Closed, Open in ' + formatHM(diff) + '</span>';
           nameCell.classList.remove('blinking-name');
           if (m.code === 'SET') { isSetTrading = false; isSetBreak = false; }
         } else if (localMin >= openMin && localMin < closeMin) {
@@ -365,7 +366,8 @@
           }
         } else {
           const nextDayOpenDiff = (24 * 60 - localMin) + openMin;
-          statusCell.innerHTML = '<span class="status-close">Closed, Open in ' + formatHM(nextDayOpenDiff) + '</span>';
+          const colorClass = nextDayOpenDiff > 60 ? 'status-close-dark' : 'status-close';
+          statusCell.innerHTML = '<span class="' + colorClass + '">Closed, Open in ' + formatHM(nextDayOpenDiff) + '</span>';
           nameCell.classList.remove('blinking-name');
           if (m.code === 'SET') { isSetTrading = false; isSetBreak = false; }
         }
