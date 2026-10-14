@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.8.3</title>
+  <title>Exchange Times v1.8.4</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -73,33 +73,37 @@
     .name-full { display: inline; }
     .name-short { display: none; }
 
-    /* 📱 MOBILE / IPHONE OVERRIDE (Compact Font & Sizing from Early Versions) */
+    /* 📱 MOBILE / IPHONE OVERRIDE (Version 1.8.4 Specific Specs) */
     @media screen and (max-width: 600px) {
       body { padding: 6px; }
       .header-panel { padding: 8px 10px; margin-bottom: 6px; }
-      .app-title { font-size: 16px; }
-      .utc-clock { font-size: 15px; }
-      .controls { font-size: 12px; gap: 8px; }
-      .audio-btn { font-size: 12px; padding: 4px 8px; }
+      
+      /* Title & UTC Clock: Bold + Increased 2 Font Sizes */
+      .app-title { font-size: 20px !important; font-weight: 800 !important; }
+      .utc-clock { font-size: 18px !important; font-weight: 800 !important; }
+      
+      .controls { font-size: 13px; gap: 8px; }
+      .audio-btn { font-size: 13px; padding: 4px 8px; }
 
       .table-container { max-height: calc(100vh - 65px); }
       .market-table th, .market-table td { padding: 4px 6px; }
-      .market-table th { font-size: 12px; padding: 4px 6px; }
+      .market-table th { font-size: 13px; padding: 4px 6px; }
       
-      .zone-header { font-size: 13px; padding: 3px 6px !important; }
+      .zone-header { font-size: 14px; padding: 3px 6px !important; }
       
       .ex-name-container { gap: 5px; }
-      .ex-name { font-size: 13px; }
-      .ex-time { font-size: 12px; }
+      .ex-name { font-size: 14px; }
+      .ex-time { font-size: 13px; }
 
-      .candle-counter { font-size: 12px; margin-left: 4px; }
-      .led-dot { width: 8px; height: 8px; }
+      .candle-counter { font-size: 13px; margin-left: 4px; }
+      .led-dot { width: 9px; height: 9px; }
 
-      .ib-container { height: 22px; }
-      .ib-overlay-text { font-size: 13px; padding-left: 6px; }
-
-      .status-open, .status-close, .status-close-dark { font-size: 13px; }
-      .tomorrow-normal, .tomorrow-close { font-size: 11px; }
+      .ib-container { height: 24px; }
+      
+      /* Status Text: Increased 2 Font Sizes (from 13px to 16px) */
+      .ib-overlay-text { font-size: 16px !important; padding-left: 6px; }
+      .status-open, .status-close, .status-close-dark { font-size: 16px !important; }
+      .tomorrow-normal, .tomorrow-close { font-size: 12px; }
 
       .name-full { display: none; }
       .name-short { display: inline; }
@@ -114,7 +118,7 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 14px; color: #888;">v1.8.3</span></div>
+    <div class="app-title">Exchange Times <span style="font-size: 14px; color: #888;">v1.8.4</span></div>
     <div class="utc-clock" id="utcClock">UTC: --:--:--</div>
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
@@ -334,6 +338,7 @@
 
     function updateEngine() {
       const now = new Date();
+      const isMobile = window.innerWidth <= 600;
 
       const utcHM = now.toISOString().substr(11, 8);
       document.getElementById('utcClock').innerText = 'UTC: ' + utcHM;
@@ -444,7 +449,8 @@
             diff = (1440 - localMin) + openMin;
           }
           const colorClass = diff > 60 ? 'status-close-dark' : 'status-close';
-          statusCell.innerHTML = '<span class="' + colorClass + '">Closed, Open in ' + formatHM(diff) + '</span>';
+          const openText = isMobile ? ('Open in ' + formatHM(diff)) : ('Closed, Open in ' + formatHM(diff));
+          statusCell.innerHTML = '<span class="' + colorClass + '">' + openText + '</span>';
           nameCell.classList.remove('blinking-name');
           setLedState(m.code, 'red');
         } else {
