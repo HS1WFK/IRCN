@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.6.0</title>
+  <title>Exchange Times v1.7.0</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; overflow: hidden; } /* ป้องกันการสกอร์ลบน iPad */
+    html, body { height: 100%; overflow: hidden; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; display: flex; flex-direction: column; justify-content: flex-start; }
     
-    /* Top Header (Scaled +50%) */
+    /* Top Header */
     .header-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 8px 12px; border-radius: 6px; border: 1px solid #333; margin-bottom: 6px; gap: 8px; flex-shrink: 0; }
     .app-title { font-size: 24px; font-weight: bold; color: #00d2ff; }
     .utc-clock { font-size: 22px; font-weight: bold; color: #ffffff; }
     .controls { display: flex; gap: 12px; font-size: 18px; align-items: center; flex-wrap: wrap; }
     .controls label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
     
-    /* Dynamic Audio Button Styles (Scaled +50%) */
+    /* Dynamic Audio Button Styles */
     .audio-btn { background: #f44336; color: #ffffff; border: none; padding: 6px 14px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 18px; transition: background 0.3s; }
     .audio-btn.active { background: #4caf50; color: #ffffff; }
 
-    /* Table Container & Compact Layout for Single Page Display */
+    /* Table Container */
     .table-container { width: 100%; flex: 1; overflow: hidden; display: flex; flex-direction: column; }
     .market-table { width: 100%; border-collapse: collapse; background: #181818; border-radius: 6px; overflow: hidden; height: 100%; }
     .market-table th, .market-table td { padding: 3px 8px; text-align: left; border-bottom: 1px solid #2a2a2a; vertical-align: middle; }
@@ -33,7 +33,10 @@
     .ex-time { font-size: 18px; color: #aaa; font-weight: 500; }
     .blinking-name { animation: blink-red 1s infinite; color: #ff5252 !important; }
 
-    /* LED Status Indicator (Scaled +50%) */
+    /* Candle Stick Counter Badge */
+    .candle-counter { font-size: 18px; color: #aaa; font-weight: 500; margin-right: 4px; min-width: 32px; display: inline-block; }
+
+    /* LED Status Indicator */
     .led-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
     .led-green { background-color: #4caf50; box-shadow: 0 0 6px #4caf50; }
     .led-red { background-color: #f44336; box-shadow: 0 0 6px #f44336; }
@@ -49,13 +52,13 @@
       .market-table th, .market-table td { padding: 2px 4px; }
     }
 
-    /* Indicator Bar (IB) Styles (Scaled height +50% = 33px) */
+    /* Indicator Bar (IB) Styles */
     .ib-container { position: relative; width: 100%; height: 33px; background-color: #2a2a2a; border-radius: 4px; overflow: hidden; }
     .ib-fill { height: 100%; background-color: #00d2ff; width: 0%; -webkit-transition: width 0.5s linear; transition: width 0.5s linear; }
-    .ib-fill.ib-gray { background-color: #808080 !important; } /* สีเทา 50% สำหรับ TFEX 1m, 5m */
+    .ib-fill.ib-gray { background-color: #808080 !important; }
     .ib-fill.warning { background-color: #ff9800 !important; }
     
-    /* Dynamic Contrast Text Overlay (Scaled Font +50% = 20px) */
+    /* Dynamic Contrast Text Overlay */
     .ib-overlay-text { 
       position: absolute; 
       top: 0; 
@@ -74,12 +77,12 @@
       z-index: 2; 
     }
 
-    /* Statuses (Scaled Font +50%) */
+    /* Statuses */
     .status-open { color: #4caf50; font-weight: bold; font-size: 19px; }
     .status-close { color: #f44336; font-weight: bold; font-size: 19px; }
     .status-close-dark { color: #7f1d1d; font-weight: bold; font-size: 19px; }
 
-    /* Tomorrow Status Styles (Scaled Font +50%) */
+    /* Tomorrow Status Styles */
     .tomorrow-normal { color: #2e7d32; font-weight: bold; font-size: 15px; }
     .tomorrow-close { color: #f44336; font-weight: bold; font-size: 15px; }
 
@@ -93,7 +96,7 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 15px; color: #888;">v1.6.0</span></div>
+    <div class="app-title">Exchange Times <span style="font-size: 15px; color: #888;">v1.7.0</span></div>
     <div class="utc-clock" id="utcClock">UTC Now: --:--:--</div>
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
@@ -270,8 +273,9 @@
               <td class="ex-time" id="time-TFEX-1M">--:--</td>
               <td class="ex-name">
                 <div class="ex-name-container">
+                  <span class="candle-counter" id="candle-count-1m">--</span>
                   <span class="led-dot led-red" id="led-TFEX-1M"></span>
-                  <span class="name-full">TFEX (1 นาที Cycle)</span>
+                  <span class="name-full">TFEX (1 นาที)</span>
                   <span class="name-short">TFEX 1m</span>
                 </div>
               </td>
@@ -282,8 +286,9 @@
               <td class="ex-time" id="time-TFEX-5M">--:--</td>
               <td class="ex-name">
                 <div class="ex-name-container">
+                  <span class="candle-counter" id="candle-count-5m">--</span>
                   <span class="led-dot led-red" id="led-TFEX-5M"></span>
-                  <span class="name-full">TFEX (5 นาที Cycle)</span>
+                  <span class="name-full">TFEX (5 นาที)</span>
                   <span class="name-short">TFEX 5m</span>
                 </div>
               </td>
@@ -317,17 +322,40 @@
 
       let isTfexTrading = false;
       let isTfexBreak = false;
+      let remainingTfexMinutes = 0;
+
+      const tfexOpenMin = timeToMin("09:45");
+      const tfexCloseMin = timeToMin("16:55");
+      const tfexLunchStart = timeToMin("12:30");
+      const tfexLunchEnd = timeToMin("13:45");
 
       if (!isThWeekend && !isThHoliday) {
-        const tfexOpenMin = timeToMin("09:45");
-        const tfexCloseMin = timeToMin("16:55");
-        const tfexLunchStart = timeToMin("12:30");
-        const tfexLunchEnd = timeToMin("13:45");
-
         if (thMin >= tfexLunchStart && thMin < tfexLunchEnd) {
           isTfexBreak = true;
+          // ช่วงพักกลางวัน: เหลือนาทีของภาคบ่ายเต็มจำนวน (13:45 - 16:55 = 190 นาที)
+          remainingTfexMinutes = tfexCloseMin - tfexLunchEnd;
         } else if (thMin >= tfexOpenMin && thMin < tfexCloseMin) {
           isTfexTrading = true;
+          if (thMin < tfexLunchStart) {
+            // ช่วงเช้า: เหลือนาทีภาคเช้า + นาทีภาคบ่าย
+            remainingTfexMinutes = (tfexLunchStart - thMin) + (tfexCloseMin - tfexLunchEnd);
+          } else {
+            // ช่วงบ่าย: เหลือนาทีภาคบ่าย
+            remainingTfexMinutes = tfexCloseMin - thMin;
+          }
+        }
+      }
+
+      // อัปเดตตัวเลข Candle Stick Countdown
+      const count1mElem = document.getElementById('candle-count-1m');
+      const count5mElem = document.getElementById('candle-count-5m');
+      if (count1mElem && count5mElem) {
+        if (isTfexTrading || isTfexBreak) {
+          count1mElem.innerText = remainingTfexMinutes;
+          count5mElem.innerText = Math.ceil(remainingTfexMinutes / 5);
+        } else {
+          count1mElem.innerText = "0";
+          count5mElem.innerText = "0";
         }
       }
 
@@ -415,7 +443,7 @@
             }
 
             if (localMin === openMin && localSec === 0 && !soundStates[m.code].opened && !muteEx) {
-              playBeep(1, 0.6, 0.1, true); // Exchange Open sound (Long beep)
+              playBeep(1, 0.6, 0.1, true);
               soundStates[m.code].opened = true;
             }
 
@@ -487,10 +515,8 @@
         if (currentSec === 0 && lastTfex1mSec !== 0) {
           if (!muteTfex) {
             if (currentMin % 5 === 0) {
-              // 5 Min Cycle Complete -> 2 Short Beeps
               playBeep(2, 0.15, 0.1, false);
             } else {
-              // 1 Min Cycle Complete -> 1 Short Beep
               playBeep(1, 0.15, 0.1, false);
             }
           }
