@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.8.4</title>
+  <title>Exchange Times v1.9.0</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -73,12 +73,11 @@
     .name-full { display: inline; }
     .name-short { display: none; }
 
-    /* 📱 MOBILE / IPHONE OVERRIDE (Version 1.8.4 Specific Specs) */
+    /* 📱 MOBILE / IPHONE OVERRIDE */
     @media screen and (max-width: 600px) {
       body { padding: 6px; }
       .header-panel { padding: 8px 10px; margin-bottom: 6px; }
       
-      /* Title & UTC Clock: Bold + Increased 2 Font Sizes */
       .app-title { font-size: 20px !important; font-weight: 800 !important; }
       .utc-clock { font-size: 18px !important; font-weight: 800 !important; }
       
@@ -100,7 +99,6 @@
 
       .ib-container { height: 24px; }
       
-      /* Status Text: Increased 2 Font Sizes (from 13px to 16px) */
       .ib-overlay-text { font-size: 16px !important; padding-left: 6px; }
       .status-open, .status-close, .status-close-dark { font-size: 16px !important; }
       .tomorrow-normal, .tomorrow-close { font-size: 12px; }
@@ -118,7 +116,7 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 14px; color: #888;">v1.8.4</span></div>
+    <div class="app-title">Exchange Times <span style="font-size: 14px; color: #888;">v1.9.0</span></div>
     <div class="utc-clock" id="utcClock">UTC: --:--:--</div>
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
@@ -148,7 +146,7 @@
     const markets = [
       // THAILAND
       { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:00", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
-      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX (Thailand Fut.)", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX S50/GO/FX", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
 
       // ASIA
       { zone: "ASIA", code: "ASX", shortName: "ASX", name: "Australia ASX", timezone: "Australia/Sydney", open: "10:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-26","2026-04-03","2026-04-06","2026-04-25","2026-06-08","2026-12-25","2026-12-26"] },
@@ -291,8 +289,8 @@
             <td class="ex-name" id="name-${m.code}">
               <div class="ex-name-container">
                 <span class="led-dot led-red" id="led-${m.code}"></span>
-                <span class="name-full">${m.name}</span>
-                <span class="name-short">${m.shortName}</span>
+                <span class="name-full" id="name-full-${m.code}">${m.name}</span>
+                <span class="name-short" id="name-short-${m.code}">${m.shortName}</span>
               </div>
             </td>
             <td id="status-${m.code}">--</td>
@@ -346,7 +344,7 @@
       const muteEx = !document.getElementById('muteExchange').checked;
       const muteTfex = !document.getElementById('muteTFEX').checked;
 
-      // Direct calculation for TFEX Trading Status in Thailand Zone
+      // Direct calculation for TFEX Day & Night Trading Status
       const thP = getZonedParts(now, "Asia/Bangkok");
       const thMin = parseInt(thP.hour, 10) * 60 + parseInt(thP.minute, 10);
       const thDateStr = thP.year + '-' + thP.month + '-' + thP.day;
@@ -356,28 +354,60 @@
 
       let isTfexTrading = false;
       let isTfexBreak = false;
+      let isNightSession = false;
       let remainingTfexMinutes = 0;
 
-      const tfexOpenMin = timeToMin("09:45");
-      const tfexCloseMin = timeToMin("16:55");
-      const tfexLunchStart = timeToMin("12:30");
-      const tfexLunchEnd = timeToMin("13:45");
+      const dayOpen = timeToMin("09:45");
+      const dayClose = timeToMin("16:55");
+      const dayLunchStart = timeToMin("12:30");
+      const dayLunchEnd = timeToMin("13:45");
+      
+      const nightOpen = timeToMin("18:45");
+      const nightClose = timeToMin("03:00"); // 180 min next morning
+
+      // Dynamic Display Name for TFEX based on Session
+      const tfexFullElem = document.getElementById('name-full-TFEX');
+      const tfexShortElem = document.getElementById('name-short-TFEX');
 
       if (!isThWeekend && !isThHoliday) {
-        if (thMin >= tfexLunchStart && thMin < tfexLunchEnd) {
-          isTfexBreak = true;
-          remainingTfexMinutes = tfexCloseMin - tfexLunchEnd;
-        } else if (thMin >= tfexOpenMin && thMin < tfexCloseMin) {
+        // Night Session check (18:45 to 23:59 OR 00:00 to 03:00)
+        if (thMin >= nightOpen || thMin < nightClose) {
+          isNightSession = true;
           isTfexTrading = true;
-          if (thMin < tfexLunchStart) {
-            remainingTfexMinutes = (tfexLunchStart - thMin) + (tfexCloseMin - tfexLunchEnd);
+          if (thMin >= nightOpen) {
+            remainingTfexMinutes = (1440 - thMin) + nightClose;
           } else {
-            remainingTfexMinutes = tfexCloseMin - thMin;
+            remainingTfexMinutes = nightClose - thMin;
+          }
+        } 
+        // Day Lunch Break
+        else if (thMin >= dayLunchStart && thMin < dayLunchEnd) {
+          isTfexBreak = true;
+          remainingTfexMinutes = dayClose - dayLunchEnd;
+        } 
+        // Day Session Trading
+        else if (thMin >= dayOpen && thMin < dayClose) {
+          isTfexTrading = true;
+          if (thMin < dayLunchStart) {
+            remainingTfexMinutes = (dayLunchStart - thMin) + (dayClose - dayLunchEnd);
+          } else {
+            remainingTfexMinutes = dayClose - thMin;
           }
         }
       }
 
-      // Update Candle Counter Output
+      // Update TFEX Name Dynamically
+      if (tfexFullElem && tfexShortElem) {
+        if (isNightSession || (thMin >= dayClose && thMin < nightOpen)) {
+          tfexFullElem.innerText = "TFEX GO/FX";
+          tfexShortElem.innerText = "TFEX Night";
+        } else {
+          tfexFullElem.innerText = "TFEX S50/GO/FX";
+          tfexShortElem.innerText = "TFEX Day";
+        }
+      }
+
+      // Update Candle Counter Output for 1m and 5m bars
       const count1mElem = document.getElementById('candle-count-1m');
       const count5mElem = document.getElementById('candle-count-5m');
       if (count1mElem && count5mElem) {
@@ -428,6 +458,52 @@
           return;
         }
 
+        // Special Custom Engine for TFEX Row
+        if (m.code === 'TFEX') {
+          if (isTfexTrading) {
+            let totalSession = isNightSession ? (1440 - nightOpen + nightClose) : (dayClose - dayOpen);
+            let pct = Math.max(0, Math.min(100, (remainingTfexMinutes / totalSession) * 100));
+            let isWarning = remainingTfexMinutes <= 30;
+
+            statusCell.innerHTML = `
+              <div class="ib-container">
+                <div class="ib-fill ${isWarning ? 'warning' : ''}" style="width: ${pct}%;"></div>
+                <div class="ib-overlay-text">Close in ${formatHM(remainingTfexMinutes)}</div>
+              </div>
+            `;
+            setLedState(m.code, 'green');
+          } else if (isTfexBreak) {
+            let remBreak = dayLunchEnd - localMin;
+            statusCell.innerHTML = `
+              <div class="ib-container">
+                <div class="ib-fill" style="width: 50%;"></div>
+                <div class="ib-overlay-text blinking-text">Break, Open in ${formatHM(remBreak)}</div>
+              </div>
+            `;
+            setLedState(m.code, 'orange');
+          } else {
+            // Between day close and night open (16:55 - 18:45)
+            if (localMin >= dayClose && localMin < nightOpen) {
+              let diffNight = nightOpen - localMin;
+              let textNight = isMobile ? ('Night Open in ' + formatHM(diffNight)) : ('Day Closed, Night Open in ' + formatHM(diffNight));
+              statusCell.innerHTML = '<span class="status-close">' + textNight + '</span>';
+            } else {
+              let diffDay = 0;
+              if (localMin < dayOpen) {
+                diffDay = dayOpen - localMin;
+              } else {
+                diffDay = (1440 - localMin) + dayOpen;
+              }
+              let textDay = isMobile ? ('Day Open in ' + formatHM(diffDay)) : ('Closed, Day Open in ' + formatHM(diffDay));
+              statusCell.innerHTML = '<span class="status-close-dark">' + textDay + '</span>';
+            }
+            nameCell.classList.remove('blinking-name');
+            setLedState(m.code, 'red');
+          }
+          return;
+        }
+
+        // Standard Market Processing
         const openMin = timeToMin(m.open);
         const closeMin = timeToMin(m.close);
         const totalSession = closeMin > openMin ? (closeMin - openMin) : (1440 - openMin + closeMin);
