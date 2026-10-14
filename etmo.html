@@ -3,15 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.9.0</title>
+  <title>Exchange Times v2.0.0</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
     
+    /* General Hyperlink Styles */
+    a { color: inherit; text-decoration: none; transition: opacity 0.2s; }
+    a:hover { opacity: 0.8; text-decoration: underline; }
+
     /* Top Header Default (iPad / PC) */
     .header-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 10px 14px; border-radius: 6px; border: 1px solid #333; margin-bottom: 8px; gap: 8px; }
     .app-title { font-size: 31px; font-weight: bold; color: #00d2ff; }
     .utc-clock { font-size: 28px; font-weight: bold; color: #ffffff; }
+    .utc-clock a { color: #ffffff; }
     .controls { display: flex; gap: 14px; font-size: 23px; align-items: center; flex-wrap: wrap; }
     .controls label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
     
@@ -24,9 +29,11 @@
     
     .market-table th, .market-table td { padding: 5px 10px; text-align: left; border-bottom: 1px solid #2a2a2a; vertical-align: middle; }
     .market-table th { background: #252525; color: #888; font-size: 21px; text-transform: uppercase; position: sticky; top: 0; z-index: 10; padding: 6px 10px; }
-    
+    .market-table th a { color: #888; }
+
     .zone-header { background: #1f2d3d !important; color: #00d2ff !important; font-weight: bold; font-size: 23px; text-transform: uppercase; padding: 5px 10px !important; }
-    
+    .zone-header a { color: #00d2ff !important; }
+
     .ex-name-container { display: flex; align-items: center; gap: 10px; }
     .ex-name { font-weight: bold; font-size: 25px; }
     .ex-time { font-size: 23px; color: #aaa; font-weight: 500; }
@@ -116,8 +123,10 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 14px; color: #888;">v1.9.0</span></div>
-    <div class="utc-clock" id="utcClock">UTC: --:--:--</div>
+    <div class="app-title">Exchange Times <span style="font-size: 14px; color: #888;">v2.0.0</span></div>
+    <div class="utc-clock">
+      <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClock">UTC: --:--:--</a>
+    </div>
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
       <label><input type="checkbox" id="muteExchange" checked> Exchange</label>
@@ -131,9 +140,15 @@
       <thead>
         <tr>
           <th style="width: 15%;">TIME</th>
-          <th style="width: 34%;">EXCHANGE / ASSET</th>
-          <th style="width: 36%;">STATUS</th>
-          <th style="width: 15%;">TOMORROW</th>
+          <th style="width: 34%;">
+            <a href="https://www.investing.com/indices/major-indices" target="_blank" rel="noopener">EXCHANGE / ASSET</a>
+          </th>
+          <th style="width: 36%;">
+            <a href="https://www.investing.com/news" target="_blank" rel="noopener">STATUS/NEWS</a>
+          </th>
+          <th style="width: 15%;">
+            <a href="https://www.investing.com/economic-calendar" target="_blank" rel="noopener">TOMORROW</a>
+          </th>
         </tr>
       </thead>
       <tbody id="marketRows">
@@ -143,38 +158,44 @@
   </div>
 
   <script>
+    const zoneLinks = {
+      "ASIA": "https://www.investing.com/indices/asian-pacific-indices",
+      "EUROPE": "https://www.investing.com/indices/european-indices",
+      "USA": "https://www.investing.com/indices/usa-indices"
+    };
+
     const markets = [
       // THAILAND
-      { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:00", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
-      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX S50/GO/FX", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", link: "", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:00", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX S50/GO/FX", link: "", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
 
       // ASIA
-      { zone: "ASIA", code: "ASX", shortName: "ASX", name: "Australia ASX", timezone: "Australia/Sydney", open: "10:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-26","2026-04-03","2026-04-06","2026-04-25","2026-06-08","2026-12-25","2026-12-26"] },
-      { zone: "ASIA", code: "TSE", shortName: "NIKKEI", name: "NIKKEI (Tokyo)", timezone: "Asia/Tokyo", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "12:30", holidays: ["2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-07-20","2026-09-21","2026-09-23","2026-10-12","2026-11-03","2026-11-23"] },
-      { zone: "ASIA", code: "KRX", shortName: "KOSPI", name: "KOSPI (Korea)", timezone: "Asia/Seoul", open: "09:00", close: "15:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-05-05","2026-05-24","2026-06-06","2026-08-15","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-09","2026-12-25","2026-12-31"] },
-      { zone: "ASIA", code: "HKEX", shortName: "HSI", name: "HANG SENG (HKG)", timezone: "Asia/Hong_Kong", open: "09:30", close: "16:00", hasLunch: true, lunchStart: "12:00", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-17","2026-02-18","2026-02-19","2026-04-03","2026-04-06","2026-04-30","2026-05-01","2026-05-25","2026-07-01","2026-09-26","2026-10-01","2026-10-19","2026-12-25","2026-12-26"] },
-      { zone: "ASIA", code: "SSE", shortName: "SSE", name: "Shanghai (China)", timezone: "Asia/Shanghai", open: "09:30", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-01","2026-10-02","2026-10-05","2026-10-06","2026-10-07"] },
-      { zone: "ASIA", code: "TWSE", shortName: "TWSE", name: "Taiwan Weighted", timezone: "Asia/Taipei", open: "09:00", close: "13:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-28","2026-04-04","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-10"] },
-      { zone: "ASIA", code: "HOSE", shortName: "HOSE", name: "Vietnam", timezone: "Asia/Ho_Chi_Minh", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-26","2026-04-30","2026-05-01","2026-09-02"] },
+      { zone: "ASIA", code: "ASX", shortName: "ASX", name: "Australia ASX", link: "https://www.investing.com/indices/aus-200", timezone: "Australia/Sydney", open: "10:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-26","2026-04-03","2026-04-06","2026-04-25","2026-06-08","2026-12-25","2026-12-26"] },
+      { zone: "ASIA", code: "TSE", shortName: "NIKKEI", name: "NIKKEI (Tokyo)", link: "https://www.investing.com/indices/japan-ni225", timezone: "Asia/Tokyo", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "12:30", holidays: ["2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-07-20","2026-09-21","2026-09-23","2026-10-12","2026-11-03","2026-11-23"] },
+      { zone: "ASIA", code: "KRX", shortName: "KOSPI", name: "KOSPI (Korea)", link: "https://www.investing.com/indices/kospi", timezone: "Asia/Seoul", open: "09:00", close: "15:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-05-05","2026-05-24","2026-06-06","2026-08-15","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-09","2026-12-25","2026-12-31"] },
+      { zone: "ASIA", code: "HKEX", shortName: "HSI", name: "HANG SENG (HKG)", link: "https://www.investing.com/indices/hang-sen-40", timezone: "Asia/Hong_Kong", open: "09:30", close: "16:00", hasLunch: true, lunchStart: "12:00", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-17","2026-02-18","2026-02-19","2026-04-03","2026-04-06","2026-04-30","2026-05-01","2026-05-25","2026-07-01","2026-09-26","2026-10-01","2026-10-19","2026-12-25","2026-12-26"] },
+      { zone: "ASIA", code: "SSE", shortName: "SSE", name: "Shanghai (China)", link: "https://www.investing.com/indices/shanghai-composite", timezone: "Asia/Shanghai", open: "09:30", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-01","2026-10-02","2026-10-05","2026-10-06","2026-10-07"] },
+      { zone: "ASIA", code: "TWSE", shortName: "TWSE", name: "Taiwan Weighted", link: "https://www.investing.com/indices/taiwan-weighted", timezone: "Asia/Taipei", open: "09:00", close: "13:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-28","2026-04-04","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-10"] },
+      { zone: "ASIA", code: "HOSE", shortName: "HOSE", name: "Vietnam", link: "https://www.investing.com/indices/vn", timezone: "Asia/Ho_Chi_Minh", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-26","2026-04-30","2026-05-01","2026-09-02"] },
       
       // EUROPE
-      { zone: "EUROPE", code: "LSE", shortName: "FTSE", name: "FTSE (London)", timezone: "Europe/London", open: "08:00", close: "16:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-04","2026-05-25","2026-08-31","2026-12-25","2026-12-28"] },
-      { zone: "EUROPE", code: "XETRA", shortName: "DAX", name: "DAX (Frankfurt)", timezone: "Europe/Berlin", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-24","2026-12-25","2026-12-26","2026-12-31"] },
-      { zone: "EUROPE", code: "PAR", shortName: "CAC", name: "CAC (Paris)", timezone: "Europe/Paris", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-25","2026-12-26"] },
+      { zone: "EUROPE", code: "LSE", shortName: "FTSE", name: "FTSE (London)", link: "https://www.investing.com/indices/uk-100", timezone: "Europe/London", open: "08:00", close: "16:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-04","2026-05-25","2026-08-31","2026-12-25","2026-12-28"] },
+      { zone: "EUROPE", code: "XETRA", shortName: "DAX", name: "DAX (Frankfurt)", link: "https://www.investing.com/indices/germany-30", timezone: "Europe/Berlin", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-24","2026-12-25","2026-12-26","2026-12-31"] },
+      { zone: "EUROPE", code: "PAR", shortName: "CAC", name: "CAC (Paris)", link: "https://www.investing.com/indices/france-40", timezone: "Europe/Paris", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-25","2026-12-26"] },
       
       // USA
-      { zone: "USA", code: "NYSE", shortName: "NYSE", name: "NYSE (New York)", timezone: "America/New_York", open: "09:30", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"] },
+      { zone: "USA", code: "NYSE", shortName: "NYSE", name: "NYSE (New York)", link: "https://www.investing.com/indices/us-30", timezone: "America/New_York", open: "09:30", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"] },
 
       // GLOBAL ASSETS
-      { zone: "GLOBAL ASSETS", code: "TBMA", shortName: "TBMA (BKK)", name: "TBMA - Bonds (BKK)", timezone: "Asia/Bangkok", open: "09:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
-      { zone: "GLOBAL ASSETS", code: "US10Y", shortName: "US10Y (CHI)", name: "US10Y - (CHI)", timezone: "America/Chicago", open: "17:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "DXY", shortName: "DXY (NYC)", name: "DXY - (NYC)", timezone: "America/New_York", open: "20:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "BRENT", shortName: "Brent (LON)", name: "Brent - Crude Oil (LON)", timezone: "Europe/London", open: "01:00", close: "23:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "GOLD", shortName: "Gold (NYC)", name: "Gold - Spot (NYC)", timezone: "America/New_York", open: "18:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "VIX", shortName: "VIX (CHI)", name: "VIX - (CHI)", timezone: "America/Chicago", open: "02:15", close: "16:15", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "FOREX", shortName: "FOREX (LON)", name: "FOREX - Global FX (LON)", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
-      { zone: "GLOBAL ASSETS", code: "MSCI_FX", shortName: "MSCI FX (LON)", name: "MSCI FX (LON)", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
-      { zone: "GLOBAL ASSETS", code: "MSCI_WORLD", shortName: "MSCI World (LON)", name: "MSCI World Index (LON)", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] }
+      { zone: "GLOBAL ASSETS", code: "TBMA", shortName: "TBMA (BKK)", name: "TBMA - Bonds (BKK)", link: "https://hs1wfk.github.io/IRCN/etmo.html", timezone: "Asia/Bangkok", open: "09:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "GLOBAL ASSETS", code: "US10Y", shortName: "US10Y (CHI)", name: "US10Y - (CHI)", link: "https://www.investing.com/rates-bonds/u.s.-10-year-bond-yield", timezone: "America/Chicago", open: "17:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "DXY", shortName: "DXY (NYC)", name: "DXY - (NYC)", link: "https://www.investing.com/currencies/us-dollar-index", timezone: "America/New_York", open: "20:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "BRENT", shortName: "Brent (LON)", name: "Brent - Crude Oil (LON)", link: "https://www.investing.com/commodities/brent-oil", timezone: "Europe/London", open: "01:00", close: "23:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "GOLD", shortName: "Gold (NYC)", name: "Gold - Spot (NYC)", link: "https://www.investing.com/commodities/gold", timezone: "America/New_York", open: "18:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "VIX", shortName: "VIX (CHI)", name: "VIX - (CHI)", link: "https://www.investing.com/indices/volatility-s-p-500", timezone: "America/Chicago", open: "02:15", close: "16:15", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "FOREX", shortName: "FOREX (LON)", name: "FOREX - Global FX (LON)", link: "https://www.investing.com/currencies/streaming-forex-rates-majors", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
+      { zone: "GLOBAL ASSETS", code: "MSCI_FX", shortName: "MSCI FX (LON)", name: "MSCI FX (LON)", link: "https://www.investing.com/indices/msci-intl-em-currency", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
+      { zone: "GLOBAL ASSETS", code: "MSCI_WORLD", shortName: "MSCI World (LON)", name: "MSCI World Index (LON)", link: "https://www.investing.com/indices/msci-world", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] }
     ];
 
     let audioCtx = null;
@@ -280,8 +301,21 @@
       markets.forEach(m => {
         if (m.zone !== currentZone) {
           currentZone = m.zone;
-          tbody.innerHTML += '<tr><td colspan="4" class="zone-header">' + currentZone + '</td></tr>';
+          const zLink = zoneLinks[currentZone];
+          const zoneHeaderContent = zLink 
+            ? `<a href="${zLink}" target="_blank" rel="noopener">${currentZone}</a>`
+            : currentZone;
+
+          tbody.innerHTML += `<tr><td colspan="4" class="zone-header">${zoneHeaderContent}</td></tr>`;
         }
+
+        const nameFullContent = m.link 
+          ? `<a href="${m.link}" target="_blank" rel="noopener">${m.name}</a>`
+          : m.name;
+
+        const nameShortContent = m.link 
+          ? `<a href="${m.link}" target="_blank" rel="noopener">${m.shortName}</a>`
+          : m.shortName;
 
         tbody.innerHTML += `
           <tr id="row-${m.code}">
@@ -289,8 +323,8 @@
             <td class="ex-name" id="name-${m.code}">
               <div class="ex-name-container">
                 <span class="led-dot led-red" id="led-${m.code}"></span>
-                <span class="name-full" id="name-full-${m.code}">${m.name}</span>
-                <span class="name-short" id="name-short-${m.code}">${m.shortName}</span>
+                <span class="name-full" id="name-full-${m.code}">${nameFullContent}</span>
+                <span class="name-short" id="name-short-${m.code}">${nameShortContent}</span>
               </div>
             </td>
             <td id="status-${m.code}">--</td>
@@ -363,14 +397,12 @@
       const dayLunchEnd = timeToMin("13:45");
       
       const nightOpen = timeToMin("18:45");
-      const nightClose = timeToMin("03:00"); // 180 min next morning
+      const nightClose = timeToMin("03:00");
 
-      // Dynamic Display Name for TFEX based on Session
       const tfexFullElem = document.getElementById('name-full-TFEX');
       const tfexShortElem = document.getElementById('name-short-TFEX');
 
       if (!isThWeekend && !isThHoliday) {
-        // Night Session check (18:45 to 23:59 OR 00:00 to 03:00)
         if (thMin >= nightOpen || thMin < nightClose) {
           isNightSession = true;
           isTfexTrading = true;
@@ -380,12 +412,10 @@
             remainingTfexMinutes = nightClose - thMin;
           }
         } 
-        // Day Lunch Break
         else if (thMin >= dayLunchStart && thMin < dayLunchEnd) {
           isTfexBreak = true;
           remainingTfexMinutes = dayClose - dayLunchEnd;
         } 
-        // Day Session Trading
         else if (thMin >= dayOpen && thMin < dayClose) {
           isTfexTrading = true;
           if (thMin < dayLunchStart) {
@@ -396,7 +426,6 @@
         }
       }
 
-      // Update TFEX Name Dynamically
       if (tfexFullElem && tfexShortElem) {
         if (isNightSession || (thMin >= dayClose && thMin < nightOpen)) {
           tfexFullElem.innerText = "TFEX GO/FX";
@@ -407,7 +436,6 @@
         }
       }
 
-      // Update Candle Counter Output for 1m and 5m bars
       const count1mElem = document.getElementById('candle-count-1m');
       const count5mElem = document.getElementById('candle-count-5m');
       if (count1mElem && count5mElem) {
@@ -458,7 +486,7 @@
           return;
         }
 
-        // Special Custom Engine for TFEX Row
+        // Custom Engine for TFEX Row
         if (m.code === 'TFEX') {
           if (isTfexTrading) {
             let totalSession = isNightSession ? (1440 - nightOpen + nightClose) : (dayClose - dayOpen);
@@ -482,7 +510,6 @@
             `;
             setLedState(m.code, 'orange');
           } else {
-            // Between day close and night open (16:55 - 18:45)
             if (localMin >= dayClose && localMin < nightOpen) {
               let diffNight = nightOpen - localMin;
               let textNight = isMobile ? ('Night Open in ' + formatHM(diffNight)) : ('Day Closed, Night Open in ' + formatHM(diffNight));
@@ -601,7 +628,6 @@
         setLedState('TFEX-1M', 'red');
         setLedState('TFEX-5M', 'red');
       } else {
-        // TFEX 1 Min Bar Render
         const remSec1M = 60 - currentSec;
         const pct1M = (remSec1M / 60) * 100;
         
@@ -611,7 +637,6 @@
           </div>
         `;
 
-        // TFEX 5 Min Bar Render
         const secIn5M = (currentMin % 5) * 60 + currentSec;
         const remSec5M = 300 - secIn5M;
         const pct5M = (remSec5M / 300) * 100;
@@ -625,7 +650,6 @@
         setLedState('TFEX-1M', 'green');
         setLedState('TFEX-5M', 'green');
 
-        // AUDIO ALERTS TRIGGER FOR TFEX CYCLES
         if (currentSec === 0 && lastTfex1mSec !== 0) {
           if (!muteTfex) {
             if (currentMin % 5 === 0) {
