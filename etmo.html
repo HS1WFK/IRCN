@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.4.1</title>
+  <title>Exchange Times v1.4.2</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 12px; }
@@ -33,7 +33,6 @@
     .name-full { display: inline; }
     .name-short { display: none; }
 
-    /* Screen Breakpoint for iPhone / Small Mobile Screens */
     @media screen and (max-width: 480px) {
       .name-full { display: none; }
       .name-short { display: inline; }
@@ -77,7 +76,7 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 11px; color: #888;">v1.4.1</span></div>
+    <div class="app-title">Exchange Times <span style="font-size: 11px; color: #888;">v1.4.2</span></div>
     <div class="utc-clock" id="utcClock">UTC Now: --:--:--</div>
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="enableAudio()">เปิดระบบเสียง (Touch)</button>
@@ -105,6 +104,10 @@
 
   <script>
     const markets = [
+      // THAILAND (TOP)
+      { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:30", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX (Thailand Futures)", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+
       // ASIA
       { zone: "ASIA", code: "ASX", shortName: "ASX", name: "Australia ASX", timezone: "Australia/Sydney", open: "10:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-26","2026-04-03","2026-04-06","2026-04-25","2026-06-08","2026-12-25","2026-12-26"] },
       { zone: "ASIA", code: "TSE", shortName: "NIKKEI", name: "NIKKEI (Tokyo)", timezone: "Asia/Tokyo", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "12:30", holidays: ["2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-07-20","2026-09-21","2026-09-23","2026-10-12","2026-11-03","2026-11-23"] },
@@ -120,11 +123,7 @@
       { zone: "EUROPE", code: "PAR", shortName: "CAC", name: "CAC (Euronext Paris)", timezone: "Europe/Paris", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-25","2026-12-26"] },
       
       // USA
-      { zone: "USA", code: "NYSE", shortName: "NYSE", name: "NYSE (New York)", timezone: "America/New_York", open: "09:30", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"] },
-
-      // THAILAND
-      { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:30", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
-      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX (Thailand Futures)", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] }
+      { zone: "USA", code: "NYSE", shortName: "NYSE", name: "NYSE (New York)", timezone: "America/New_York", open: "09:30", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"] }
     ];
 
     let audioCtx = null;
@@ -229,28 +228,31 @@
             <td id="tomorrow-${m.code}">--</td>
           </tr>
         `;
-      });
 
-      tbody.innerHTML += `
-        <tr id="row-TFEX-1M">
-          <td class="ex-time" id="time-TFEX-1M">--:--</td>
-          <td class="ex-name">
-            <span class="name-full">TFEX (1 นาที Cycle)</span>
-            <span class="name-short">TFEX 1m</span>
-          </td>
-          <td id="status-TFEX-1M">--</td>
-          <td>Open</td>
-        </tr>
-        <tr id="row-TFEX-5M">
-          <td class="ex-time" id="time-TFEX-5M">--:--</td>
-          <td class="ex-name">
-            <span class="name-full">TFEX (5 นาที Cycle)</span>
-            <span class="name-short">TFEX 5m</span>
-          </td>
-          <td id="status-TFEX-5M">--</td>
-          <td>Open</td>
-        </tr>
-      `;
+        // Append TFEX Sub-Rows directly below TFEX in THAILAND Section
+        if (m.code === 'TFEX') {
+          tbody.innerHTML += `
+            <tr id="row-TFEX-1M">
+              <td class="ex-time" id="time-TFEX-1M">--:--</td>
+              <td class="ex-name">
+                <span class="name-full">TFEX (1 นาที Cycle)</span>
+                <span class="name-short">TFEX 1m</span>
+              </td>
+              <td id="status-TFEX-1M">--</td>
+              <td>Open</td>
+            </tr>
+            <tr id="row-TFEX-5M">
+              <td class="ex-time" id="time-TFEX-5M">--:--</td>
+              <td class="ex-name">
+                <span class="name-full">TFEX (5 นาที Cycle)</span>
+                <span class="name-short">TFEX 5m</span>
+              </td>
+              <td id="status-TFEX-5M">--</td>
+              <td>Open</td>
+            </tr>
+          `;
+        }
+      });
     }
 
     const soundStates = {};
