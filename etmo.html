@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.4.4</title>
+  <title>Exchange Times v1.5.0</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 12px; }
@@ -25,9 +25,16 @@
     
     .zone-header { background: #1f2d3d !important; color: #00d2ff !important; font-weight: bold; font-size: 12px; text-transform: uppercase; }
     
+    .ex-name-container { display: flex; align-items: center; gap: 6px; }
     .ex-name { font-weight: bold; font-size: 13px; }
     .ex-time { font-size: 12px; color: #aaa; }
     .blinking-name { animation: blink-red 1s infinite; color: #ff5252 !important; }
+
+    /* LED Status Indicator */
+    .led-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .led-green { background-color: #4caf50; box-shadow: 0 0 4px #4caf50; }
+    .led-red { background-color: #f44336; box-shadow: 0 0 4px #f44336; }
+    .led-orange { background-color: #ff9800; box-shadow: 0 0 4px #ff9800; }
 
     /* Responsive Display Logic: Desktop/iPad vs iPhone */
     .name-full { display: inline; }
@@ -44,7 +51,7 @@
     .ib-fill { height: 100%; background-color: #00d2ff; width: 0%; -webkit-transition: width 0.5s linear; transition: width 0.5s linear; }
     .ib-fill.warning { background-color: #ff9800 !important; }
     
-    /* Dynamic Contrast Text Overlay */
+    /* Dynamic Contrast Text Overlay (Font Size Up 2 Levels = 13px) */
     .ib-overlay-text { 
       position: absolute; 
       top: 0; 
@@ -55,7 +62,7 @@
       align-items: center; 
       justify-content: flex-start; 
       padding-left: 8px; 
-      font-size: 11px; 
+      font-size: 13px; 
       font-weight: bold; 
       color: #ffffff; 
       mix-blend-mode: difference; 
@@ -64,9 +71,14 @@
     }
 
     /* Statuses */
-    .status-open { color: #4caf50; font-weight: bold; }
-    .status-close { color: #f44336; font-weight: bold; }
-    .status-close-dark { color: #7f1d1d; font-weight: bold; } /* สีแดงทึบเข้มลงอีก 2 ระดับสำหรับรอเปิดเกิน 1 ชั่วโมง */
+    .status-open { color: #4caf50; font-weight: bold; font-size: 13px; }
+    .status-close { color: #f44336; font-weight: bold; font-size: 13px; } /* สีแดงสว่าง */
+    .status-close-dark { color: #7f1d1d; font-weight: bold; font-size: 13px; } /* สีแดงทึบเข้มลงอีก 2 ระดับสำหรับรอเปิดเกิน 1 ชั่วโมง */
+
+    /* Tomorrow Status Styles (Font reduced 2 levels, darker color) */
+    .tomorrow-normal { color: #2e7d32; font-weight: bold; font-size: 10px; } /* สีเขียวมืดลง 2 ระดับ */
+    .tomorrow-close { color: #f44336; font-weight: bold; font-size: 10px; } /* สีแดงสว่าง */
+
     .blinking-text { animation: blink-anim 1s infinite; }
 
     @keyframes blink-anim { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -77,7 +89,7 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 11px; color: #888;">v1.4.4</span></div>
+    <div class="app-title">Exchange Times <span style="font-size: 11px; color: #888;">v1.5.0</span></div>
     <div class="utc-clock" id="utcClock">UTC Now: --:--:--</div>
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="enableAudio()">เปิดระบบเสียง (Touch)</button>
@@ -92,8 +104,8 @@
       <thead>
         <tr>
           <th style="width: 15%;">TIME</th>
-          <th style="width: 25%;">EXCHANGE</th>
-          <th style="width: 45%;">STATUS</th>
+          <th style="width: 28%;">EXCHANGE</th>
+          <th style="width: 42%;">STATUS</th>
           <th style="width: 15%;">TOMORROW</th>
         </tr>
       </thead>
@@ -207,6 +219,12 @@
       return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
     }
 
+    function setLedState(code, state) {
+      const led = document.getElementById(`led-${code}`);
+      if (!led) return;
+      led.className = `led-dot led-${state}`;
+    }
+
     function initTable() {
       const tbody = document.getElementById('marketRows');
       tbody.innerHTML = '';
@@ -222,8 +240,11 @@
           <tr id="row-${m.code}">
             <td class="ex-time" id="time-${m.code}">--:--</td>
             <td class="ex-name" id="name-${m.code}">
-              <span class="name-full">${m.name}</span>
-              <span class="name-short">${m.shortName}</span>
+              <div class="ex-name-container">
+                <span class="led-dot led-red" id="led-${m.code}"></span>
+                <span class="name-full">${m.name}</span>
+                <span class="name-short">${m.shortName}</span>
+              </div>
             </td>
             <td id="status-${m.code}">--</td>
             <td id="tomorrow-${m.code}">--</td>
@@ -235,20 +256,26 @@
             <tr id="row-TFEX-1M">
               <td class="ex-time" id="time-TFEX-1M">--:--</td>
               <td class="ex-name">
-                <span class="name-full">TFEX (1 นาที Cycle)</span>
-                <span class="name-short">TFEX 1m</span>
+                <div class="ex-name-container">
+                  <span class="led-dot led-red" id="led-TFEX-1M"></span>
+                  <span class="name-full">TFEX (1 นาที Cycle)</span>
+                  <span class="name-short">TFEX 1m</span>
+                </div>
               </td>
               <td id="status-TFEX-1M">--</td>
-              <td class="status-open">Open</td>
+              <td class="tomorrow-normal">Normal</td>
             </tr>
             <tr id="row-TFEX-5M">
               <td class="ex-time" id="time-TFEX-5M">--:--</td>
               <td class="ex-name">
-                <span class="name-full">TFEX (5 นาที Cycle)</span>
-                <span class="name-short">TFEX 5m</span>
+                <div class="ex-name-container">
+                  <span class="led-dot led-red" id="led-TFEX-5M"></span>
+                  <span class="name-full">TFEX (5 นาที Cycle)</span>
+                  <span class="name-short">TFEX 5m</span>
+                </div>
               </td>
               <td id="status-TFEX-5M">--</td>
-              <td class="status-open">Open</td>
+              <td class="tomorrow-normal">Normal</td>
             </tr>
           `;
         }
@@ -277,6 +304,7 @@
 
         document.getElementById('time-' + m.code).innerText = localHM;
 
+        // Tomorrow Check
         const tomDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
         const tomP = getZonedParts(tomDate, m.timezone);
         const tomDateStr = tomP.year + '-' + tomP.month + '-' + tomP.day;
@@ -286,12 +314,13 @@
 
         if (isTomWeekend || isTomHoliday) {
           tomCell.innerText = "Close";
-          tomCell.className = "status-close";
+          tomCell.className = "tomorrow-close";
         } else {
-          tomCell.innerText = "Open";
-          tomCell.className = "status-open";
+          tomCell.innerText = "Normal";
+          tomCell.className = "tomorrow-normal";
         }
 
+        // Today Check
         const isTodayWeekend = (p.weekday === 'Sat' || p.weekday === 'Sun');
         const isTodayHoliday = m.holidays.indexOf(dateStr) !== -1;
         const statusCell = document.getElementById('status-' + m.code);
@@ -300,6 +329,7 @@
         if (isTodayWeekend || isTodayHoliday) {
           statusCell.innerHTML = '<span class="status-close">CLOSED (Holiday/Weekend)</span>';
           nameCell.classList.remove('blinking-name');
+          setLedState(m.code, 'red');
           if (m.code === 'SET') { isSetTrading = false; isSetBreak = false; }
           return;
         }
@@ -315,6 +345,7 @@
           const colorClass = diff > 60 ? 'status-close-dark' : 'status-close';
           statusCell.innerHTML = '<span class="' + colorClass + '">Closed, Open in ' + formatHM(diff) + '</span>';
           nameCell.classList.remove('blinking-name');
+          setLedState(m.code, 'red');
           if (m.code === 'SET') { isSetTrading = false; isSetBreak = false; }
         } else if (localMin >= openMin && localMin < closeMin) {
           let isLunch = false;
@@ -334,6 +365,7 @@
                 </div>
               `;
               nameCell.classList.remove('blinking-name');
+              setLedState(m.code, 'orange');
 
               if (m.code === 'SET') { isSetTrading = false; isSetBreak = true; }
             }
@@ -363,16 +395,19 @@
                 <div class="ib-overlay-text">Close in ${formatHM(remaining)}</div>
               </div>
             `;
+            setLedState(m.code, 'green');
           }
         } else {
           const nextDayOpenDiff = (24 * 60 - localMin) + openMin;
           const colorClass = nextDayOpenDiff > 60 ? 'status-close-dark' : 'status-close';
           statusCell.innerHTML = '<span class="' + colorClass + '">Closed, Open in ' + formatHM(nextDayOpenDiff) + '</span>';
           nameCell.classList.remove('blinking-name');
+          setLedState(m.code, 'red');
           if (m.code === 'SET') { isSetTrading = false; isSetBreak = false; }
         }
       });
 
+      // TFEX SPECIAL CYCLES (1 Min & 5 Min)
       const tfexP = getZonedParts(now, "Asia/Bangkok");
       const tfexHM = tfexP.hour + ':' + tfexP.minute;
       document.getElementById('time-TFEX-1M').innerText = tfexHM;
@@ -387,9 +422,13 @@
       if (isSetBreak) {
         tfex1Cell.innerHTML = '<span class="status-close blinking-text">Break</span>';
         tfex5Cell.innerHTML = '<span class="status-close blinking-text">Break</span>';
+        setLedState('TFEX-1M', 'orange');
+        setLedState('TFEX-5M', 'orange');
       } else if (!isSetTrading) {
         tfex1Cell.innerHTML = '<span class="status-close">Closed</span>';
         tfex5Cell.innerHTML = '<span class="status-close">Closed</span>';
+        setLedState('TFEX-1M', 'red');
+        setLedState('TFEX-5M', 'red');
       } else {
         const remSec1M = 60 - currentSec;
         const pct1M = (remSec1M / 60) * 100;
@@ -412,6 +451,9 @@
             <div class="ib-overlay-text">Close in ${formatHM(Math.floor(remSec5M / 60))}:${rem5mSecStr}</div>
           </div>
         `;
+
+        setLedState('TFEX-1M', 'green');
+        setLedState('TFEX-5M', 'green');
       }
     }
 
