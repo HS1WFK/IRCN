@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.7.0</title>
+  <title>Exchange Times v1.7.1</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; overflow: hidden; }
-    body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; display: flex; flex-direction: column; justify-content: flex-start; }
+    body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
     
     /* Top Header */
-    .header-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 8px 12px; border-radius: 6px; border: 1px solid #333; margin-bottom: 6px; gap: 8px; flex-shrink: 0; }
+    .header-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 8px 12px; border-radius: 6px; border: 1px solid #333; margin-bottom: 6px; gap: 8px; }
     .app-title { font-size: 24px; font-weight: bold; color: #00d2ff; }
     .utc-clock { font-size: 22px; font-weight: bold; color: #ffffff; }
     .controls { display: flex; gap: 12px; font-size: 18px; align-items: center; flex-wrap: wrap; }
@@ -20,11 +19,11 @@
     .audio-btn { background: #f44336; color: #ffffff; border: none; padding: 6px 14px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 18px; transition: background 0.3s; }
     .audio-btn.active { background: #4caf50; color: #ffffff; }
 
-    /* Table Container */
-    .table-container { width: 100%; flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-    .market-table { width: 100%; border-collapse: collapse; background: #181818; border-radius: 6px; overflow: hidden; height: 100%; }
+    /* Table Container - Enabled Smooth Touch Scrolling */
+    .table-container { width: 100%; overflow-x: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; max-height: calc(100vh - 75px); }
+    .market-table { width: 100%; border-collapse: collapse; background: #181818; border-radius: 6px; overflow: hidden; }
     .market-table th, .market-table td { padding: 3px 8px; text-align: left; border-bottom: 1px solid #2a2a2a; vertical-align: middle; }
-    .market-table th { background: #252525; color: #888; font-size: 16px; text-transform: uppercase; }
+    .market-table th { background: #252525; color: #888; font-size: 16px; text-transform: uppercase; position: sticky; top: 0; z-index: 10; }
     
     .zone-header { background: #1f2d3d !important; color: #00d2ff !important; font-weight: bold; font-size: 18px; text-transform: uppercase; padding: 2px 8px !important; }
     
@@ -33,8 +32,8 @@
     .ex-time { font-size: 18px; color: #aaa; font-weight: 500; }
     .blinking-name { animation: blink-red 1s infinite; color: #ff5252 !important; }
 
-    /* Candle Stick Counter Badge */
-    .candle-counter { font-size: 18px; color: #aaa; font-weight: 500; margin-right: 4px; min-width: 32px; display: inline-block; }
+    /* Candle Stick Counter Badge (Moved Position) */
+    .candle-counter { font-size: 18px; color: #aaa; font-weight: 500; margin-left: 6px; display: inline-block; }
 
     /* LED Status Indicator */
     .led-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
@@ -96,7 +95,7 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 15px; color: #888;">v1.7.0</span></div>
+    <div class="app-title">Exchange Times <span style="font-size: 15px; color: #888;">v1.7.1</span></div>
     <div class="utc-clock" id="utcClock">UTC Now: --:--:--</div>
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
@@ -111,8 +110,8 @@
       <thead>
         <tr>
           <th style="width: 15%;">TIME</th>
-          <th style="width: 28%;">EXCHANGE</th>
-          <th style="width: 42%;">STATUS</th>
+          <th style="width: 32%;">EXCHANGE</th>
+          <th style="width: 38%;">STATUS</th>
           <th style="width: 15%;">TOMORROW</th>
         </tr>
       </thead>
@@ -273,10 +272,10 @@
               <td class="ex-time" id="time-TFEX-1M">--:--</td>
               <td class="ex-name">
                 <div class="ex-name-container">
-                  <span class="candle-counter" id="candle-count-1m">--</span>
                   <span class="led-dot led-red" id="led-TFEX-1M"></span>
-                  <span class="name-full">TFEX (1 นาที)</span>
+                  <span class="name-full">TFEX 1 นาที</span>
                   <span class="name-short">TFEX 1m</span>
+                  <span class="candle-counter" id="candle-count-1m">--</span>
                 </div>
               </td>
               <td id="status-TFEX-1M">--</td>
@@ -286,10 +285,10 @@
               <td class="ex-time" id="time-TFEX-5M">--:--</td>
               <td class="ex-name">
                 <div class="ex-name-container">
-                  <span class="candle-counter" id="candle-count-5m">--</span>
                   <span class="led-dot led-red" id="led-TFEX-5M"></span>
-                  <span class="name-full">TFEX (5 นาที)</span>
+                  <span class="name-full">TFEX 5 นาที</span>
                   <span class="name-short">TFEX 5m</span>
+                  <span class="candle-counter" id="candle-count-5m">--</span>
                 </div>
               </td>
               <td id="status-TFEX-5M">--</td>
@@ -332,21 +331,18 @@
       if (!isThWeekend && !isThHoliday) {
         if (thMin >= tfexLunchStart && thMin < tfexLunchEnd) {
           isTfexBreak = true;
-          // ช่วงพักกลางวัน: เหลือนาทีของภาคบ่ายเต็มจำนวน (13:45 - 16:55 = 190 นาที)
           remainingTfexMinutes = tfexCloseMin - tfexLunchEnd;
         } else if (thMin >= tfexOpenMin && thMin < tfexCloseMin) {
           isTfexTrading = true;
           if (thMin < tfexLunchStart) {
-            // ช่วงเช้า: เหลือนาทีภาคเช้า + นาทีภาคบ่าย
             remainingTfexMinutes = (tfexLunchStart - thMin) + (tfexCloseMin - tfexLunchEnd);
           } else {
-            // ช่วงบ่าย: เหลือนาทีภาคบ่าย
             remainingTfexMinutes = tfexCloseMin - thMin;
           }
         }
       }
 
-      // อัปเดตตัวเลข Candle Stick Countdown
+      // Update Candle Counter Position Output
       const count1mElem = document.getElementById('candle-count-1m');
       const count5mElem = document.getElementById('candle-count-5m');
       if (count1mElem && count5mElem) {
@@ -487,7 +483,7 @@
         setLedState('TFEX-1M', 'red');
         setLedState('TFEX-5M', 'red');
       } else {
-        // TFEX 1 Min Bar Render (Bar Only)
+        // TFEX 1 Min Bar Render
         const remSec1M = 60 - currentSec;
         const pct1M = (remSec1M / 60) * 100;
         
@@ -497,7 +493,7 @@
           </div>
         `;
 
-        // TFEX 5 Min Bar Render (Bar Only)
+        // TFEX 5 Min Bar Render
         const secIn5M = (currentMin % 5) * 60 + currentSec;
         const remSec5M = 300 - secIn5M;
         const pct5M = (remSec5M / 300) * 100;
