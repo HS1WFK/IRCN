@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.5.0</title>
+  <title>Exchange Times v1.5.1</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 12px; }
@@ -14,8 +14,10 @@
     .utc-clock { font-size: 15px; font-weight: bold; color: #ffffff; }
     .controls { display: flex; gap: 12px; font-size: 12px; align-items: center; flex-wrap: wrap; }
     .controls label { cursor: pointer; display: flex; align-items: center; gap: 4px; }
-    .audio-btn { background: #00d2ff; color: #000; border: none; padding: 6px 12px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 12px; }
-    .audio-btn.active { background: #4caf50; color: #fff; }
+    
+    /* Dynamic Audio Button Styles */
+    .audio-btn { background: #f44336; color: #ffffff; border: none; padding: 6px 12px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.3s; }
+    .audio-btn.active { background: #4caf50; color: #ffffff; }
 
     /* Table Container */
     .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -51,7 +53,7 @@
     .ib-fill { height: 100%; background-color: #00d2ff; width: 0%; -webkit-transition: width 0.5s linear; transition: width 0.5s linear; }
     .ib-fill.warning { background-color: #ff9800 !important; }
     
-    /* Dynamic Contrast Text Overlay (Font Size Up 2 Levels = 13px) */
+    /* Dynamic Contrast Text Overlay */
     .ib-overlay-text { 
       position: absolute; 
       top: 0; 
@@ -72,12 +74,12 @@
 
     /* Statuses */
     .status-open { color: #4caf50; font-weight: bold; font-size: 13px; }
-    .status-close { color: #f44336; font-weight: bold; font-size: 13px; } /* สีแดงสว่าง */
-    .status-close-dark { color: #7f1d1d; font-weight: bold; font-size: 13px; } /* สีแดงทึบเข้มลงอีก 2 ระดับสำหรับรอเปิดเกิน 1 ชั่วโมง */
+    .status-close { color: #f44336; font-weight: bold; font-size: 13px; }
+    .status-close-dark { color: #7f1d1d; font-weight: bold; font-size: 13px; }
 
-    /* Tomorrow Status Styles (Font reduced 2 levels, darker color) */
-    .tomorrow-normal { color: #2e7d32; font-weight: bold; font-size: 10px; } /* สีเขียวมืดลง 2 ระดับ */
-    .tomorrow-close { color: #f44336; font-weight: bold; font-size: 10px; } /* สีแดงสว่าง */
+    /* Tomorrow Status Styles */
+    .tomorrow-normal { color: #2e7d32; font-weight: bold; font-size: 10px; }
+    .tomorrow-close { color: #f44336; font-weight: bold; font-size: 10px; }
 
     .blinking-text { animation: blink-anim 1s infinite; }
 
@@ -89,12 +91,12 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 11px; color: #888;">v1.5.0</span></div>
+    <div class="app-title">Exchange Times <span style="font-size: 11px; color: #888;">v1.5.1</span></div>
     <div class="utc-clock" id="utcClock">UTC Now: --:--:--</div>
     <div class="controls">
-      <button id="btnAudio" class="audio-btn" onclick="enableAudio()">เปิดระบบเสียง (Touch)</button>
-      <label><input type="checkbox" id="muteExchange" checked> เสียง Exchange</label>
-      <label><input type="checkbox" id="muteTFEX" checked> เสียง TFEX</label>
+      <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
+      <label><input type="checkbox" id="muteExchange" checked> Exchange</label>
+      <label><input type="checkbox" id="muteTFEX" checked> TFEX</label>
     </div>
   </div>
 
@@ -149,13 +151,16 @@
         audioCtx.resume();
       }
       const btn = document.getElementById('btnAudio');
-      btn.innerText = "เสียงพร้อมใช้งาน";
+      btn.innerText = "Alert On";
       btn.classList.add('active');
     }
 
     document.addEventListener('touchstart', function() {
       if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume();
+        const btn = document.getElementById('btnAudio');
+        btn.innerText = "Alert On";
+        btn.classList.add('active');
       }
     }, { once: true });
 
