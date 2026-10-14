@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v1.5.5</title>
+  <title>Exchange Times v1.5.6</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 12px; }
@@ -54,7 +54,7 @@
     .ib-fill.ib-gray { background-color: #808080 !important; } /* สีเทา 50% สำหรับ TFEX 1m, 5m */
     .ib-fill.warning { background-color: #ff9800 !important; }
     
-    /* Dynamic Contrast Text Overlay */
+    /* Dynamic Contrast Text Overlay (สำหรับตลาดทั่วไป) */
     .ib-overlay-text { 
       position: absolute; 
       top: 0; 
@@ -72,6 +72,25 @@
       white-space: nowrap; 
       z-index: 2; 
     }
+
+    /* Dynamic Dual-Layer Overlay (สำหรับ TFEX 1m/5m แท่งเทา) */
+    .ib-overlay-tfex {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding-left: 8px;
+      font-size: 13px;
+      font-weight: bold;
+      white-space: nowrap;
+      z-index: 2;
+    }
+    .ib-overlay-tfex.text-black { color: #000000; } /* ข้อความสีดำ เมื่ออยู่บน bar สีเทา */
+    .ib-overlay-tfex.text-gray { color: #808080; }  /* ข้อความสีเทา 50% เมื่อหลุดจาก bar */
 
     /* Statuses */
     .status-open { color: #4caf50; font-weight: bold; font-size: 13px; }
@@ -92,7 +111,7 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 11px; color: #888;">v1.5.5</span></div>
+    <div class="app-title">Exchange Times <span style="font-size: 11px; color: #888;">v1.5.6</span></div>
     <div class="utc-clock" id="utcClock">UTC Now: --:--:--</div>
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
@@ -457,25 +476,31 @@
         setLedState('TFEX-1M', 'red');
         setLedState('TFEX-5M', 'red');
       } else {
+        // TFEX 1 Min Bar Logic
         const remSec1M = 60 - currentSec;
         const pct1M = (remSec1M / 60) * 100;
         const secStr = remSec1M < 10 ? '0' + remSec1M : remSec1M;
+        const isTextOutside1M = pct1M < 45; // หากเปอร์เซ็นต์แท่งเหลือน้อยกว่า 45% ตัวอักษรจะเริ่มหลุดจาก bar
+        
         tfex1Cell.innerHTML = `
           <div class="ib-container">
             <div class="ib-fill ib-gray ${remSec1M <= 10 ? 'warning' : ''}" style="width: ${pct1M}%;"></div>
-            <div class="ib-overlay-text">Close in 00:${secStr}</div>
+            <div class="ib-overlay-tfex ${isTextOutside1M ? 'text-gray' : 'text-black'}">Close in 00:${secStr}</div>
           </div>
         `;
 
+        // TFEX 5 Min Bar Logic
         const secIn5M = (currentMin % 5) * 60 + currentSec;
         const remSec5M = 300 - secIn5M;
         const pct5M = (remSec5M / 300) * 100;
         const rem5mSec = remSec5M % 60;
         const rem5mSecStr = rem5mSec < 10 ? '0' + rem5mSec : rem5mSec;
+        const isTextOutside5M = pct5M < 45; // หากเปอร์เซ็นต์แท่งเหลือน้อยกว่า 45% ตัวอักษรจะเริ่มหลุดจาก bar
+
         tfex5Cell.innerHTML = `
           <div class="ib-container">
             <div class="ib-fill ib-gray ${remSec5M <= 30 ? 'warning' : ''}" style="width: ${pct5M}%;"></div>
-            <div class="ib-overlay-text">Close in ${formatHM(Math.floor(remSec5M / 60))}:${rem5mSecStr}</div>
+            <div class="ib-overlay-tfex ${isTextOutside5M ? 'text-gray' : 'text-black'}">Close in ${formatHM(Math.floor(remSec5M / 60))}:${rem5mSecStr}</div>
           </div>
         `;
 
