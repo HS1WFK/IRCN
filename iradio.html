@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Header Meter V.1.9.2</title>
+  <title>Global News - Header Meter V.1.9.3</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -198,17 +198,18 @@
     .station-title-left {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
     }
 
+    /* ขนาดไอคอน Header 96x96px */
     .station-header-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 4px;
+      width: 96px;
+      height: 96px;
+      border-radius: 8px;
       object-fit: contain;
       display: inline-block;
       flex-shrink: 0;
-      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
     }
 
     .station-fixed-title { 
@@ -403,9 +404,9 @@
     }
     
     .channel-item { 
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      cursor: pointer; user-select: none; width: 100%; padding: 12px 10px; 
-      min-height: 60px; border-radius: 8px; border: 2px solid var(--panel-border);
+      display: flex; align-items: center; justify-content: flex-start; gap: 12px;
+      cursor: pointer; user-select: none; width: 100%; padding: 10px 14px; 
+      min-height: 68px; border-radius: 8px; border: 2px solid var(--panel-border);
       background: var(--btn-bg); transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; 
     }
     .channel-item:hover { border-color: #777777; }
@@ -417,16 +418,17 @@
     }
     body.light-mode .channel-item.active { border-color: #d97706 !important; }
 
+    /* ขนาดไอคอน Playlist 48x48px */
     .channel-icon {
-      width: 24px;
-      height: 24px;
-      border-radius: 4px;
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
       object-fit: contain;
       flex-shrink: 0;
-      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
     }
 
-    .channel-name { font-size: 22px; font-weight: 800; color: var(--text-muted); text-align: center; line-height: 1.2; white-space: normal; word-break: break-word; text-shadow: var(--text-shadow-strong); }
+    .channel-name { font-size: 22px; font-weight: 800; color: var(--text-muted); text-align: left; line-height: 1.2; white-space: normal; word-break: break-word; text-shadow: var(--text-shadow-strong); flex-grow: 1; }
     .channel-item.active .channel-name { 
       color: #ff9800 !important; 
       font-weight: 800; 
@@ -449,7 +451,7 @@
       .channels-indicator { font-size: 13px; }
       
       .video-btn { font-size: 11px; padding: 2px 5px; }
-      .station-header-icon { width: 22px; height: 22px; }
+      .station-header-icon { width: 56px; height: 56px; }
       
       .buf-meter-container { font-size: 13px; width: 52%; }
       .connection-status-line { font-size: 13px; letter-spacing: 0px; }
@@ -458,8 +460,8 @@
       .vu-scale-labels { font-size: 12px; }
       .scope-container { height: 54px; margin-bottom: 6px; }
       .playlist-container { padding: 12px; gap: 8px; }
-      .channel-item { padding: 8px 4px; min-height: 52px; border-radius: 6px; gap: 5px; }
-      .channel-icon { width: 18px; height: 18px; }
+      .channel-item { padding: 8px 10px; min-height: 56px; border-radius: 6px; gap: 8px; }
+      .channel-icon { width: 36px; height: 36px; }
       .channel-name { font-size: 15px; }
     }
   </style>
@@ -555,7 +557,7 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.9.2</div>
+  <div class="page-version-footer">ver.1.9.3</div>
 
   <script>
     /* --- SVGs เวกเตอร์ความคมชัดสูงสำหรับ Priority 1 --- */
@@ -582,12 +584,13 @@
       
       { name: "Classic FM", svgKey: "classicfm", domain: "classicfm.com", location: "London, UK", cityCode: "LON", utc: "UTC+1", tz: "Europe/London", about: "UK classic music radio stream based in Leicester Square, London.", url: "http://media-ice.musicradio.com/ClassicFMMP3", kbps: 128, rss: null },
       { name: "Klassik-1", domain: "klassik1.de", location: "Berlin, Germany", cityCode: "BER", utc: "UTC+2", tz: "Europe/Berlin", about: "German classical music online radio station based in Berlin.", url: "http://icepool.silvacast.com/KLASSIK1.mp3", kbps: 128, rss: null },
-      { name: "Radio Swiss Classique", svgKey: "radioswiss", domain: "radioswissclassique.ch", location: "Basel, Switzerland", cityCode: "BSL", utc: "UTC+2", tz: "Europe/Zurich", about: "Swiss public classical music radio station operated by SRG SSR.", url: "https://stream.srg-ssr.ch/srgssr/rsc_de/aac/192", kbps: 192, rss: null },
+      
+      /* --- ตัดคำว่า Classique ออก เหลือ Radio Swiss --- */
+      { name: "Radio Swiss", svgKey: "radioswiss", domain: "radioswissclassique.ch", location: "Basel, Switzerland", cityCode: "BSL", utc: "UTC+2", tz: "Europe/Zurich", about: "Swiss public classical music radio station operated by SRG SSR.", url: "https://stream.srg-ssr.ch/srgssr/rsc_de/aac/192", kbps: 192, rss: null },
+      
       { name: "บ้านธรรมะ", domain: "dhamma.org", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "Dhamma media and radio broadcasting operated by the Dhamma Study and Propagation Foundation.", url: "https://radio10.plathong.net/7238/;stream.mp3", kbps: 128, rss: null },
       { name: "วิทยุศึกษา MOE", domain: "moeradiothai.net", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "สถานีวิทยุศึกษา กระทรวงศึกษาธิการ FM 92 MHz ส่งเสริมการเรียนรู้ตลอดชีวิตแก่ประชาชน", url: "https://stream.moeradiothai.net/live/moe32.sdp/chunklist_w235079672.m3u8", rss: null },
       { name: "Smooth London", domain: "smoothradio.com", location: "London, UK", cityCode: "LON", utc: "UTC+1", tz: "Europe/London", about: "Smooth Radio London - Easy Listening, soft rock, and classic pop hits from the past five decades.", url: "http://media-the.musicradio.com:80/SmoothLondonMP3", kbps: 128, rss: null },
-      
-      /* --- ปรับชื่อปุ่มเป็น SmoothLounge & SmoothJazz --- */
       { name: "SmoothLounge", domain: "smoothlounge.com", location: "Monterey, USA", cityCode: "MCR", utc: "UTC-7", tz: "America/Los_Angeles", about: "SmoothLounge.com - Chillout, lounge, and groove ambient jazz stream.", url: "https://smoothjazz.cdnstream1.com/2586_256.mp3", kbps: 256, rss: null },
       { name: "SmoothJazz", domain: "smoothjazz.com", location: "Monterey, USA", cityCode: "MCR", utc: "UTC-7", tz: "America/Los_Angeles", about: "World's first and longest-running online radio dedicated to smooth jazz, contemporary jazz, and groove chillout.", url: "https://smoothjazz.cdnstream1.com/2585_256.mp3", kbps: 256, rss: null }
     ];
@@ -636,7 +639,7 @@
 
       // 3. ลำดับ Priority 2 & 3: Direct URL & Google Favicon Fallback (Async Background)
       setTimeout(() => {
-        const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${ch.domain || 'example.com'}&sz=64`;
+        const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${ch.domain || 'example.com'}&sz=128`;
         const initialTryUrl = ch.directIcon || googleFaviconUrl;
 
         const tempImg = new Image();
@@ -918,7 +921,7 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // สร้างปุ่ม Playlist พร้อมโหลด Icon Asynchronous
+    // สร้างปุ่ม Playlist พร้อมโหลด Icon Asynchronous (48x48px)
     channels.forEach((channel, index) => {
       const item = document.createElement('div');
       item.className = 'channel-item';
@@ -1003,7 +1006,7 @@
         const ch = channels[activeIndex];
         stationFixedTitle.innerText = ch.name;
         
-        // อัปเดตรูปสถานีบน Header (Background async)
+        // อัปเดตรูปสถานีบน Header (Background async, 96x96px)
         loadStationIconAsync(ch, stationHeaderIcon);
 
         updateTickerContent(ch);
