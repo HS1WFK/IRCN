@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Voice Test - Martha (Enhanced)</title>
+  <title>Voice Test - Serena (Premium)</title>
   <style>
     body {
       background-color: #121212;
@@ -49,7 +49,7 @@
 <body>
 
   <button id="btnToggle" class="toggle-btn" onclick="toggleSpeech()">Speak</button>
-  <div id="voiceStatus" class="info-box">Targeting Voice: Martha (Enhanced) - English UK</div>
+  <div id="voiceStatus" class="info-box">Targeting Voice: Serena (Premium) - English UK</div>
 
   <script>
     let isSpeaking = false;
@@ -69,21 +69,29 @@
       }
     }
 
-    // Target Martha Voice specifically
-    function getMarthaVoice() {
+    // Target Serena (Premium) Voice Specifically
+    function getSerenaPremiumVoice() {
       if (cachedVoices.length === 0 && 'speechSynthesis' in window) {
         cachedVoices = window.speechSynthesis.getVoices();
       }
       
-      // 1. Target "Martha" (Enhanced / Premium)
-      let martha = cachedVoices.find(v => v.name.includes('Martha'));
-      if (martha) return martha;
+      // 1. Target exact "Serena" with "Premium" or "Enhanced" in the name
+      let serenaPremium = cachedVoices.find(v => v.name.includes('Serena') && (v.name.includes('Premium') || v.name.includes('Enhanced')));
+      if (serenaPremium) return serenaPremium;
 
-      // 2. Fallback to English UK (en-GB)
+      // 2. Target any voice named "Serena"
+      let serena = cachedVoices.find(v => v.name.includes('Serena'));
+      if (serena) return serena;
+
+      // 3. Fallback to default/selected voice for English UK (en-GB)
+      let defaultUk = cachedVoices.find(v => (v.lang === 'en-GB' || v.lang.startsWith('en_GB')) && v.default);
+      if (defaultUk) return defaultUk;
+
+      // 4. Fallback to any English UK voice
       let ukVoice = cachedVoices.find(v => v.lang === 'en-GB' || v.lang.startsWith('en_GB'));
       if (ukVoice) return ukVoice;
 
-      // 3. Fallback to any English
+      // 5. Fallback to any English voice
       return cachedVoices.find(v => v.lang.startsWith('en')) || null;
     }
 
@@ -117,14 +125,14 @@
       utterance.rate = 0.9;
       utterance.pitch = 1.0;
 
-      const selectedVoice = getMarthaVoice();
+      const selectedVoice = getSerenaPremiumVoice();
       if (selectedVoice) {
         utterance.voice = selectedVoice;
         utterance.lang = selectedVoice.lang;
         status.innerText = `Using Voice: ${selectedVoice.name} (${selectedVoice.lang})`;
       } else {
         utterance.lang = 'en-GB';
-        status.innerText = 'Martha not found, using default en-GB';
+        status.innerText = 'Serena not found, using default en-GB';
       }
 
       utterance.onstart = function() {
