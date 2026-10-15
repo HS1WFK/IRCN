@@ -2,161 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Voice Test - Serena (Premium)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iPad Voice Inspector</title>
   <style>
-    body {
-      background-color: #121212;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-    .toggle-btn {
-      background-color: #00d2ff;
-      color: #000000;
-      border: none;
-      padding: 20px 40px;
-      font-size: 28px;
-      font-weight: bold;
-      border-radius: 12px;
-      cursor: pointer;
-      min-width: 220px;
-      box-shadow: 0 4px 15px rgba(0,210,255,0.3);
-      transition: all 0.2s ease;
-    }
-    .toggle-btn.speaking {
-      background-color: #f44336;
-      color: #ffffff;
-      box-shadow: 0 4px 15px rgba(244,67,54,0.4);
-    }
-    .info-box {
-      margin-top: 25px;
-      font-size: 16px;
-      color: #aaa;
-      text-align: center;
-      max-width: 90%;
-      line-height: 1.5;
-    }
+    body { background: #121212; color: #fff; font-family: sans-serif; padding: 20px; }
+    button { padding: 12px 24px; font-size: 18px; font-weight: bold; background: #00d2ff; border: none; border-radius: 8px; cursor: pointer; }
+    ul { background: #1e1e1e; padding: 15px 30px; border-radius: 8px; max-height: 300px; overflow-y: auto; }
+    li { margin-bottom: 8px; font-size: 14px; color: #ccc; }
   </style>
 </head>
 <body>
-
-  <button id="btnToggle" class="toggle-btn" onclick="toggleSpeech()">Speak</button>
-  <div id="voiceStatus" class="info-box">Targeting Voice: Serena (Premium) - English UK</div>
+  <h2>iPad Speech Voices Inspector</h2>
+  <button onclick="listVoices()">Inspect Available Voices</button>
+  <ul id="voiceList">Click button to inspect...</ul>
 
   <script>
-    let isSpeaking = false;
-    let cachedVoices = [];
-
-    // Pre-load available voices on iPadOS
-    function loadVoices() {
-      if ('speechSynthesis' in window) {
-        cachedVoices = window.speechSynthesis.getVoices();
-      }
-    }
-
-    if ('speechSynthesis' in window) {
-      loadVoices();
-      if (window.speechSynthesis.onvoiceschanged !== undefined) {
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-      }
-    }
-
-    // Target Serena (Premium) Voice Specifically
-    function getSerenaPremiumVoice() {
-      if (cachedVoices.length === 0 && 'speechSynthesis' in window) {
-        cachedVoices = window.speechSynthesis.getVoices();
-      }
+    function listVoices() {
+      const voices = window.speechSynthesis.getVoices();
+      const listElem = document.getElementById('voiceList');
+      listElem.innerHTML = '';
       
-      // 1. Target exact "Serena" with "Premium" or "Enhanced" in the name
-      let serenaPremium = cachedVoices.find(v => v.name.includes('Serena') && (v.name.includes('Premium') || v.name.includes('Enhanced')));
-      if (serenaPremium) return serenaPremium;
-
-      // 2. Target any voice named "Serena"
-      let serena = cachedVoices.find(v => v.name.includes('Serena'));
-      if (serena) return serena;
-
-      // 3. Fallback to default/selected voice for English UK (en-GB)
-      let defaultUk = cachedVoices.find(v => (v.lang === 'en-GB' || v.lang.startsWith('en_GB')) && v.default);
-      if (defaultUk) return defaultUk;
-
-      // 4. Fallback to any English UK voice
-      let ukVoice = cachedVoices.find(v => v.lang === 'en-GB' || v.lang.startsWith('en_GB'));
-      if (ukVoice) return ukVoice;
-
-      // 5. Fallback to any English voice
-      return cachedVoices.find(v => v.lang.startsWith('en')) || null;
-    }
-
-    function toggleSpeech() {
-      const btn = document.getElementById('btnToggle');
-      const status = document.getElementById('voiceStatus');
-
-      if (!('speechSynthesis' in window)) {
-        alert('Speech Synthesis is not supported on this browser.');
+      if (voices.length === 0) {
+        listElem.innerHTML = '<li>No voices returned by iPadOS WebEngine yet. Try tapping again.</li>';
         return;
       }
 
-      // If already speaking, stop it
-      if (isSpeaking) {
-        window.speechSynthesis.cancel();
-        resetButton();
-        return;
-      }
-
-      // Unlock iOS Speech Engine
-      window.speechSynthesis.resume();
-
-      // Format time as hh:ss (Hours:Seconds)
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const ss = String(now.getSeconds()).padStart(2, '0');
-
-      const textToSpeak = `Hello, it's a beautiful day and wonderful night, time now is ${hh}:${ss}`;
-
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
-
-      const selectedVoice = getSerenaPremiumVoice();
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-        utterance.lang = selectedVoice.lang;
-        status.innerText = `Using Voice: ${selectedVoice.name} (${selectedVoice.lang})`;
-      } else {
-        utterance.lang = 'en-GB';
-        status.innerText = 'Serena not found, using default en-GB';
-      }
-
-      utterance.onstart = function() {
-        isSpeaking = true;
-        btn.innerText = 'Stop';
-        btn.classList.add('speaking');
-      };
-
-      utterance.onend = function() {
-        resetButton();
-      };
-
-      utterance.onerror = function() {
-        resetButton();
-      };
-
-      window.speechSynthesis.speak(utterance);
-    }
-
-    function resetButton() {
-      isSpeaking = false;
-      const btn = document.getElementById('btnToggle');
-      btn.innerText = 'Speak';
-      btn.classList.remove('speaking');
+      voices.filter(v => v.lang.startsWith('en')).forEach(v => {
+        const li = document.createElement('li');
+        li.innerText = `Name: "${v.name}" | Lang: ${v.lang} | Default: ${v.default}`;
+        listElem.appendChild(li);
+      });
     }
   </script>
 </body>
