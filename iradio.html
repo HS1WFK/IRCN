@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Header Meter V.1.8.1</title>
+  <title>Global News - Header Meter V.1.8.2</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -29,25 +29,26 @@
       --vu-scale-text: #e0e0e0;
       --stat-term-gray: #555555;
       --stat-conn-blue: #8ab4ff;
-      --text-shadow-strong: 0 2px 5px rgba(0, 0, 0, 0.95);
+      --text-shadow-strong: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.8);
     }
 
+    /* สไตล์แสงเงาเข้มชัดสำหรับ Day Mode (Light Mode) */
     body.light-mode {
       --bg-color: #f4f5f7;
       --card-bg: rgba(255, 255, 255, 0.85);
       --header-bg: rgba(255, 255, 255, 0.92);
       --border-color: rgba(0, 0, 0, 0.15);
-      --text-main: #111111;
-      --text-muted: #222222;
-      --text-callsign: #111111;
+      --text-main: #000000;
+      --text-muted: #111111;
+      --text-callsign: #000000;
       --panel-border: #bbbbbb;
       --btn-bg: #ffffff;
       --scope-bg: #1a241a;
       --scope-grid: rgba(0, 255, 0, 0.15);
-      --vu-scale-text: #111111;
-      --stat-term-gray: #777777;
+      --vu-scale-text: #000000;
+      --stat-term-gray: #555555;
       --stat-conn-blue: #1d4ed8;
-      --text-shadow-strong: 0 1px 2px rgba(255, 255, 255, 0.8);
+      --text-shadow-strong: 0 1px 3px rgba(255, 255, 255, 1), 0 0 1px rgba(0, 0, 0, 0.5);
     }
 
     body {
@@ -94,14 +95,14 @@
       padding-top: 12px;
       padding-bottom: 10px;
       padding-left: 14px;
-      padding-right: 18px; /* เพิ่ม Padding ด้านขวาเพื่อระยะกระชับเวลามีตัวเลขเดิน */
+      padding-right: 18px;
       margin-bottom: 12px;
       border-bottom: 1px solid var(--border-color);
       border-radius: 0 0 8px 8px;
       transition: background 0.3s ease, border-color 0.3s ease;
     }
 
-    .header-container { text-align: left; padding-left: 2px; }
+    .header-container { text-align: left; padding-left: 0px; }
     
     /* 1. Header Top Row (Callsign Left | Tesla Logo Right) */
     .top-header-row {
@@ -111,24 +112,25 @@
       margin-bottom: 2px;
     }
 
-    /* Callsign: ลดขนาดลง 50% เหลือ 13px */
+    /* Callsign: เพิ่มขนาดขึ้น 1 ระดับ เป็น 15px ตรงขอบซ้ายกับ Global News */
     .callsign { 
-      font-size: 13px; 
+      font-size: 15px; 
       font-weight: 800; 
       color: var(--text-callsign); 
       letter-spacing: 0.5px; 
       text-shadow: var(--text-shadow-strong);
       transition: color 0.3s ease;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin-left: 0;
+      padding-left: 0;
     }
 
-    /* Tesla Logo: ขยับเข้ามาทางซ้ายเล็กน้อยโดยใช้ margin-right */
     .tesla-logo-header {
       width: 120px;
       height: auto;
       display: block;
       object-fit: contain;
-      margin-right: 8px; /* ขยับโลโก้มาทางซ้ายเล็กน้อย */
+      margin-right: 8px;
       filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
       transition: filter 0.3s ease;
     }
@@ -152,14 +154,16 @@
       cursor: pointer;
       user-select: none;
       transition: transform 0.1s ease;
+      margin-left: 0;
+      padding-left: 0;
     }
     .page-title-group:active {
       transform: scale(0.97);
     }
 
-    /* Global News: เพิ่มขนาดขึ้น 2 ระดับ เป็น 28px */
+    /* Global News: เพิ่มขนาดขึ้น 1 ระดับ เป็น 31px */
     h1.page-title { 
-      font-size: 28px; 
+      font-size: 31px; 
       font-weight: 800; 
       color: var(--text-main); 
       text-shadow: var(--text-shadow-strong); 
@@ -175,15 +179,15 @@
       line-height: 1;
     }
     
-    /* UTC Time Display: ขยับมาทางซ้ายเล็กน้อย (margin-right) เผื่อพื้นที่ให้ ss เดินนิ่งๆ */
+    /* UTC Time Display: ลดขนาดลงเท่ากับ Time: hh:mm (23px) */
     .utc-time-display {
-      font-size: 26px; 
+      font-size: 23px; 
       font-weight: 800; 
       color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       text-shadow: var(--text-shadow-strong); 
       white-space: nowrap;
-      margin-right: 8px; /* ขยับเข้ามาทางซ้ายเล็กน้อย */
+      margin-right: 8px;
       transition: color 0.3s ease;
     }
 
@@ -205,17 +209,17 @@
       white-space: nowrap; 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    body.light-mode .station-fixed-title { color: #e65100; }
+    body.light-mode .station-fixed-title { color: #d97706; }
 
     .feed-status-tag {
       font-size: 20px;
-      font-weight: 700;
+      font-weight: 800;
       white-space: nowrap;
       letter-spacing: 0.5px;
       text-shadow: var(--text-shadow-strong);
     }
     .feed-status-tag.color-info { color: #ff9800; }
-    body.light-mode .feed-status-tag.color-info { color: #e65100; }
+    body.light-mode .feed-status-tag.color-info { color: #d97706; }
 
     .feed-status-tag.color-rss { color: #22c55e; }
     body.light-mode .feed-status-tag.color-rss { color: #15803d; }
@@ -223,13 +227,13 @@
     .station-ticker-full-row { width: 100%; overflow: hidden; white-space: nowrap; position: relative; margin-top: 1px; }
     
     .station-ticker-text {
-      display: inline-block; font-size: 22px; font-weight: 600;
+      display: inline-block; font-size: 22px; font-weight: 700;
       white-space: nowrap;
       animation: ticker-scroll-slow 50s linear infinite;
     }
 
     .station-ticker-text.color-info { color: #ff9800; text-shadow: var(--text-shadow-strong); }
-    body.light-mode .station-ticker-text.color-info { color: #e65100; }
+    body.light-mode .station-ticker-text.color-info { color: #d97706; }
 
     .station-ticker-text.color-rss { color: #22c55e; text-shadow: var(--text-shadow-strong); }
     body.light-mode .station-ticker-text.color-rss { color: #15803d; }
@@ -273,7 +277,7 @@
     .audio-content-stats { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: none; margin-top: 4px; padding-left: 2px; color: var(--text-muted); }
     
     .stats-main-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
-    .channels-indicator { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; display: flex; align-items: center; color: var(--text-main); }
+    .channels-indicator { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; display: flex; align-items: center; color: var(--text-main); text-shadow: var(--text-shadow-strong); }
     
     .video-btn {
       font-size: 15px; font-weight: 700; padding: 2px 8px; margin-right: 8px;
@@ -300,6 +304,7 @@
       font-size: 20px; font-weight: 700; color: var(--stat-conn-blue); 
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace; 
       white-space: nowrap; width: 50%; 
+      text-shadow: var(--text-shadow-strong);
     }
     
     .buf-bar-bg { flex-grow: 1; height: 12px; background-color: rgba(17, 17, 17, 0.2); border: 1px solid var(--panel-border); border-radius: 2px; overflow: hidden; }
@@ -311,6 +316,7 @@
       margin-top: 3px; font-size: 18px; line-height: 1.2; font-weight: 600;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       color: var(--stat-conn-blue); letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; width: 100%;
+      text-shadow: var(--text-shadow-strong);
     }
     .conn-left-group { display: flex; align-items: center; gap: 8px; }
     .conn-right-group { display: flex; align-items: center; gap: 10px; width: 50%; justify-content: flex-start; }
@@ -339,7 +345,7 @@
 
     .time-vu-row { margin-top: 4px; display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
     
-    /* Local Time Display: ลดขนาดลง 1 ระดับ เหลือ 23px และตัด SS ออก */
+    /* Local Time Display: แสดง [CITY] Time: hh:mm */
     .local-time-display {
       font-size: 23px !important; 
       font-weight: 800; 
@@ -349,11 +355,11 @@
       white-space: nowrap; 
       line-height: 1.1;
     }
-    body.light-mode .local-time-display { color: #e65100; }
+    body.light-mode .local-time-display { color: #d97706; }
 
     .vu-container-global { --bar-h: 14px; --label-h: 22px; display: flex; align-items: center; width: 50%; }
     .vu-meter-panel { flex-grow: 1; display: flex; flex-direction: column; gap: 1px; }
-    .vu-scale-labels { display: flex; justify-content: space-between; position: relative; height: var(--label-h); font-size: 17px; color: var(--vu-scale-text); font-weight: 700; }
+    .vu-scale-labels { display: flex; justify-content: space-between; position: relative; height: var(--label-h); font-size: 17px; color: var(--vu-scale-text); font-weight: 800; text-shadow: var(--text-shadow-strong); }
     
     .scale-mark { position: absolute; transform: translateX(-50%); }
     .scale-mark.minus-twenty { transform: translateX(0%); }
@@ -391,42 +397,42 @@
       border-color: #ff9800 !important;
       box-shadow: 0 0 10px rgba(255, 152, 0, 0.3);
     }
-    body.light-mode .channel-item.active { border-color: #e65100 !important; }
+    body.light-mode .channel-item.active { border-color: #d97706 !important; }
 
-    .channel-name { font-size: 22px; font-weight: 700; color: var(--text-muted); text-align: center; line-height: 1.2; white-space: normal; word-break: break-word; }
+    .channel-name { font-size: 22px; font-weight: 800; color: var(--text-muted); text-align: center; line-height: 1.2; white-space: normal; word-break: break-word; text-shadow: var(--text-shadow-strong); }
     .channel-item.active .channel-name { 
       color: #ff9800 !important; 
       font-weight: 800; 
     }
-    body.light-mode .channel-item.active .channel-name { color: #e65100 !important; }
+    body.light-mode .channel-item.active .channel-name { color: #d97706 !important; }
     
-    .page-version-footer { text-align: center; font-size: 14px; color: var(--text-muted); margin-top: 16px; letter-spacing: 0.5px; }
+    .page-version-footer { text-align: center; font-size: 14px; color: var(--text-muted); margin-top: 16px; letter-spacing: 0.5px; text-shadow: var(--text-shadow-strong); }
 
     /* --- Mobile Browser Optimization --- */
     @media (max-width: 480px) {
       body { padding: 0 10px 14px 10px; }
-      .sticky-header { padding-left: 8px; padding-right: 12px; }
-      .callsign { font-size: 10px; } /* Callsign มือถือลดเหลือ 10px */
-      .tesla-logo-header { width: 90px; margin-right: 4px; }
-      h1.page-title { font-size: 21px; } /* Global News มือถือ 21px */
-      .utc-time-display { font-size: 19px !important; margin-right: 4px; }
-      .local-time-display { font-size: 17px !important; } /* Local Time มือถือ 17px */
-      .station-fixed-title, .station-ticker-text { font-size: 19px !important; }
+      .sticky-header { padding-left: 8px; padding-right: 10px; }
+      .callsign { font-size: 12px; } 
+      .tesla-logo-header { width: 85px; margin-right: 2px; }
+      h1.page-title { font-size: 24px; } 
+      .utc-time-display { font-size: 17px !important; margin-right: 2px; }
+      .local-time-display { font-size: 16px !important; } 
+      .station-fixed-title, .station-ticker-text { font-size: 18px !important; }
       .theme-icon { font-size: 18px; }
       .feed-status-tag { font-size: 15px; }
-      .channels-indicator { font-size: 16px; }
+      .channels-indicator { font-size: 15px; }
       
-      .video-btn { font-size: 12px; padding: 2px 5px; margin-right: 5px; }
+      .video-btn { font-size: 12px; padding: 2px 5px; margin-right: 4px; }
       
-      .buf-meter-container { font-size: 15px; width: 52%; }
-      .connection-status-line { font-size: 13px; letter-spacing: 0px; }
+      .buf-meter-container { font-size: 14px; width: 52%; }
+      .connection-status-line { font-size: 12px; letter-spacing: 0px; }
       .conn-right-group { width: 52%; }
       .vu-container-global { --bar-h: 11px; --label-h: 17px; width: 52%; }
       .vu-scale-labels { font-size: 12px; }
       .scope-container { height: 54px; margin-bottom: 6px; }
-      .playlist-container { padding: 14px; gap: 10px; }
-      .channel-item { padding: 12px 5px; min-height: 54px; border-radius: 6px; }
-      .channel-name { font-size: 16px; }
+      .playlist-container { padding: 12px; gap: 8px; }
+      .channel-item { padding: 10px 4px; min-height: 52px; border-radius: 6px; }
+      .channel-name { font-size: 15px; }
     }
   </style>
 </head>
@@ -524,26 +530,26 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.8.1</div>
+  <div class="page-version-footer">ver.1.8.2</div>
 
   <script>
     const channels = [
-      { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network.", url: "https://live-hls-apps-aje-fa.getaj.net/AJE/index.m3u8", rss: "https://www.aljazeera.com/xml/rss/all.xml" },
-      { name: "ABC Australia", location: "Sydney, Australia", utc: "UTC+10", tz: "Australia/Sydney", about: "Australia’s public broadcasting service.", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8", rss: "https://www.abc.net.au/news/feed/51120/rss.xml" },
-      { name: "Arirang Korea", location: "Seoul, South Korea", utc: "UTC+9", tz: "Asia/Seoul", about: "South Korean English-language international broadcasting network.", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8", rss: "https://www.arirang.com/rss/news" },
-      { name: "BBC News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "The operational business division of the British Broadcasting Corporation (BBC).", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8", rss: "https://feeds.bbci.co.uk/news/rss.xml" },
-      { name: "CGTN", location: "Beijing, China", utc: "UTC+8", tz: "Asia/Shanghai", about: "China Global Television Network, the international division of CCTV.", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8", rss: "https://www.cgtn.com/subscribe/rss/p/1.xml" },
-      { name: "CNA", location: "Singapore", utc: "UTC+8", tz: "Asia/Singapore", about: "Channel NewsAsia, a Singaporean multinational news channel.", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8", rss: "https://www.channelnewsasia.com/api/v1/rss-outbound/rssnews/posts.xml" },
-      { name: "NHK English", location: "Tokyo, Japan", utc: "UTC+9", tz: "Asia/Tokyo", about: "NHK World-Japan, the international broadcasting service of NHK.", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8", rss: "https://www3.nhk.or.jp/nhkworld/en/news/backstories/rss/index.xml" },
-      { name: "DW En", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "Deutsche Welle English, Germany's public international broadcaster.", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8", rss: "https://rss.dw.com/xml/rss-en-all" },
-      { name: "France 24 En", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The English-language arm of France's state-owned international news network.", url: "https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8", rss: "https://www.france24.com/en/rss" },
-      { name: "France 24 Fr", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The French-language domestic and international channel of France 24.", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8", rss: "https://www.france24.com/fr/rss" },
-      { name: "GB News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "A British free-to-air news and opinion channel.", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8", rss: "https://www.gbnews.com/feeds/news.rss" },
-      { name: "Tagesschau24", location: "Hamburg, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "A German specialized news channel operated by ARD.", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8", rss: "https://www.tagesschau.de/xml/rss2/" },
-      { name: "TPTV", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Parliament Television.", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org", rss: null },
-      { name: "Classic FM", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "UK classic music radio stream based in Leicester Square, London.", url: "http://media-ice.musicradio.com/ClassicFMMP3", kbps: 128, rss: null },
-      { name: "Klassik-1", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "German classical music online radio station based in Berlin.", url: "http://icepool.silvacast.com/KLASSIK1.mp3", kbps: 128, rss: null },
-      { name: "บ้านธรรมะ", location: "Bangkok, Thailand", utc: "UTC+7", tz: "Asia/Bangkok", about: "Dhamma media and radio broadcasting operated by the Dhamma Study and Propagation Foundation.", url: "https://radio10.plathong.net/7238/;stream.mp3", kbps: 128, rss: null }
+      { name: "Al Jazeera", location: "Doha, Qatar", cityCode: "DOH", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network.", url: "https://live-hls-web-aje.getaj.net/AJE/index.m3u8", fallbackUrl: "https://live-hls-apps-aje-fa.getaj.net/AJE/index.m3u8", rss: "https://www.aljazeera.com/xml/rss/all.xml" },
+      { name: "ABC Australia", location: "Sydney, Australia", cityCode: "SYD", utc: "UTC+10", tz: "Australia/Sydney", about: "Australia’s public broadcasting service.", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8", rss: "https://www.abc.net.au/news/feed/51120/rss.xml" },
+      { name: "Arirang Korea", location: "Seoul, South Korea", cityCode: "SEL", utc: "UTC+9", tz: "Asia/Seoul", about: "South Korean English-language international broadcasting network.", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8", rss: "https://www.arirang.com/rss/news" },
+      { name: "BBC News", location: "London, UK", cityCode: "LON", utc: "UTC+1", tz: "Europe/London", about: "The operational business division of the British Broadcasting Corporation (BBC).", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8", rss: "https://feeds.bbci.co.uk/news/rss.xml" },
+      { name: "CGTN", location: "Beijing, China", cityCode: "BJS", utc: "UTC+8", tz: "Asia/Shanghai", about: "China Global Television Network, the international division of CCTV.", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8", rss: "https://www.cgtn.com/subscribe/rss/p/1.xml" },
+      { name: "CNA", location: "Singapore", cityCode: "SGP", utc: "UTC+8", tz: "Asia/Singapore", about: "Channel NewsAsia, a Singaporean multinational news channel.", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8", rss: "https://www.channelnewsasia.com/api/v1/rss-outbound/rssnews/posts.xml" },
+      { name: "NHK English", location: "Tokyo, Japan", cityCode: "TYO", utc: "UTC+9", tz: "Asia/Tokyo", about: "NHK World-Japan, the international broadcasting service of NHK.", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8", rss: "https://www3.nhk.or.jp/nhkworld/en/news/backstories/rss/index.xml" },
+      { name: "DW En", location: "Berlin, Germany", cityCode: "BER", utc: "UTC+2", tz: "Europe/Berlin", about: "Deutsche Welle English, Germany's public international broadcaster.", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8", rss: "https://rss.dw.com/xml/rss-en-all" },
+      { name: "France 24 En", location: "Paris, France", cityCode: "PAR", utc: "UTC+2", tz: "Europe/Paris", about: "The English-language arm of France's state-owned international news network.", url: "https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8", rss: "https://www.france24.com/en/rss" },
+      { name: "France 24 Fr", location: "Paris, France", cityCode: "PAR", utc: "UTC+2", tz: "Europe/Paris", about: "The French-language domestic and international channel of France 24.", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8", rss: "https://www.france24.com/fr/rss" },
+      { name: "GB News", location: "London, UK", cityCode: "LON", utc: "UTC+1", tz: "Europe/London", about: "A British free-to-air news and opinion channel.", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8", rss: "https://www.gbnews.com/feeds/news.rss" },
+      { name: "Tagesschau24", location: "Hamburg, Germany", cityCode: "HAM", utc: "UTC+2", tz: "Europe/Berlin", about: "A German specialized news channel operated by ARD.", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8", rss: "https://www.tagesschau.de/xml/rss2/" },
+      { name: "TPTV", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Parliament Television.", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org", rss: null },
+      { name: "Classic FM", location: "London, UK", cityCode: "LON", utc: "UTC+1", tz: "Europe/London", about: "UK classic music radio stream based in Leicester Square, London.", url: "http://media-ice.musicradio.com/ClassicFMMP3", kbps: 128, rss: null },
+      { name: "Klassik-1", location: "Berlin, Germany", cityCode: "BER", utc: "UTC+2", tz: "Europe/Berlin", about: "German classical music online radio station based in Berlin.", url: "http://icepool.silvacast.com/KLASSIK1.mp3", kbps: 128, rss: null },
+      { name: "บ้านธรรมะ", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "Dhamma media and radio broadcasting operated by the Dhamma Study and Propagation Foundation.", url: "https://radio10.plathong.net/7238/;stream.mp3", kbps: 128, rss: null }
     ];
 
     const dbMarks = [ 
@@ -692,7 +698,7 @@
       }
     }
 
-    // --- Dynamic Ticker & Robust Multi-Layer RSS Engine ---
+    // --- Ultra-Fast Parallel RSS Engine With Timeout Protection ---
     async function updateTickerContent(ch) {
       activeRssFetchId++;
       const currentFetchId = activeRssFetchId;
@@ -706,73 +712,72 @@
 
       if (!ch.rss) return;
 
-      // Layer 1: Direct XML Fetch
-      try {
-        const res0 = await fetch(ch.rss, { method: 'GET', cache: 'no-cache' });
-        if (res0.ok) {
-          const xmlText = await res0.text();
-          const parser = new DOMParser();
-          const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+      const fetchWithTimeout = (promise, ms) => {
+        return Promise.race([
+          promise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms))
+        ]);
+      };
+
+      // 1. Direct Fetch Promise
+      const pDirect = fetchWithTimeout(fetch(ch.rss, { cache: 'no-cache' }), 3500)
+        .then(async res => {
+          if (!res.ok) throw new Error("Direct Failed");
+          const xmlText = await res.text();
+          const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
           const items = xmlDoc.querySelectorAll("item");
-          if (items && items.length > 0) {
-            const headlineList = [];
-            for (let i = 0; i < Math.min(items.length, 8); i++) {
-              const titleEl = items[i].querySelector("title");
-              if (titleEl && titleEl.textContent) headlineList.push(titleEl.textContent.trim());
-            }
-            if (headlineList.length > 0 && currentFetchId === activeRssFetchId) {
-              setRssTicker(headlineList.join(' \u00A0\u00A0•\u00A0\u00A0 '));
-              return;
-            }
+          if (!items || items.length === 0) throw new Error("No items");
+          const headlines = Array.from(items).slice(0, 8)
+            .map(i => i.querySelector("title")?.textContent?.trim()).filter(Boolean);
+          if (headlines.length === 0) throw new Error("No titles");
+          return headlines.join(' \u00A0\u00A0•\u00A0\u00A0 ');
+        });
+
+      // 2. RSS2JSON Proxy Promise
+      const pRss2Json = fetchWithTimeout(fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(ch.rss)}`), 3500)
+        .then(async res => {
+          const data = await res.json();
+          if (data && data.status === 'ok' && data.items && data.items.length > 0) {
+            return data.items.slice(0, 8).map(i => i.title.trim()).join(' \u00A0\u00A0•\u00A0\u00A0 ');
           }
-        }
-      } catch (err) {
-        console.log("Direct RSS Fetch bypassed (CORS), trying Proxy 1:", err);
-      }
+          throw new Error("RSS2JSON Failed");
+        });
 
-      // Layer 2: rss2json API Proxy
-      try {
-        const proxyUrl1 = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(ch.rss)}`;
-        const res1 = await fetch(proxyUrl1);
-        const data1 = await res1.json();
-
-        if (currentFetchId !== activeRssFetchId) return;
-
-        if (data1 && data1.status === 'ok' && data1.items && data1.items.length > 0) {
-          const headlines = data1.items.slice(0, 8).map(item => item.title.trim()).join(' \u00A0\u00A0•\u00A0\u00A0 ');
-          setRssTicker(headlines);
-          return;
-        }
-      } catch (err) {
-        console.log("RSS Proxy 1 failed, trying Proxy 2:", err);
-      }
-
-      // Layer 3: AllOrigins CORS Proxy
-      try {
-        const proxyUrl2 = `https://api.allorigins.win/get?url=${encodeURIComponent(ch.rss)}`;
-        const res2 = await fetch(proxyUrl2);
-        const data2 = await res2.json();
-
-        if (currentFetchId !== activeRssFetchId) return;
-
-        if (data2 && data2.contents) {
-          const parser = new DOMParser();
-          const xmlDoc = parser.parseFromString(data2.contents, "text/xml");
+      // 3. AllOrigins Proxy Promise
+      const pAllOrigins = fetchWithTimeout(fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(ch.rss)}`), 3500)
+        .then(async res => {
+          const data = await res.json();
+          if (!data || !data.contents) throw new Error("AllOrigins Empty");
+          const xmlDoc = new DOMParser().parseFromString(data.contents, "text/xml");
           const items = xmlDoc.querySelectorAll("item");
-          
-          if (items && items.length > 0) {
-            const headlineList = [];
-            for (let i = 0; i < Math.min(items.length, 8); i++) {
-              const titleEl = items[i].querySelector("title");
-              if (titleEl && titleEl.textContent) headlineList.push(titleEl.textContent.trim());
-            }
-            if (headlineList.length > 0) {
-              setRssTicker(headlineList.join(' \u00A0\u00A0•\u00A0\u00A0 '));
-            }
-          }
+          if (!items || items.length === 0) throw new Error("No items");
+          const headlines = Array.from(items).slice(0, 8)
+            .map(i => i.querySelector("title")?.textContent?.trim()).filter(Boolean);
+          if (headlines.length === 0) throw new Error("No titles");
+          return headlines.join(' \u00A0\u00A0•\u00A0\u00A0 ');
+        });
+
+      // 4. CorsProxy Promise
+      const pCorsProxy = fetchWithTimeout(fetch(`https://corsproxy.io/?${encodeURIComponent(ch.rss)}`), 3500)
+        .then(async res => {
+          if (!res.ok) throw new Error("CorsProxy Failed");
+          const xmlText = await res.text();
+          const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
+          const items = xmlDoc.querySelectorAll("item");
+          if (!items || items.length === 0) throw new Error("No items");
+          const headlines = Array.from(items).slice(0, 8)
+            .map(i => i.querySelector("title")?.textContent?.trim()).filter(Boolean);
+          if (headlines.length === 0) throw new Error("No titles");
+          return headlines.join(' \u00A0\u00A0•\u00A0\u00A0 ');
+        });
+
+      try {
+        const fastestHeadlines = await Promise.any([pDirect, pRss2Json, pAllOrigins, pCorsProxy]);
+        if (currentFetchId === activeRssFetchId && fastestHeadlines) {
+          setRssTicker(fastestHeadlines);
         }
       } catch (err) {
-        console.log("RSS Proxy 2 failed:", err);
+        console.log("All RSS proxies failed or timed out:", err);
       }
     }
 
@@ -805,12 +810,16 @@
       const now = new Date();
       utcClockElem.innerText = `UTC ${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')}:${String(now.getUTCSeconds()).padStart(2,'0')}`;
       
-      // ปรับรูปแบบเวลา Local Time ตัด SS ออกเป็น Time: hh:mm
+      // รูปแบบตัวย่อเมืองหน้า Local Time เช่น SGP Time: hh:mm
       if (activeIndex !== -1 && channels[activeIndex]?.tz) {
         try {
-          const formatter = new Intl.DateTimeFormat('en-GB', { timeZone: channels[activeIndex].tz, hour: '2-digit', minute: '2-digit', hour12: false });
-          localClockElem.innerText = `Time: ${formatter.format(now)}`;
+          const ch = channels[activeIndex];
+          const cityTag = ch.cityCode ? `${ch.cityCode} ` : '';
+          const formatter = new Intl.DateTimeFormat('en-GB', { timeZone: ch.tz, hour: '2-digit', minute: '2-digit', hour12: false });
+          localClockElem.innerText = `${cityTag}Time: ${formatter.format(now)}`;
         } catch (e) { localClockElem.innerText = "Time: --:--"; }
+      } else {
+        localClockElem.innerText = "Time: --:--";
       }
       updateAutoTheme();
     }
@@ -1069,10 +1078,34 @@
         if (window.Hls && Hls.isSupported()) {
           usingNative = false;
           meterMode = IS_IOS ? 'segments' : 'analyser';
-          hls = new Hls({ enableWorker: true, startLevel: 0 });
+          
+          hls = new Hls({ 
+            enableWorker: true, 
+            startLevel: -1,
+            manifestLoadingTimeOut: 10000,
+            manifestLoadingMaxRetry: 3,
+            levelLoadingTimeOut: 10000
+          });
+
           hls.loadSource(url);
           hls.attachMedia(player);
-          hls.on(Hls.Events.MANIFEST_PARSED, () => { if (LOWEST_QUALITY) hls.autoLevelCapping = 0; player.play().then(onPlayStarted).catch(e => console.log("Play error:", e)); });
+          
+          hls.on(Hls.Events.ERROR, (event, data) => {
+            if (data.fatal) {
+              const ch = channels[activeIndex];
+              if (ch && ch.fallbackUrl && url !== ch.fallbackUrl) {
+                console.log("HLS Fatal error, switching to fallback URL...");
+                hls.destroy();
+                playAudio(ch.fallbackUrl);
+              }
+            }
+          });
+
+          hls.on(Hls.Events.MANIFEST_PARSED, () => { 
+            if (LOWEST_QUALITY) hls.autoLevelCapping = 0; 
+            player.play().then(onPlayStarted).catch(e => console.log("Play error:", e)); 
+          });
+          
           hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { 
             if (data.details && data.details.totalduration) {
               currentBitrate = Math.round((data.details.totalduration > 0 ? (data.details.bandwidth || 0) : 0) / 1000); 
