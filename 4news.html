@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HS1WFK 4 STREAMS v2.7.7</title>
+  <title>HS1WFK 4 STREAMS v2.7.8</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -636,7 +636,7 @@
   <header>
     <div class="header-left">
       <div class="brand-title">
-        HS1WFK 4 STREAMS <span class="version-text">v2.7.7</span>
+        HS1WFK 4 STREAMS <span class="version-text">v2.7.8</span>
       </div>
 
       <!-- Quad System Toggle Button -->
@@ -1242,7 +1242,7 @@
         pauseSys3Videos();
         pauseBackgroundYouTubeSys1();
         pauseBackgroundHLSVideo();
-        resumeSys4Videos();
+        setTimeout(resumeSys4Videos, 50);
       } else if (activeSystem === 3) {
         toggleBtn.textContent = 'System 3';
         toggleBtn.className = 'btn-sys-toggle sys3-mode';
@@ -1257,7 +1257,7 @@
         pauseSys4Videos();
         pauseBackgroundYouTubeSys1();
         pauseBackgroundHLSVideo();
-        resumeSys3Videos();
+        setTimeout(resumeSys3Videos, 50);
       } else if (activeSystem === 1) {
         toggleBtn.textContent = 'System 1';
         toggleBtn.className = 'btn-sys-toggle sys1-mode';
@@ -1312,7 +1312,7 @@
       setLayout(nextLayout);
     }
 
-    /* SYSTEM 4 ENGINE (SINGLE CHANNEL 16:9 MODE WITH AUTOPLAY FIX) */
+    /* SYSTEM 4 ENGINE (RE-ARCHITECTED AUTOPLAY RECOVERY) */
     function initSys4Players() {
       if (sys4Initialized) return;
       sys4Initialized = true;
@@ -1337,10 +1337,7 @@
           onReady: (e) => {
             sys4ReadyStatus[ch] = true;
             e.target.mute();
-            e.target.playVideo();
-          },
-          onStateChange: (e) => {
-            if (e.data === YT.PlayerState.PAUSED && activeSystem === 4) {
+            if (activeSystem === 4) {
               e.target.playVideo();
             }
           }
@@ -1381,7 +1378,12 @@
     }
 
     function resumeSys4Videos() {
-      if (sys4Players[1] && sys4ReadyStatus[1] && typeof sys4Players[1].playVideo === 'function') {
+      if (!sys4Players[1]) {
+        initSingleSys4Player(1);
+        return;
+      }
+      if (sys4ReadyStatus[1] && typeof sys4Players[1].playVideo === 'function') {
+        sys4Players[1].mute();
         sys4Players[1].playVideo();
       }
     }
@@ -1480,7 +1482,7 @@
       }
     }
 
-    /* SYSTEM 3 ENGINE WITH AUTOPLAY FIX */
+    /* SYSTEM 3 ENGINE (RE-ARCHITECTED AUTOPLAY RECOVERY) */
     function initSys3Players() {
       if (sys3Initialized) return;
       sys3Initialized = true;
@@ -1507,10 +1509,7 @@
           onReady: (e) => {
             sys3ReadyStatus[ch] = true;
             e.target.mute();
-            e.target.playVideo();
-          },
-          onStateChange: (e) => {
-            if (e.data === YT.PlayerState.PAUSED && activeSystem === 3) {
+            if (activeSystem === 3) {
               e.target.playVideo();
             }
           }
@@ -1579,7 +1578,12 @@
 
     function resumeSys3Videos() {
       for (let ch = 1; ch <= 2; ch++) {
-        if (sys3Players[ch] && sys3ReadyStatus[ch] && typeof sys3Players[ch].playVideo === 'function') {
+        if (!sys3Players[ch]) {
+          initSingleSys3Player(ch);
+          continue;
+        }
+        if (sys3ReadyStatus[ch] && typeof sys3Players[ch].playVideo === 'function') {
+          sys3Players[ch].mute();
           sys3Players[ch].playVideo();
         }
       }
@@ -2420,7 +2424,7 @@
       if (activeSystem === 3 || activeSystem === 4) return; 
       if (document.getElementById('thaipbs-overlay').classList.contains('active')) return;
 
-      console.log(`[Hourly Automation v2.7.7] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
+      console.log(`[Hourly Automation v2.7.8] Executed at xx:00:00 - Time: ${new Date().toLocaleTimeString()}`);
 
       playTripleBeep();
 
