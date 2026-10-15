@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.0.0</title>
+  <title>Exchange Times v2.0.1</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -123,7 +123,7 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 14px; color: #888;">v2.0.0</span></div>
+    <div class="app-title">Exchange Times <span style="font-size: 14px; color: #888;">v2.0.1</span></div>
     <div class="utc-clock">
       <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClock">UTC: --:--:--</a>
     </div>
@@ -486,7 +486,7 @@
           return;
         }
 
-        // Custom Engine for TFEX Row
+        // Dynamic Engine Fix for TFEX Row
         if (m.code === 'TFEX') {
           if (isTfexTrading) {
             let totalSession = isNightSession ? (1440 - nightOpen + nightClose) : (dayClose - dayOpen);
@@ -510,10 +510,12 @@
             `;
             setLedState(m.code, 'orange');
           } else {
+            // Closed session logic with dynamic color <= 60 minutes
             if (localMin >= dayClose && localMin < nightOpen) {
               let diffNight = nightOpen - localMin;
+              let colorClass = diffNight <= 60 ? 'status-close' : 'status-close-dark';
               let textNight = isMobile ? ('Night Open in ' + formatHM(diffNight)) : ('Day Closed, Night Open in ' + formatHM(diffNight));
-              statusCell.innerHTML = '<span class="status-close">' + textNight + '</span>';
+              statusCell.innerHTML = '<span class="' + colorClass + '">' + textNight + '</span>';
             } else {
               let diffDay = 0;
               if (localMin < dayOpen) {
@@ -521,8 +523,9 @@
               } else {
                 diffDay = (1440 - localMin) + dayOpen;
               }
+              let colorClass = diffDay <= 60 ? 'status-close' : 'status-close-dark';
               let textDay = isMobile ? ('Day Open in ' + formatHM(diffDay)) : ('Closed, Day Open in ' + formatHM(diffDay));
-              statusCell.innerHTML = '<span class="status-close-dark">' + textDay + '</span>';
+              statusCell.innerHTML = '<span class="' + colorClass + '">' + textDay + '</span>';
             }
             nameCell.classList.remove('blinking-name');
             setLedState(m.code, 'red');
@@ -551,7 +554,7 @@
           } else {
             diff = (1440 - localMin) + openMin;
           }
-          const colorClass = diff > 60 ? 'status-close-dark' : 'status-close';
+          const colorClass = diff <= 60 ? 'status-close' : 'status-close-dark';
           const openText = isMobile ? ('Open in ' + formatHM(diff)) : ('Closed, Open in ' + formatHM(diff));
           statusCell.innerHTML = '<span class="' + colorClass + '">' + openText + '</span>';
           nameCell.classList.remove('blinking-name');
