@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.3.0</title>
+  <title>Exchange Times v2.3.1</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -125,7 +125,7 @@
   <!-- Top Navigation Panel -->
   <div class="header-panel">
     <div class="app-title" onclick="runSoundTest()" title="Click to test Morse sound sequence and voice time announcement">
-      Exchange Times <span style="font-size: 14px; color: #888;">v2.3.0</span>
+      Exchange Times <span style="font-size: 14px; color: #888;">v2.3.1</span>
     </div>
     <div class="utc-clock">
       <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClock">UTC: --:--:--</a>
@@ -204,6 +204,20 @@
     let audioCtx = null;
     const marketStateTracker = {}; 
     const flashingTimers = {};
+    let cachedVoices = [];
+
+    // Pre-load voices for iOS Safari / iPadOS
+    function preloadVoices() {
+      if ('speechSynthesis' in window) {
+        cachedVoices = window.speechSynthesis.getVoices();
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+          window.speechSynthesis.onvoiceschanged = () => {
+            cachedVoices = window.speechSynthesis.getVoices();
+          };
+        }
+      }
+    }
+    preloadVoices();
 
     function initAudioContext() {
       if (!audioCtx) {
@@ -215,10 +229,13 @@
       }
     }
 
+    // Warm-up Speech Engine specifically for iPadOS / iOS
     function enableAudio() {
       initAudioContext();
       if ('speechSynthesis' in window) {
         window.speechSynthesis.resume();
+        const dummyUtterance = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(dummyUtterance);
       }
       const btn = document.getElementById('btnAudio');
       btn.innerText = "Alert On";
@@ -226,26 +243,28 @@
     }
 
     document.addEventListener('touchstart', function() {
-      if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.resume();
-      }
-      const btn = document.getElementById('btnAudio');
-      btn.innerText = "Alert On";
-      btn.classList.add('active');
+      enableAudio();
     }, { once: true });
 
-    // Text to Speech Engine (British Format Default)
-    function speakText(text, lang = 'en-GB', rate = 0.95) {
+    // iOS/iPadOS Optimized Speech Function
+    function speakText(text) {
       if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel(); 
+      
+      window.speechSynthesis.cancel(); // Clear queue
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = lang;
-      utterance.rate = rate; 
+      utterance.lang = 'en-GB';
+      utterance.rate = 0.9;
       utterance.pitch = 1.0;
+
+      // Select British Voice if available
+      if (cachedVoices.length === 0) {
+        cachedVoices = window.speechSynthesis.getVoices();
+      }
+      const ukVoice = cachedVoices.find(v => v.lang === 'en-GB' || v.lang.startsWith('en_GB'));
+      if (ukVoice) {
+        utterance.voice = ukVoice;
+      }
 
       window.speechSynthesis.speak(utterance);
     }
@@ -299,11 +318,10 @@
       } catch (e) { console.error(e); }
     }
 
-    // Sound Test Sequence (Title Click Switch): O -> V -> VV -> E -> T -> Speech (British Format Time)
+    // Sound Test Sequence (Title Click Switch): O -> V -> VV -> E -> T -> Speech
     function runSoundTest() {
       enableAudio();
-      
-      // Sequence: O -> V -> VV -> E -> T
+
       playMorsePattern('---', () => {
         setTimeout(() => {
           playMorsePattern('...-', () => {
@@ -313,13 +331,13 @@
                   playMorsePattern('.', () => {
                     setTimeout(() => {
                       playMorsePattern('-', () => {
-                        // After T sound finishes, speak the current local time in British format
+                        // After T sound finishes, announce current time on iPad
                         setTimeout(() => {
                           const now = new Date();
                           const hours = String(now.getHours()).padStart(2, '0');
                           const minutes = String(now.getMinutes()).padStart(2, '0');
-                          speakText(`The time now is ${hours}:${minutes}`, 'en-GB');
-                        }, 400);
+                          speakText(`The time now is ${hours}:${minutes}`);
+                        }, 500);
                       });
                     }, 400);
                   });
