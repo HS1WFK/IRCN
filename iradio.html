@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Header Meter V.1.8.3</title>
+  <title>Global News - Header Meter V.1.8.5</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -32,7 +32,6 @@
       --text-shadow-strong: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.8);
     }
 
-    /* สไตล์แสงเงาเข้มชัดสำหรับ Day Mode (Light Mode) */
     body.light-mode {
       --bg-color: #f4f5f7;
       --card-bg: rgba(255, 255, 255, 0.85);
@@ -104,7 +103,6 @@
 
     .header-container { text-align: left; padding-left: 0px; }
     
-    /* 1. Header Top Row (Callsign Left | Tesla Logo Right) */
     .top-header-row {
       display: flex;
       justify-content: space-between;
@@ -138,7 +136,6 @@
       filter: invert(1) drop-shadow(0 1px 2px rgba(255, 255, 255, 0.5));
     }
 
-    /* 2. Title Row (Global News + Sun/Moon Left | UTC Time Right) */
     .title-row { 
       display: flex; 
       justify-content: space-between; 
@@ -188,7 +185,6 @@
       transition: color 0.3s ease;
     }
 
-    /* 3. Station Info & Dedicated Full-Width Ticker Layout */
     .station-info-container { display: flex; flex-direction: column; margin-bottom: 6px; min-height: 38px; visibility: hidden; width: 100%; }
     
     .station-title-row { 
@@ -240,7 +236,6 @@
       100% { transform: translateX(-50%); }
     }
 
-    /* --- Video Wrapper --- */
     .video-wrapper {
       width: 100%;
       border-radius: 5px;
@@ -404,7 +399,6 @@
     
     .page-version-footer { text-align: center; font-size: 14px; color: var(--text-muted); margin-top: 16px; letter-spacing: 0.5px; text-shadow: var(--text-shadow-strong); }
 
-    /* --- Mobile Browser Optimization --- */
     @media (max-width: 480px) {
       body { padding: 0 10px 14px 10px; }
       .sticky-header { padding-left: 8px; padding-right: 10px; }
@@ -434,11 +428,9 @@
 </head>
 <body>
 
-  <!-- Sticky Header -->
   <div class="sticky-header">
     <div class="header-container">
       
-      <!-- 1. Callsign Left | Tesla Logo Right -->
       <div class="top-header-row">
         <div class="callsign">HS1WFK</div>
         <img src="https://raw.githubusercontent.com/HS1WFK/IRCN/main/Tesla1.png" 
@@ -447,7 +439,6 @@
              class="tesla-logo-header">
       </div>
 
-      <!-- 2. Global News + [Sun/Moon] Left | UTC Time Right -->
       <div class="title-row">
         <div class="page-title-group" id="theme-toggle-btn" title="Click to Toggle Day/Night Mode">
           <h1 class="page-title">Global News</h1>
@@ -456,7 +447,6 @@
         <div class="utc-time-display" id="utc-clock">UTC --:--:--</div>
       </div>
 
-      <!-- 3. Station Title + Feed Status Tag + Dedicated Full-Width Ticker Row -->
       <div class="station-info-container" id="station-info-row">
         <div class="station-title-row">
           <div class="station-fixed-title" id="station-fixed-title"></div>
@@ -467,7 +457,6 @@
         </div>
       </div>
 
-      <!-- VIDEO WRAPPER -->
       <div class="video-wrapper" id="video-wrapper">
         <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
       </div>
@@ -526,7 +515,7 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.8.3</div>
+  <div class="page-version-footer">ver.1.8.5</div>
 
   <script>
     const channels = [
@@ -542,16 +531,15 @@
       { name: "France 24 Fr", location: "Paris, France", cityCode: "PAR", utc: "UTC+2", tz: "Europe/Paris", about: "The French-language domestic and international channel of France 24.", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8", rss: "https://www.france24.com/fr/rss" },
       { name: "GB News", location: "London, UK", cityCode: "LON", utc: "UTC+1", tz: "Europe/London", about: "A British free-to-air news and opinion channel.", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8", rss: "https://www.gbnews.com/feeds/news.rss" },
       { name: "Tagesschau24", location: "Hamburg, Germany", cityCode: "HAM", utc: "UTC+2", tz: "Europe/Berlin", about: "A German specialized news channel operated by ARD.", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8", rss: "https://www.tagesschau.de/xml/rss2/" },
+      
+      /* --- แทรก ThaiPBS ก่อน TPTV --- */
+      { name: "ThaiPBS", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Public Broadcasting Service (องค์การกระจายเสียงและแพร่ภาพสาธารณะแห่งประเทศไทย) สื่อสาธารณะแห่งแรกของประเทศไทย", url: "https://thaipbs-mcx0wm.cdn.byteark.com/vtt-live/variant_1080p.m3u8", rss: null },
       { name: "TPTV", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Parliament Television.", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org", rss: null },
+      
       { name: "Classic FM", location: "London, UK", cityCode: "LON", utc: "UTC+1", tz: "Europe/London", about: "UK classic music radio stream based in Leicester Square, London.", url: "http://media-ice.musicradio.com/ClassicFMMP3", kbps: 128, rss: null },
       { name: "Klassik-1", location: "Berlin, Germany", cityCode: "BER", utc: "UTC+2", tz: "Europe/Berlin", about: "German classical music online radio station based in Berlin.", url: "http://icepool.silvacast.com/KLASSIK1.mp3", kbps: 128, rss: null },
       { name: "บ้านธรรมะ", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "Dhamma media and radio broadcasting operated by the Dhamma Study and Propagation Foundation.", url: "https://radio10.plathong.net/7238/;stream.mp3", kbps: 128, rss: null },
-      
-      /* --- 6 สถานีใหม่ (เพิ่มเติมต่อจาก บ้านธรรมะ) --- */
-      { name: "วัดปากบ่อ", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "วัดปากบ่อ ซอยอ่อนนุช 35 สร้างเมื่อ พ.ศ. 2352 โดยเจ้าพระยาบดินทรเดชา (สิงห์ สิงหเสนี) เดิมชื่อวัดหัวโค้ง", url: "http://radio1.siamlivehost.com:8001", kbps: 128, rss: null },
-      { name: "วัดนายโรง", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "วัดนายโรง สร้างขึ้นเมื่อราว พ.ศ. 2403 โดยท่านเจ้ากรับ เจ้าของโรงละครนอกที่มีชื่อเสียงในอดีต", url: "http://103.7.56.219:4106", kbps: 128, rss: null },
       { name: "วิทยุศึกษา MOE", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "สถานีวิทยุศึกษา กระทรวงศึกษาธิการ FM 92 MHz ส่งเสริมการเรียนรู้ตลอดชีวิตแก่ประชาชน", url: "https://stream.moeradiothai.net/live/moe32.sdp/chunklist_w235079672.m3u8", rss: null },
-      { name: "FM91 Traffic", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "สวพ.FM91 สถานีวิทยุเพื่อความปลอดภัยและการจราจร กองตำรวจสื่อสาร สำนักงานตำรวจแห่งชาติ โทร 1644", url: "http://122.155.16.48:8955/;stream", kbps: 128, rss: null },
       { name: "Smooth London", location: "London, UK", cityCode: "LON", utc: "UTC+1", tz: "Europe/London", about: "Smooth Radio London - Easy Listening, soft rock, and classic pop hits from the past five decades.", url: "http://media-the.musicradio.com:80/SmoothLondonMP3", kbps: 128, rss: null },
       { name: "SmoothJazz.com", location: "Monterey, USA", cityCode: "MCR", utc: "UTC-7", tz: "America/Los_Angeles", about: "World's first and longest-running online radio dedicated to smooth jazz, contemporary jazz, and groove chillout.", url: "http://smoothjazz.cdnstream1.com/2585_320.mp3", kbps: 320, rss: null }
     ];
@@ -607,7 +595,6 @@
     let isVideoToggledOn = false;
     let isUserThemeOverride = false;
 
-    // Realtime Local Time Auto Day/Night Switcher
     function updateAutoTheme() {
       if (isUserThemeOverride) return;
       const hour = new Date().getHours();
@@ -701,7 +688,6 @@
       }
     }
 
-    // --- Ultra-Fast Parallel RSS Engine With Timeout Protection ---
     async function updateTickerContent(ch) {
       activeRssFetchId++;
       const currentFetchId = activeRssFetchId;
@@ -744,34 +730,8 @@
           throw new Error("RSS2JSON Failed");
         });
 
-      const pAllOrigins = fetchWithTimeout(fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(ch.rss)}`), 3500)
-        .then(async res => {
-          const data = await res.json();
-          if (!data || !data.contents) throw new Error("AllOrigins Empty");
-          const xmlDoc = new DOMParser().parseFromString(data.contents, "text/xml");
-          const items = xmlDoc.querySelectorAll("item");
-          if (!items || items.length === 0) throw new Error("No items");
-          const headlines = Array.from(items).slice(0, 8)
-            .map(i => i.querySelector("title")?.textContent?.trim()).filter(Boolean);
-          if (headlines.length === 0) throw new Error("No titles");
-          return headlines.join(' \u00A0\u00A0•\u00A0\u00A0 ');
-        });
-
-      const pCorsProxy = fetchWithTimeout(fetch(`https://corsproxy.io/?${encodeURIComponent(ch.rss)}`), 3500)
-        .then(async res => {
-          if (!res.ok) throw new Error("CorsProxy Failed");
-          const xmlText = await res.text();
-          const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
-          const items = xmlDoc.querySelectorAll("item");
-          if (!items || items.length === 0) throw new Error("No items");
-          const headlines = Array.from(items).slice(0, 8)
-            .map(i => i.querySelector("title")?.textContent?.trim()).filter(Boolean);
-          if (headlines.length === 0) throw new Error("No titles");
-          return headlines.join(' \u00A0\u00A0•\u00A0\u00A0 ');
-        });
-
       try {
-        const fastestHeadlines = await Promise.any([pDirect, pRss2Json, pAllOrigins, pCorsProxy]);
+        const fastestHeadlines = await Promise.any([pDirect, pRss2Json]);
         if (currentFetchId === activeRssFetchId && fastestHeadlines) {
           setRssTicker(fastestHeadlines);
         }
@@ -980,27 +940,17 @@
       return { rms: Math.sqrt(sum / (idx - a + 1)), stereo: e.stereo };
     }
 
-    /* --- Robust Direct Audio Stream Handler (HTTP Mixed-Content & SSL Tunnel Protection) --- */
     function startDirectAudio(url) {
       directAttempt++;
       const sid = directAttempt;
       usingNative = true;
 
+      const ch = channels[activeIndex];
       const cands = [];
-      const isHttpsPage = location.protocol === 'https:';
-
-      // 1. Direct Original URL
+      
       cands.push(url);
-
-      // 2. Auto HTTPS Upgrading (ถ้าหน้าเว็บเป็น HTTPS และ URL สตรีมเป็น HTTP)
-      if (isHttpsPage && /^http:/i.test(url)) {
-        cands.unshift(url.replace(/^http:/i, 'https:'));
-      }
-
-      // 3. Fallback SSL Reverse Proxy Tunnels (สำหรับ HTTP สตรีมที่ติด Port หรือไม่มี SSL)
-      if (isHttpsPage && /^http:/i.test(url)) {
-        cands.push(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-        cands.push(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+      if (location.protocol === 'https:' && /^http:/i.test(url)) {
+        cands.push(url.replace(/^http:/i, 'https:'));
       }
       
       const list = [];
@@ -1016,13 +966,12 @@
       function attemptAt(i) {
         if (sid !== directAttempt) return;
         if (i >= list.length) {
-          const ch = channels[activeIndex];
           if (ch) {
             stationFixedTitle.innerText = ch.name;
             feedStatusTag.innerText = "Station Info:";
             feedStatusTag.className = "feed-status-tag color-info";
             stationTickerText.className = "station-ticker-text color-info";
-            applyTickerAnimation('Cannot open stream (HTTP Mixed-Content Blocked / Server Offline) \u00A0\u00A0•\u00A0\u00A0 ', "30s");
+            applyTickerAnimation('Cannot open stream (Mixed Content / Server offline) \u00A0\u00A0•\u00A0\u00A0 ', "30s");
             stationInfoRow.style.visibility = 'visible';
           }
           return;
