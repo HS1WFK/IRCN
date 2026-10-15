@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Compact Header Meter V.1.8.0</title>
+  <title>Global News - Header Meter V.1.8.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -94,7 +94,7 @@
       padding-top: 12px;
       padding-bottom: 10px;
       padding-left: 14px;
-      padding-right: 14px;
+      padding-right: 18px; /* เพิ่ม Padding ด้านขวาเพื่อระยะกระชับเวลามีตัวเลขเดิน */
       margin-bottom: 12px;
       border-bottom: 1px solid var(--border-color);
       border-radius: 0 0 8px 8px;
@@ -103,7 +103,7 @@
 
     .header-container { text-align: left; padding-left: 2px; }
     
-    /* 1. Header Top Row (Callsign Left | Tesla Logo Right) - กระชับระยะห่าง */
+    /* 1. Header Top Row (Callsign Left | Tesla Logo Right) */
     .top-header-row {
       display: flex;
       justify-content: space-between;
@@ -111,9 +111,9 @@
       margin-bottom: 2px;
     }
 
-    /* Callsign: Font และ Text Shadow เหมือน Global News ขนาดเท่าชื่อสถานี (26px) */
+    /* Callsign: ลดขนาดลง 50% เหลือ 13px */
     .callsign { 
-      font-size: 26px; 
+      font-size: 13px; 
       font-weight: 800; 
       color: var(--text-callsign); 
       letter-spacing: 0.5px; 
@@ -122,11 +122,13 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
+    /* Tesla Logo: ขยับเข้ามาทางซ้ายเล็กน้อยโดยใช้ margin-right */
     .tesla-logo-header {
       width: 120px;
       height: auto;
       display: block;
       object-fit: contain;
+      margin-right: 8px; /* ขยับโลโก้มาทางซ้ายเล็กน้อย */
       filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
       transition: filter 0.3s ease;
     }
@@ -143,7 +145,6 @@
       margin-bottom: 4px; 
     }
     
-    /* ลดขนาด Font Global News ลง 50% เหลือ 24px */
     .page-title-group {
       display: flex;
       align-items: center;
@@ -156,8 +157,9 @@
       transform: scale(0.97);
     }
 
+    /* Global News: เพิ่มขนาดขึ้น 2 ระดับ เป็น 28px */
     h1.page-title { 
-      font-size: 24px; 
+      font-size: 28px; 
       font-weight: 800; 
       color: var(--text-main); 
       text-shadow: var(--text-shadow-strong); 
@@ -169,11 +171,11 @@
     }
 
     .theme-icon {
-      font-size: 20px;
+      font-size: 22px;
       line-height: 1;
     }
     
-    /* UTC Time Display: Font เดียวกับ Global News ชิดขวา ขนาด 26px */
+    /* UTC Time Display: ขยับมาทางซ้ายเล็กน้อย (margin-right) เผื่อพื้นที่ให้ ss เดินนิ่งๆ */
     .utc-time-display {
       font-size: 26px; 
       font-weight: 800; 
@@ -181,6 +183,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       text-shadow: var(--text-shadow-strong); 
       white-space: nowrap;
+      margin-right: 8px; /* ขยับเข้ามาทางซ้ายเล็กน้อย */
       transition: color 0.3s ease;
     }
 
@@ -336,9 +339,9 @@
 
     .time-vu-row { margin-top: 4px; display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
     
-    /* 4. Local Time Display: ปรับขนาด Font ให้เท่ากับชื่อสถานี (26px) */
+    /* Local Time Display: ลดขนาดลง 1 ระดับ เหลือ 23px และตัด SS ออก */
     .local-time-display {
-      font-size: 26px !important; 
+      font-size: 23px !important; 
       font-weight: 800; 
       color: #ff9800;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -399,14 +402,17 @@
     
     .page-version-footer { text-align: center; font-size: 14px; color: var(--text-muted); margin-top: 16px; letter-spacing: 0.5px; }
 
+    /* --- Mobile Browser Optimization --- */
     @media (max-width: 480px) {
       body { padding: 0 10px 14px 10px; }
-      .sticky-header { padding-left: 8px; padding-right: 8px; }
-      .callsign { font-size: 19px; }
-      .tesla-logo-header { width: 90px; }
-      h1.page-title { font-size: 18px; }
-      .utc-time-display, .local-time-display, .station-fixed-title, .station-ticker-text { font-size: 19px !important; }
-      .theme-icon { font-size: 16px; }
+      .sticky-header { padding-left: 8px; padding-right: 12px; }
+      .callsign { font-size: 10px; } /* Callsign มือถือลดเหลือ 10px */
+      .tesla-logo-header { width: 90px; margin-right: 4px; }
+      h1.page-title { font-size: 21px; } /* Global News มือถือ 21px */
+      .utc-time-display { font-size: 19px !important; margin-right: 4px; }
+      .local-time-display { font-size: 17px !important; } /* Local Time มือถือ 17px */
+      .station-fixed-title, .station-ticker-text { font-size: 19px !important; }
+      .theme-icon { font-size: 18px; }
       .feed-status-tag { font-size: 15px; }
       .channels-indicator { font-size: 16px; }
       
@@ -500,7 +506,7 @@
         </div>
 
         <div class="time-vu-row">
-          <div class="local-time-display" id="local-clock">Time: --:--:--</div>
+          <div class="local-time-display" id="local-clock">Time: --:--</div>
 
           <div class="vu-container-global">
             <div class="vu-meter-panel">
@@ -518,7 +524,7 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.8.0</div>
+  <div class="page-version-footer">ver.1.8.1</div>
 
   <script>
     const channels = [
@@ -591,11 +597,10 @@
     let isVideoToggledOn = false;
     let isUserThemeOverride = false;
 
-    // --- 5. Realtime Local Time Auto Day/Night Switcher ---
+    // Realtime Local Time Auto Day/Night Switcher
     function updateAutoTheme() {
       if (isUserThemeOverride) return;
       const hour = new Date().getHours();
-      // Day Time: 06:00 - 17:59 | Night Time: 18:00 - 05:59
       const isDayTime = hour >= 6 && hour < 18;
       
       if (isDayTime) {
@@ -799,11 +804,13 @@
     function updateClocks() {
       const now = new Date();
       utcClockElem.innerText = `UTC ${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')}:${String(now.getUTCSeconds()).padStart(2,'0')}`;
+      
+      // ปรับรูปแบบเวลา Local Time ตัด SS ออกเป็น Time: hh:mm
       if (activeIndex !== -1 && channels[activeIndex]?.tz) {
         try {
-          const formatter = new Intl.DateTimeFormat('en-GB', { timeZone: channels[activeIndex].tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+          const formatter = new Intl.DateTimeFormat('en-GB', { timeZone: channels[activeIndex].tz, hour: '2-digit', minute: '2-digit', hour12: false });
           localClockElem.innerText = `Time: ${formatter.format(now)}`;
-        } catch (e) { localClockElem.innerText = "Time: --:--:--"; }
+        } catch (e) { localClockElem.innerText = "Time: --:--"; }
       }
       updateAutoTheme();
     }
