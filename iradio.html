@@ -38,15 +38,15 @@
       --header-bg: rgba(255, 255, 255, 0.92);
       --border-color: rgba(0, 0, 0, 0.15);
       --text-main: #111111;
-      --text-muted: #444444;
-      --text-callsign: #333333;
+      --text-muted: #333333;
+      --text-callsign: #111111;
       --panel-border: #bbbbbb;
       --btn-bg: #ffffff;
       --scope-bg: #1a241a;
       --scope-grid: rgba(0, 255, 0, 0.15);
       --scope-line: #16a34a;
-      --vu-scale-text: #222222;
-      --stat-term-gray: #888888;
+      --vu-scale-text: #111111;
+      --stat-term-gray: #777777;
       --stat-conn-blue: #1d4ed8;
     }
 
@@ -81,7 +81,7 @@
     }
 
     body.light-mode::before {
-      opacity: 0.15;
+      opacity: 0.12;
     }
 
     .sticky-header {
@@ -103,7 +103,7 @@
 
     .header-container { text-align: left; padding-left: 6px; }
     
-    /* 1. Header Top Row (Callsign Left | Tesla Logo Right) */
+    /* Header Top Row (Callsign Left | Tesla Logo Right) */
     .top-header-row {
       display: flex;
       justify-content: space-between;
@@ -129,7 +129,7 @@
     }
 
     body.light-mode .tesla-logo-header {
-      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2)) brightness(0.2);
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2)) brightness(0.15);
     }
 
     .title-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
@@ -145,7 +145,7 @@
       transition: color 0.3s ease;
     }
     
-    /* 2. UTC Clock Theme Switcher Toggle */
+    /* UTC Clock Theme Switcher Toggle */
     .utc-time-display {
       font-size: 31px; font-weight: 600; color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
@@ -271,7 +271,7 @@
       display: flex; align-items: center; gap: 10px; 
       font-size: 22px; font-weight: 700; color: var(--stat-conn-blue); 
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace; 
-      white-space: nowrap; width: 42%; 
+      white-space: nowrap; width: 50%; 
     }
     
     .buf-bar-bg { flex-grow: 1; height: 12px; background-color: rgba(17, 17, 17, 0.2); border: 1px solid var(--panel-border); border-radius: 2px; overflow: hidden; }
@@ -284,7 +284,8 @@
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       color: var(--stat-conn-blue); letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; width: 100%;
     }
-    .conn-left-group { display: flex; align-items: center; gap: 8px; width: 58%; justify-content: flex-start; }
+    .conn-left-group { display: flex; align-items: center; gap: 8px; }
+    .conn-right-group { display: flex; align-items: center; gap: 10px; width: 50%; justify-content: flex-start; }
 
     .led-indicator { 
       width: 10px; height: 10px; border-radius: 50%; 
@@ -296,6 +297,14 @@
       border-color: #22c55e !important;
       box-shadow: 0 0 6px #22c55e !important;
     }
+    .audio-text-indicator {
+      color: var(--stat-term-gray); font-weight: 700;
+      transition: color 0.15s ease;
+    }
+    .audio-text-indicator.active {
+      color: #22c55e !important;
+    }
+    body.light-mode .audio-text-indicator.active { color: #16a34a !important; }
 
     .status-highlight-red { color: #ef4444; font-weight: 700; }
     body.light-mode .status-highlight-red { color: #dc2626; }
@@ -306,23 +315,20 @@
       font-size: 31px !important; font-weight: 700; color: #ff9800;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); white-space: nowrap; line-height: 1.1;
-      width: 42%;
     }
     body.light-mode .local-time-display { color: #e65100; }
 
-    /* Dual VU Meter Row */
-    .vu-container-global { display: flex; align-items: center; width: 58%; gap: 6px; }
-    .vu-ch-labels { display: flex; flex-direction: column; justify-content: space-between; font-size: 14px; font-weight: 800; color: var(--text-muted); height: 44px; padding: 1px 0; }
-    .vu-meter-panel-dual { flex-grow: 1; display: flex; flex-direction: column; gap: 2px; }
-    
-    .vu-scale-labels-mid { display: flex; justify-content: space-between; position: relative; height: 16px; font-size: 13px; color: var(--vu-scale-text); font-weight: 700; margin: 1px 0; }
+    /* Single VU Meter (V.1.6.0 Baseline) */
+    .vu-container-global { --bar-h: 14px; --label-h: 22px; display: flex; align-items: center; width: 50%; }
+    .vu-meter-panel { flex-grow: 1; display: flex; flex-direction: column; gap: 1px; }
+    .vu-scale-labels { display: flex; justify-content: space-between; position: relative; height: var(--label-h); font-size: 18px; color: var(--vu-scale-text); font-weight: 700; }
     
     .scale-mark { position: absolute; transform: translateX(-50%); }
     .scale-mark.minus-twenty { transform: translateX(0%); }
     .scale-mark.zero-db { color: var(--text-main); font-weight: 800; }
     .scale-mark.plus-four { transform: translateX(-100%); }
 
-    .vu-bar-bg { position: relative; width: 100%; height: 12px; background-color: rgba(17, 17, 17, 0.2); border: 1px solid var(--panel-border); border-radius: 2px; overflow: hidden; }
+    .vu-bar-bg { position: relative; width: 100%; height: var(--bar-h); background-color: rgba(17, 17, 17, 0.2); border: 1px solid var(--panel-border); border-radius: 2px; overflow: hidden; }
     .vu-grid-line { position: absolute; top: 0; bottom: 0; width: 1px; background-color: var(--panel-border); z-index: 2; }
     .vu-grid-line.zero-line { background-color: #aaaaaa; }
     .vu-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #22c55e 0%, #22c55e 70%, #ff9800 72%, #ef4444 100%); transition: width 0.04s ease-out; z-index: 1; }
@@ -378,16 +384,11 @@
       
       .video-btn { font-size: 13px; padding: 2px 6px; margin-right: 6px; }
       
-      .buf-meter-container { font-size: 16px; width: 48%; }
+      .buf-meter-container { font-size: 16px; width: 52%; }
       .connection-status-line { font-size: 14px; letter-spacing: 0px; }
-      .conn-left-group { width: 52%; }
-      
-      .local-time-display { width: 48%; }
-      .vu-container-global { width: 52%; gap: 4px; }
-      .vu-ch-labels { font-size: 12px; height: 38px; }
-      .vu-bar-bg { height: 10px; }
-      .vu-scale-labels-mid { font-size: 11px; height: 14px; }
-      
+      .conn-right-group { width: 52%; }
+      .vu-container-global { --bar-h: 11px; --label-h: 17px; width: 52%; }
+      .vu-scale-labels { font-size: 13px; }
       .scope-container { height: 58px; margin-bottom: 8px; }
       .playlist-container { padding: 16px; gap: 12px; }
       .channel-item { padding: 14px 6px; min-height: 58px; border-radius: 6px; }
@@ -400,10 +401,13 @@
   <!-- Sticky Header -->
   <div class="sticky-header">
     <div class="header-container">
-      <!-- 1. Callsign Left | Tesla Logo Right -->
+      <!-- Callsign Left | Tesla Logo Right -->
       <div class="top-header-row">
         <div class="callsign">HS1WFK</div>
-        <img src="tesla1.png" alt="Tesla Logo" class="tesla-logo-header">
+        <img src="https://raw.githubusercontent.com/HS1WFK/IRCN/main/Tesla1.png" 
+             onerror="this.onerror=null; this.src='Tesla1.png';" 
+             alt="Tesla Logo" 
+             class="tesla-logo-header">
       </div>
 
       <!-- Title Row | UTC Clock (Day/Night Theme Toggle) -->
@@ -456,32 +460,25 @@
 
         <div class="connection-status-line" id="conn-status">
           <div class="conn-left-group">
+            <span>CONNECTED</span>
             <div class="led-indicator" id="global-led"></div>
+            <span class="audio-text-indicator" id="audio-text-tag">Audio</span>
+          </div>
+          <div class="conn-right-group">
             <span id="wrap-br">Bitrate: <span class="status-highlight-red" id="conn-br">-- kbps</span> <span id="sep-br">|</span> </span>
-            <span>Data: <span class="status-highlight-red" id="conn-rx">0.00 MB</span></span>
+            <span>Data Received <span class="status-highlight-red" id="conn-rx">0.00 MB</span></span>
           </div>
         </div>
 
-        <!-- Dual L/R VU Meter Row -->
         <div class="time-vu-row">
           <div class="local-time-display" id="local-clock">Time: --:--:--</div>
 
           <div class="vu-container-global">
-            <div class="vu-ch-labels">
-              <span>L</span>
-              <span>R</span>
-            </div>
-            <div class="vu-meter-panel-dual">
+            <div class="vu-meter-panel">
+              <div class="vu-scale-labels" id="global-scale-labels"></div>
               <div class="vu-bar-bg">
-                <div id="grid-lines-l"></div>
-                <div class="vu-bar-fill" id="vu-fill-l"></div>
-              </div>
-              
-              <div class="vu-scale-labels-mid" id="global-scale-labels"></div>
-              
-              <div class="vu-bar-bg">
-                <div id="grid-lines-r"></div>
-                <div class="vu-bar-fill" id="vu-fill-r"></div>
+                <div id="global-grid-lines"></div>
+                <div class="vu-bar-fill" id="global-vu-fill"></div>
               </div>
             </div>
           </div>
@@ -556,10 +553,9 @@
     const connBrElem = document.getElementById('conn-br');
     const connRxElem = document.getElementById('conn-rx');
     const wrapBrElem = document.getElementById('wrap-br');
-    
-    const vuFillL = document.getElementById('vu-fill-l');
-    const vuFillR = document.getElementById('vu-fill-r');
+    const globalVuFill = document.getElementById('global-vu-fill');
     const globalLed = document.getElementById('global-led');
+    const audioTextTag = document.getElementById('audio-text-tag');
 
     // UI Elements for Video Toggle
     const videoToggleBtn = document.getElementById('video-toggle-btn');
@@ -593,8 +589,7 @@
     let sourceNodeVideo = null;
     let animFrameId = null;
 
-    let currentLevelL = 0;
-    let currentLevelR = 0;
+    let currentLevel = 0;
     let stereoRatio = 0;
     let meterMode = 'none';
     let sessionId = 0;
@@ -611,7 +606,7 @@
 
     let activeRssFetchId = 0;
 
-    // Video Toggle Management
+    // --- Video Toggle Management ---
     videoToggleBtn.addEventListener('click', () => {
       if (activeIndex === -1) return;
       const ch = channels[activeIndex];
@@ -648,7 +643,7 @@
       }
     }
 
-    // Dynamic Ticker & Status Tag Logic
+    // --- Dynamic Ticker & Status Tag Logic ---
     async function updateTickerContent(ch) {
       activeRssFetchId++;
       const currentFetchId = activeRssFetchId;
@@ -694,10 +689,9 @@
       document.getElementById('global-scale-labels').innerHTML = dbMarks.map(m => 
         `<span class="scale-mark ${m.isMinusTwenty ? 'minus-twenty' : ''} ${m.isZero ? 'zero-db' : ''} ${m.isPlusFour ? 'plus-four' : ''}" style="left: ${m.pos}%;">${m.db}</span>`
       ).join('');
-      
-      const gridHTML = dbMarks.map(m => `<div class="vu-grid-line ${m.isZero ? 'zero-line' : ''}" style="left: ${m.pos}%;"></div>`).join('');
-      document.getElementById('grid-lines-l').innerHTML = gridHTML;
-      document.getElementById('grid-lines-r').innerHTML = gridHTML;
+      document.getElementById('global-grid-lines').innerHTML = dbMarks.map(m => 
+        `<div class="vu-grid-line ${m.isZero ? 'zero-line' : ''}" style="left: ${m.pos}%;"></div>`
+      ).join('');
     }
     initGlobalVuMeterUI();
 
@@ -727,7 +721,7 @@
       playlistContainer.appendChild(item);
     });
 
-    // Web Media Session Integration
+    // --- Web Media Session Integration (Tesla Screen & Steering Wheel Support) ---
     function updateTeslaMediaSession(channel) {
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
@@ -766,8 +760,8 @@
           const AC = window.AudioContext || window.webkitAudioContext;
           audioCtx = new AC();
           analyser = audioCtx.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = 0;
-          analyserL = audioCtx.createAnalyser(); analyserL.fftSize = 2048; analyserL.smoothingTimeConstant = 0;
-          analyserR = audioCtx.createAnalyser(); analyserR.fftSize = 2048; analyserR.smoothingTimeConstant = 0;
+          analyserL = audioCtx.createAnalyser(); analyserL.fftSize = 2048;
+          analyserR = audioCtx.createAnalyser(); analyserR.fftSize = 2048;
           splitter = audioCtx.createChannelSplitter(2);
           analyser.connect(audioCtx.destination);
           splitter.connect(analyserL, 0);
@@ -816,7 +810,7 @@
       startVUMeter();
     }
 
-    // Media Segments Engine (HLS)
+    // --- Media Segments Engine (HLS) ---
     function getOfflineCtx() { if (!offlineCtx) { const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext; offlineCtx = new OAC(2, 1, 44100); } return offlineCtx; }
     function decodeBuffer(arrayBuffer) { return new Promise((resolve, reject) => { const p = getOfflineCtx().decodeAudioData(arrayBuffer, resolve, reject); if (p && typeof p.catch === 'function') p.catch(() => {}); }); }
     async function ingestSegment(sid, init, media, start) {
@@ -871,7 +865,7 @@
       return { rms: Math.sqrt(sum / (idx - a + 1)), stereo: e.stereo };
     }
 
-    // Direct Audio Engine (MP3/Icecast)
+    // --- Direct Audio Engine (MP3/Icecast) ---
     function startDirectAudio(url) {
       directAttempt++;
       const sid = directAttempt;
@@ -957,7 +951,7 @@
       }, 500);
     }
 
-    // Main Play/Stop Router
+    // --- Main Play/Stop Router ---
     function playAudio(url) {
       stopAudio(false);
       
@@ -1011,19 +1005,20 @@
       if (clearSrc) { player.removeAttribute('src'); player.load(); }
       
       segEntries = []; initSegs = {}; decodeQueue = 0; totalRxBytes = 0; currentBitrate = 0;
-      meterMode = 'none'; silentSince = 0; currentLevelL = 0; currentLevelR = 0; stereoRatio = 0;
+      meterMode = 'none'; silentSince = 0; currentLevel = 0; stereoRatio = 0;
       drawScopeFlat();
       stationInfoRow.style.visibility = 'hidden';
       if (statsPanel) statsPanel.style.display = 'none';
       statMono.className = 'stat-term disable-gray'; statStereo.className = 'stat-term disable-gray';
-      vuFillL.style.width = '0%'; vuFillR.style.width = '0%';
+      globalVuFill.style.width = '0%'; 
       
       globalLed.classList.remove('active');
+      audioTextTag.classList.remove('active');
       clearTeslaMediaSession();
       updateVideoVisibility();
     }
 
-    // Drawing & Dual VU Meters
+    // --- Drawing & Meters ---
     function vuToPercent(vu) {
       const first = parseFloat(dbMarks[0].db), last = parseFloat(dbMarks[dbMarks.length - 1].db);
       if (vu <= first) return 0; if (vu >= last) return 100;
@@ -1069,7 +1064,7 @@
       function update() {
         const nowMs = performance.now();
         const playing = !player.paused;
-        let targetLevelL = 0, targetLevelR = 0, hasRealData = false, scopeData = null, stereoState = null, peak = 0;
+        let targetLevel = 0, hasRealData = false, scopeData = null, stereoState = null, peak = 0;
 
         if (meterMode === 'analyser' && analyser && timeF) {
           analyser.getFloatTimeDomainData(timeF);
@@ -1077,25 +1072,14 @@
           hasRealData = peak > SIGNAL_PEAK_MIN;
 
           if (hasRealData) {
+            targetLevel = vuToPercent(20 * Math.log10(Math.sqrt(sum / timeF.length) + 1e-9) - VU_REF_DBFS);
             analyser.getByteTimeDomainData(timeB); scopeData = timeB;
             if (bufL && bufR) {
               analyserL.getFloatTimeDomainData(bufL); analyserR.getFloatTimeDomainData(bufR);
-              
-              let sumL = 0, sumR = 0, sumDiff = 0, sumTotal = 0;
-              for (let i = 0; i < bufL.length; i++) { 
-                const l = bufL[i], r = bufR[i];
-                sumL += l * l; sumR += r * r;
-                const d = l - r; sumDiff += d * d; sumTotal += l * l + r * r; 
-              }
-              
-              targetLevelL = vuToPercent(20 * Math.log10(Math.sqrt(sumL / bufL.length) + 1e-9) - VU_REF_DBFS);
-              targetLevelR = vuToPercent(20 * Math.log10(Math.sqrt(sumR / bufR.length) + 1e-9) - VU_REF_DBFS);
-
+              let sumDiff = 0, sumTotal = 0;
+              for (let i = 0; i < bufL.length; i++) { const d = bufL[i] - bufR[i]; sumDiff += d * d; sumTotal += bufL[i] * bufL[i] + bufR[i] * bufR[i]; }
               stereoRatio = stereoRatio * 0.97 + (sumDiff / (sumTotal + 1e-12)) * 0.03;
               stereoState = stereoRatio > 0.02;
-            } else {
-              const masterLevel = vuToPercent(20 * Math.log10(Math.sqrt(sum / timeF.length) + 1e-9) - VU_REF_DBFS);
-              targetLevelL = masterLevel; targetLevelR = masterLevel;
             }
           }
           if (playing && hls && nowMs - playStartedAt > 2000) {
@@ -1105,16 +1089,10 @@
           }
         } else if (meterMode === 'segments') {
           const f = segmentFrame();
-          if (f) { 
-            hasRealData = true; 
-            const segLevel = vuToPercent(20 * Math.log10(f.rms + 1e-9) - VU_REF_DBFS); 
-            targetLevelL = segLevel; targetLevelR = segLevel;
-            scopeData = segTimeB; stereoState = f.stereo; 
-          }
+          if (f) { hasRealData = true; targetLevel = vuToPercent(20 * Math.log10(f.rms + 1e-9) - VU_REF_DBFS); scopeData = segTimeB; stereoState = f.stereo; }
         }
 
-        currentLevelL += (targetLevelL - currentLevelL) * (targetLevelL > currentLevelL ? 0.5 : 0.08);
-        currentLevelR += (targetLevelR - currentLevelR) * (targetLevelR > currentLevelR ? 0.5 : 0.08);
+        currentLevel += (targetLevel - currentLevel) * (targetLevel > currentLevel ? 0.5 : 0.08);
 
         if (activeIndex !== -1) {
           let bufSec = 0;
@@ -1138,13 +1116,14 @@
 
           connRxElem.innerText = `${(totalRxBytes / (1024 * 1024)).toFixed(2)} MB`;
 
-          vuFillL.style.width = currentLevelL.toFixed(1) + '%';
-          vuFillR.style.width = currentLevelR.toFixed(1) + '%';
+          globalVuFill.style.width = currentLevel.toFixed(1) + '%';
           
-          if (currentLevelL > 10 || currentLevelR > 10) { 
+          if (currentLevel > 10) { 
             globalLed.classList.add('active');
+            audioTextTag.classList.add('active');
           } else { 
             globalLed.classList.remove('active');
+            audioTextTag.classList.remove('active');
           }
 
           if (statsPanel) {
