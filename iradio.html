@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Header Meter V.1.7.0</title>
+  <title>Global News - Header Meter V.1.7.1</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -128,8 +128,9 @@
       transition: filter 0.3s ease;
     }
 
+    /* Invert Tesla Logo สีตรงกันข้ามใน Light Mode */
     body.light-mode .tesla-logo-header {
-      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2)) brightness(0.15);
+      filter: invert(1) drop-shadow(0 1px 2px rgba(255, 255, 255, 0.5));
     }
 
     .title-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
@@ -489,11 +490,11 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.7.0</div>
+  <div class="page-version-footer">ver.1.7.1</div>
 
   <script>
     const channels = [
-      { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network.", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/02.m3u8", rss: "https://www.aljazeera.com/xml/rss/all.xml" },
+      { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network.", url: "https://www.youtube.com/watch?v=gCNeDWCI0vo", rss: "https://www.aljazeera.com/xml/rss/all.xml" },
       { name: "ABC Australia", location: "Sydney, Australia", utc: "UTC+10", tz: "Australia/Sydney", about: "Australia’s public broadcasting service.", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8", rss: "https://www.abc.net.au/news/feed/51120/rss.xml" },
       { name: "Arirang Korea", location: "Seoul, South Korea", utc: "UTC+9", tz: "Asia/Seoul", about: "South Korean English-language international broadcasting network.", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8", rss: "https://www.arirang.com/rss/news" },
       { name: "BBC News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "The operational business division of the British Broadcasting Corporation (BBC).", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8", rss: "http://feeds.bbci.co.uk/news/rss.xml" },
@@ -610,7 +611,7 @@
     videoToggleBtn.addEventListener('click', () => {
       if (activeIndex === -1) return;
       const ch = channels[activeIndex];
-      const isVideoSource = ch.url.includes('.m3u8');
+      const isVideoSource = ch.url.includes('.m3u8') || ch.url.includes('youtube.com');
       
       if (isVideoSource) {
         isVideoToggledOn = !isVideoToggledOn;
@@ -626,7 +627,7 @@
       }
       
       const ch = channels[activeIndex];
-      const isVideoSource = ch.url.includes('.m3u8');
+      const isVideoSource = ch.url.includes('.m3u8') || ch.url.includes('youtube.com');
       
       if (isVideoSource) {
         videoToggleBtn.className = 'video-btn has-video';
@@ -865,7 +866,7 @@
       return { rms: Math.sqrt(sum / (idx - a + 1)), stereo: e.stereo };
     }
 
-    // --- Direct Audio Engine (MP3/Icecast) ---
+    // --- Direct Audio Engine (MP3/Icecast/External) ---
     function startDirectAudio(url) {
       directAttempt++;
       const sid = directAttempt;
@@ -891,7 +892,7 @@
             feedStatusTag.innerText = "Station Info:";
             feedStatusTag.className = "feed-status-tag color-info";
             stationTickerText.className = "station-ticker-text color-info";
-            applyTickerAnimation('Cannot open this stream (Mixed Content / Server offline) \u00A0\u00A0•\u00A0\u00A0 ', "30s");
+            applyTickerAnimation('Cannot open this stream (Mixed Content / External Stream) \u00A0\u00A0•\u00A0\u00A0 ', "30s");
             stationInfoRow.style.visibility = 'visible';
           }
           return;
