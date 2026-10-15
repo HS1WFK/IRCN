@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Header Meter V.1.7.1</title>
+  <title>Global News - Header Meter V.1.7.3</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -103,7 +103,6 @@
 
     .header-container { text-align: left; padding-left: 6px; }
     
-    /* Header Top Row (Callsign Left | Tesla Logo Right) */
     .top-header-row {
       display: flex;
       justify-content: space-between;
@@ -128,7 +127,6 @@
       transition: filter 0.3s ease;
     }
 
-    /* Invert Tesla Logo สีตรงกันข้ามใน Light Mode */
     body.light-mode .tesla-logo-header {
       filter: invert(1) drop-shadow(0 1px 2px rgba(255, 255, 255, 0.5));
     }
@@ -146,7 +144,6 @@
       transition: color 0.3s ease;
     }
     
-    /* UTC Clock Theme Switcher Toggle */
     .utc-time-display {
       font-size: 31px; font-weight: 600; color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
@@ -167,7 +164,6 @@
       line-height: 1;
     }
 
-    /* --- Station Info & Dedicated Full-Width Ticker Layout --- */
     .station-info-container { display: flex; flex-direction: column; margin-bottom: 12px; min-height: 42px; visibility: hidden; width: 100%; }
     
     .station-title-row { 
@@ -212,7 +208,6 @@
       100% { transform: translateX(-50%); }
     }
 
-    /* --- Video Wrapper --- */
     .video-wrapper {
       width: 100%;
       border-radius: 5px;
@@ -319,7 +314,6 @@
     }
     body.light-mode .local-time-display { color: #e65100; }
 
-    /* Single VU Meter (V.1.6.0 Baseline) */
     .vu-container-global { --bar-h: 14px; --label-h: 22px; display: flex; align-items: center; width: 50%; }
     .vu-meter-panel { flex-grow: 1; display: flex; flex-direction: column; gap: 1px; }
     .vu-scale-labels { display: flex; justify-content: space-between; position: relative; height: var(--label-h); font-size: 18px; color: var(--vu-scale-text); font-weight: 700; }
@@ -339,7 +333,6 @@
     body.light-mode .stat-term.active-red { color: #dc2626 !important; }
     .stat-term.disable-gray { color: var(--stat-term-gray); }
 
-    /* --- Playlist Button Grid --- */
     .playlist-container { 
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; 
       background: var(--card-bg); padding: 24px; border-radius: 8px; 
@@ -402,7 +395,6 @@
   <!-- Sticky Header -->
   <div class="sticky-header">
     <div class="header-container">
-      <!-- Callsign Left | Tesla Logo Right -->
       <div class="top-header-row">
         <div class="callsign">HS1WFK</div>
         <img src="https://raw.githubusercontent.com/HS1WFK/IRCN/main/Tesla1.png" 
@@ -411,7 +403,6 @@
              class="tesla-logo-header">
       </div>
 
-      <!-- Title Row | UTC Clock (Day/Night Theme Toggle) -->
       <div class="title-row">
         <h1 class="page-title">Global News</h1>
         <div class="utc-time-display" id="utc-clock" title="Click to Toggle Light/Dark Mode">
@@ -420,7 +411,6 @@
         </div>
       </div>
 
-      <!-- Station Title + Feed Status Tag + Dedicated Full-Width Ticker Row -->
       <div class="station-info-container" id="station-info-row">
         <div class="station-title-row">
           <div class="station-fixed-title" id="station-fixed-title"></div>
@@ -431,7 +421,6 @@
         </div>
       </div>
 
-      <!-- VIDEO WRAPPER -->
       <div class="video-wrapper" id="video-wrapper">
         <video id="media-player" crossorigin="anonymous" playsinline webkit-playsinline></video>
       </div>
@@ -490,18 +479,18 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.7.1</div>
+  <div class="page-version-footer">ver.1.7.3</div>
 
   <script>
     const channels = [
-      { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network.", url: "https://www.youtube.com/watch?v=gCNeDWCI0vo", rss: "https://www.aljazeera.com/xml/rss/all.xml" },
+      { name: "Al Jazeera", location: "Doha, Qatar", utc: "UTC+3", tz: "Asia/Qatar", about: "Qatar-based state-funded international news television network.", url: "https://live-hls-apps-aje-fa.getaj.net/AJE/index.m3u8", rss: "https://www.aljazeera.com/xml/rss/all.xml" },
       { name: "ABC Australia", location: "Sydney, Australia", utc: "UTC+10", tz: "Australia/Sydney", about: "Australia’s public broadcasting service.", url: "https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8", rss: "https://www.abc.net.au/news/feed/51120/rss.xml" },
       { name: "Arirang Korea", location: "Seoul, South Korea", utc: "UTC+9", tz: "Asia/Seoul", about: "South Korean English-language international broadcasting network.", url: "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8", rss: "https://www.arirang.com/rss/news" },
-      { name: "BBC News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "The operational business division of the British Broadcasting Corporation (BBC).", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8", rss: "http://feeds.bbci.co.uk/news/rss.xml" },
+      { name: "BBC News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "The operational business division of the British Broadcasting Corporation (BBC).", url: "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8", rss: "https://feeds.bbci.co.uk/news/rss.xml" },
       { name: "CGTN", location: "Beijing, China", utc: "UTC+8", tz: "Asia/Shanghai", about: "China Global Television Network, the international division of CCTV.", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8", rss: "https://www.cgtn.com/subscribe/rss/p/1.xml" },
       { name: "CNA", location: "Singapore", utc: "UTC+8", tz: "Asia/Singapore", about: "Channel NewsAsia, a Singaporean multinational news channel.", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8", rss: "https://www.channelnewsasia.com/api/v1/rss-outbound/rssnews/posts.xml" },
       { name: "NHK English", location: "Tokyo, Japan", utc: "UTC+9", tz: "Asia/Tokyo", about: "NHK World-Japan, the international broadcasting service of NHK.", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8", rss: "https://www3.nhk.or.jp/nhkworld/en/news/backstories/rss/index.xml" },
-      { name: "DW En", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "Deutsche Welle English, Germany's public international broadcaster.", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8", rss: "https://rss.dw.com/rdf/rss-en-all" },
+      { name: "DW En", location: "Berlin, Germany", utc: "UTC+2", tz: "Europe/Berlin", about: "Deutsche Welle English, Germany's public international broadcaster.", url: "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8", rss: "https://rss.dw.com/xml/rss-en-all" },
       { name: "France 24 En", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The English-language arm of France's state-owned international news network.", url: "https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8", rss: "https://www.france24.com/en/rss" },
       { name: "France 24 Fr", location: "Paris, France", utc: "UTC+2", tz: "Europe/Paris", about: "The French-language domestic and international channel of France 24.", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8", rss: "https://www.france24.com/fr/rss" },
       { name: "GB News", location: "London, UK", utc: "UTC+1", tz: "Europe/London", about: "A British free-to-air news and opinion channel.", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8", rss: "https://www.gbnews.com/feeds/news.rss" },
@@ -558,19 +547,16 @@
     const globalLed = document.getElementById('global-led');
     const audioTextTag = document.getElementById('audio-text-tag');
 
-    // UI Elements for Video Toggle
     const videoToggleBtn = document.getElementById('video-toggle-btn');
     const videoWrapper = document.getElementById('video-wrapper');
     let isVideoToggledOn = false;
 
-    // Theme Switcher Toggle Event
     utcClockElem.addEventListener('click', () => {
       document.body.classList.toggle('light-mode');
       const isLight = document.body.classList.contains('light-mode');
       themeIcon.innerText = isLight ? '☀️' : '🌙';
     });
 
-    // Dual Engine Vars
     let player = videoEl;
     let audioEl = null;
     let directSrc = null;
@@ -607,11 +593,10 @@
 
     let activeRssFetchId = 0;
 
-    // --- Video Toggle Management ---
     videoToggleBtn.addEventListener('click', () => {
       if (activeIndex === -1) return;
       const ch = channels[activeIndex];
-      const isVideoSource = ch.url.includes('.m3u8') || ch.url.includes('youtube.com');
+      const isVideoSource = ch.url.includes('.m3u8');
       
       if (isVideoSource) {
         isVideoToggledOn = !isVideoToggledOn;
@@ -627,7 +612,7 @@
       }
       
       const ch = channels[activeIndex];
-      const isVideoSource = ch.url.includes('.m3u8') || ch.url.includes('youtube.com');
+      const isVideoSource = ch.url.includes('.m3u8');
       
       if (isVideoSource) {
         videoToggleBtn.className = 'video-btn has-video';
@@ -644,7 +629,7 @@
       }
     }
 
-    // --- Dynamic Ticker & Status Tag Logic ---
+    // --- Dynamic Ticker & Robust Multi-Layer RSS Engine ---
     async function updateTickerContent(ch) {
       activeRssFetchId++;
       const currentFetchId = activeRssFetchId;
@@ -658,25 +643,82 @@
 
       if (!ch.rss) return;
 
+      // Layer 1: Direct XML Fetch (ถ้าเบราว์เซอร์และต้นทางยอมรับ CORS)
       try {
-        const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(ch.rss)}`;
-        const res = await fetch(proxyUrl);
-        const data = await res.json();
+        const res0 = await fetch(ch.rss, { method: 'GET', cache: 'no-cache' });
+        if (res0.ok) {
+          const xmlText = await res0.text();
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+          const items = xmlDoc.querySelectorAll("item");
+          if (items && items.length > 0) {
+            const headlineList = [];
+            for (let i = 0; i < Math.min(items.length, 8); i++) {
+              const titleEl = items[i].querySelector("title");
+              if (titleEl && titleEl.textContent) headlineList.push(titleEl.textContent.trim());
+            }
+            if (headlineList.length > 0 && currentFetchId === activeRssFetchId) {
+              setRssTicker(headlineList.join(' \u00A0\u00A0•\u00A0\u00A0 '));
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.log("Direct RSS Fetch bypassed (CORS), trying Proxy 1:", err);
+      }
+
+      // Layer 2: rss2json API Proxy
+      try {
+        const proxyUrl1 = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(ch.rss)}`;
+        const res1 = await fetch(proxyUrl1);
+        const data1 = await res1.json();
 
         if (currentFetchId !== activeRssFetchId) return;
 
-        if (data && data.status === 'ok' && data.items && data.items.length > 0) {
-          const headlines = data.items.slice(0, 8).map(item => item.title.trim()).join(' \u00A0\u00A0•\u00A0\u00A0 ');
-          const rssText = `🔴 BREAKING NEWS: ${headlines} \u00A0\u00A0•\u00A0\u00A0 `;
-
-          feedStatusTag.innerText = "RSS Feed:";
-          feedStatusTag.className = "feed-status-tag color-rss";
-          stationTickerText.className = "station-ticker-text color-rss";
-          applyTickerAnimation(rssText + rssText, "85s");
+        if (data1 && data1.status === 'ok' && data1.items && data1.items.length > 0) {
+          const headlines = data1.items.slice(0, 8).map(item => item.title.trim()).join(' \u00A0\u00A0•\u00A0\u00A0 ');
+          setRssTicker(headlines);
+          return;
         }
       } catch (err) {
-        console.log("RSS Fetch Notice (fallback to info):", err);
+        console.log("RSS Proxy 1 failed, trying Proxy 2:", err);
       }
+
+      // Layer 3: AllOrigins CORS Proxy
+      try {
+        const proxyUrl2 = `https://api.allorigins.win/get?url=${encodeURIComponent(ch.rss)}`;
+        const res2 = await fetch(proxyUrl2);
+        const data2 = await res2.json();
+
+        if (currentFetchId !== activeRssFetchId) return;
+
+        if (data2 && data2.contents) {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(data2.contents, "text/xml");
+          const items = xmlDoc.querySelectorAll("item");
+          
+          if (items && items.length > 0) {
+            const headlineList = [];
+            for (let i = 0; i < Math.min(items.length, 8); i++) {
+              const titleEl = items[i].querySelector("title");
+              if (titleEl && titleEl.textContent) headlineList.push(titleEl.textContent.trim());
+            }
+            if (headlineList.length > 0) {
+              setRssTicker(headlineList.join(' \u00A0\u00A0•\u00A0\u00A0 '));
+            }
+          }
+        }
+      } catch (err) {
+        console.log("RSS Proxy 2 failed (Fallback to Station Info):", err);
+      }
+    }
+
+    function setRssTicker(headlines) {
+      const rssText = `🔴 BREAKING NEWS: ${headlines} \u00A0\u00A0•\u00A0\u00A0 `;
+      feedStatusTag.innerText = "RSS Feed:";
+      feedStatusTag.className = "feed-status-tag color-rss";
+      stationTickerText.className = "station-ticker-text color-rss";
+      applyTickerAnimation(rssText + rssText, "85s");
     }
 
     function applyTickerAnimation(text, durationStr) {
@@ -722,7 +764,6 @@
       playlistContainer.appendChild(item);
     });
 
-    // --- Web Media Session Integration (Tesla Screen & Steering Wheel Support) ---
     function updateTeslaMediaSession(channel) {
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
@@ -811,7 +852,6 @@
       startVUMeter();
     }
 
-    // --- Media Segments Engine (HLS) ---
     function getOfflineCtx() { if (!offlineCtx) { const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext; offlineCtx = new OAC(2, 1, 44100); } return offlineCtx; }
     function decodeBuffer(arrayBuffer) { return new Promise((resolve, reject) => { const p = getOfflineCtx().decodeAudioData(arrayBuffer, resolve, reject); if (p && typeof p.catch === 'function') p.catch(() => {}); }); }
     async function ingestSegment(sid, init, media, start) {
@@ -866,7 +906,6 @@
       return { rms: Math.sqrt(sum / (idx - a + 1)), stereo: e.stereo };
     }
 
-    // --- Direct Audio Engine (MP3/Icecast/External) ---
     function startDirectAudio(url) {
       directAttempt++;
       const sid = directAttempt;
@@ -892,7 +931,7 @@
             feedStatusTag.innerText = "Station Info:";
             feedStatusTag.className = "feed-status-tag color-info";
             stationTickerText.className = "station-ticker-text color-info";
-            applyTickerAnimation('Cannot open this stream (Mixed Content / External Stream) \u00A0\u00A0•\u00A0\u00A0 ', "30s");
+            applyTickerAnimation('Cannot open this stream (Mixed Content / Server offline) \u00A0\u00A0•\u00A0\u00A0 ', "30s");
             stationInfoRow.style.visibility = 'visible';
           }
           return;
@@ -952,7 +991,6 @@
       }, 500);
     }
 
-    // --- Main Play/Stop Router ---
     function playAudio(url) {
       stopAudio(false);
       
@@ -1019,7 +1057,6 @@
       updateVideoVisibility();
     }
 
-    // --- Drawing & Meters ---
     function vuToPercent(vu) {
       const first = parseFloat(dbMarks[0].db), last = parseFloat(dbMarks[dbMarks.length - 1].db);
       if (vu <= first) return 0; if (vu >= last) return 100;
