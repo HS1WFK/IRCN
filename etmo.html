@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.0.1</title>
+  <title>Exchange Times v2.2.0</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -14,7 +14,8 @@
 
     /* Top Header Default (iPad / PC) */
     .header-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 10px 14px; border-radius: 6px; border: 1px solid #333; margin-bottom: 8px; gap: 8px; }
-    .app-title { font-size: 31px; font-weight: bold; color: #00d2ff; }
+    .app-title { font-size: 31px; font-weight: bold; color: #00d2ff; cursor: pointer; user-select: none; }
+    .app-title:active { opacity: 0.7; }
     .utc-clock { font-size: 28px; font-weight: bold; color: #ffffff; }
     .utc-clock a { color: #ffffff; }
     .controls { display: flex; gap: 14px; font-size: 23px; align-items: center; flex-wrap: wrap; }
@@ -123,7 +124,9 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title">Exchange Times <span style="font-size: 14px; color: #888;">v2.0.1</span></div>
+    <div class="app-title" onclick="runSoundTest()" title="Click to test Morse sound sequence">
+      Exchange Times <span style="font-size: 14px; color: #888;">v2.2.0</span>
+    </div>
     <div class="utc-clock">
       <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClock">UTC: --:--:--</a>
     </div>
@@ -199,6 +202,7 @@
     ];
 
     let audioCtx = null;
+    const marketStateTracker = {}; 
 
     function initAudioContext() {
       if (!audioCtx) {
@@ -226,25 +230,77 @@
       }
     }, { once: true });
 
-    function playBeep(count = 1, duration = 0.15, interval = 0.1, isLong = false) {
+    // Morse Code Engine
+    function playMorsePattern(patternString, callback) {
       initAudioContext();
       if (!audioCtx || audioCtx.state !== 'running') return;
-      for (let i = 0; i < count; i++) {
-        setTimeout(() => {
-          try {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = 520;
-            gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(0);
-            const dur = isLong ? duration * 2.5 : duration;
-            osc.stop(audioCtx.currentTime + dur);
-          } catch (e) { console.error(e); }
-        }, i * (duration + interval) * 1000);
+
+      const dotDuration = 0.10;
+      const dashDuration = 0.30;
+      const elementSpace = 0.08;
+      const charSpace = 0.25;
+
+      let currentTime = audioCtx.currentTime + 0.05;
+
+      for (let i = 0; i < patternString.length; i++) {
+        const symbol = patternString[i];
+        if (symbol === '.') {
+          scheduleTone(currentTime, dotDuration);
+          currentTime += dotDuration + elementSpace;
+        } else if (symbol === '-') {
+          scheduleTone(currentTime, dashDuration);
+          currentTime += dashDuration + elementSpace;
+        } else if (symbol === ' ') {
+          currentTime += charSpace;
+        }
       }
+
+      if (callback) {
+        const totalDuration = (currentTime - audioCtx.currentTime) * 1000;
+        setTimeout(callback, totalDuration);
+      }
+    }
+
+    function scheduleTone(startTime, duration) {
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 580; 
+        gain.gain.setValueAtTime(0.3, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      } catch (e) { console.error(e); }
+    }
+
+    // Sound Test Sequence (Title Click Switch): O -> V -> VV -> E -> T
+    function runSoundTest() {
+      enableAudio();
+      // O (Open: ---)
+      playMorsePattern('---', () => {
+        setTimeout(() => {
+          // V (Break: ...-)
+          playMorsePattern('...-', () => {
+            setTimeout(() => {
+              // VV (Close: ...- ...-)
+              playMorsePattern('...- ...-', () => {
+                setTimeout(() => {
+                  // E (1m: .)
+                  playMorsePattern('.', () => {
+                    setTimeout(() => {
+                      // T (5m: -)
+                      playMorsePattern('-');
+                    }, 400);
+                  });
+                }, 400);
+              });
+            }, 400);
+          });
+        }, 400);
+      });
     }
 
     function getZonedParts(date, timeZone) {
@@ -291,6 +347,15 @@
       const led = document.getElementById(`led-${code}`);
       if (!led) return;
       led.className = `led-dot led-${state}`;
+    }
+
+    function triggerFlashingAlert(code) {
+      const nameElem = document.getElementById('name-' + code);
+      if (!nameElem) return;
+      nameElem.classList.add('blinking-name');
+      setTimeout(() => {
+        nameElem.classList.remove('blinking-name');
+      }, 60000); // Flashes for 1 minute (60,000ms)
     }
 
     function initTable() {
@@ -365,7 +430,6 @@
       });
     }
 
-    const soundStates = {};
     let lastTfex1mSec = -1;
 
     function updateEngine() {
@@ -381,6 +445,7 @@
       // Direct calculation for TFEX Day & Night Trading Status
       const thP = getZonedParts(now, "Asia/Bangkok");
       const thMin = parseInt(thP.hour, 10) * 60 + parseInt(thP.minute, 10);
+      const thSec = parseInt(thP.second, 10);
       const thDateStr = thP.year + '-' + thP.month + '-' + thP.day;
       const isThWeekend = (thP.weekday === 'Sat' || thP.weekday === 'Sun');
       const tfexHolidays = ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"];
@@ -479,15 +544,43 @@
         const statusCell = document.getElementById('status-' + m.code);
         const nameCell = document.getElementById('name-' + m.code);
 
+        if (!marketStateTracker[m.code]) {
+          marketStateTracker[m.code] = { state: 'UNKNOWN' };
+        }
+
         if (isTodayWeekend || isTodayHoliday) {
           statusCell.innerHTML = '<span class="status-close-dark">CLOSED (Holiday/Weekend)</span>';
-          nameCell.classList.remove('blinking-name');
           setLedState(m.code, 'red');
+          marketStateTracker[m.code].state = 'CLOSED';
           return;
         }
 
-        // Dynamic Engine Fix for TFEX Row
+        // Processing TFEX Row
         if (m.code === 'TFEX') {
+          let currentState = 'CLOSED';
+          if (isTfexTrading) currentState = 'OPEN';
+          else if (isTfexBreak) currentState = 'BREAK';
+
+          // AUDIO & FLASHING TRIGGERS FOR TFEX
+          if (localSec === 0 && marketStateTracker[m.code].state !== 'UNKNOWN') {
+            const prevState = marketStateTracker[m.code].state;
+            if (prevState !== currentState) {
+              if (!muteEx) {
+                if (currentState === 'OPEN') {
+                  playMorsePattern('---'); // Morse 'O' for Open
+                } else if (currentState === 'BREAK') {
+                  playMorsePattern('...-'); // Morse 'V' for Break
+                } else if (currentState === 'CLOSED') {
+                  playMorsePattern('...- ...-'); // Morse 'V V' for Close
+                }
+              }
+              if (currentState === 'OPEN' || currentState === 'CLOSED') {
+                triggerFlashingAlert(m.code);
+              }
+            }
+          }
+          marketStateTracker[m.code].state = currentState;
+
           if (isTfexTrading) {
             let totalSession = isNightSession ? (1440 - nightOpen + nightClose) : (dayClose - dayOpen);
             let pct = Math.max(0, Math.min(100, (remainingTfexMinutes / totalSession) * 100));
@@ -510,7 +603,6 @@
             `;
             setLedState(m.code, 'orange');
           } else {
-            // Closed session logic with dynamic color <= 60 minutes
             if (localMin >= dayClose && localMin < nightOpen) {
               let diffNight = nightOpen - localMin;
               let colorClass = diffNight <= 60 ? 'status-close' : 'status-close-dark';
@@ -527,7 +619,6 @@
               let textDay = isMobile ? ('Day Open in ' + formatHM(diffDay)) : ('Closed, Day Open in ' + formatHM(diffDay));
               statusCell.innerHTML = '<span class="' + colorClass + '">' + textDay + '</span>';
             }
-            nameCell.classList.remove('blinking-name');
             setLedState(m.code, 'red');
           }
           return;
@@ -538,14 +629,45 @@
         const closeMin = timeToMin(m.close);
         const totalSession = closeMin > openMin ? (closeMin - openMin) : (1440 - openMin + closeMin);
 
-        if (!soundStates[m.code]) soundStates[m.code] = {};
-
         let isTradingNow = false;
         if (closeMin > openMin) {
           isTradingNow = (localMin >= openMin && localMin < closeMin);
         } else {
           isTradingNow = (localMin >= openMin || localMin < closeMin);
         }
+
+        let isLunch = false;
+        if (m.hasLunch) {
+          const lStart = timeToMin(m.lunchStart);
+          const lEnd = timeToMin(m.lunchEnd);
+          if (localMin >= lStart && localMin < lEnd) {
+            isLunch = true;
+          }
+        }
+
+        let currentState = 'CLOSED';
+        if (isTradingNow && !isLunch) currentState = 'OPEN';
+        else if (isLunch) currentState = 'BREAK';
+
+        // AUDIO & FLASHING TRIGGERS FOR STANDARD MARKETS
+        if (localSec === 0 && marketStateTracker[m.code].state !== 'UNKNOWN') {
+          const prevState = marketStateTracker[m.code].state;
+          if (prevState !== currentState) {
+            if (!muteEx) {
+              if (currentState === 'OPEN') {
+                playMorsePattern('---'); // Morse 'O' for Open
+              } else if (currentState === 'BREAK') {
+                playMorsePattern('...-'); // Morse 'V' for Break
+              } else if (currentState === 'CLOSED') {
+                playMorsePattern('...- ...-'); // Morse 'V V' for Close
+              }
+            }
+            if (currentState === 'OPEN' || currentState === 'CLOSED') {
+              triggerFlashingAlert(m.code);
+            }
+          }
+        }
+        marketStateTracker[m.code].state = currentState;
 
         if (!isTradingNow) {
           let diff = 0;
@@ -557,45 +679,25 @@
           const colorClass = diff <= 60 ? 'status-close' : 'status-close-dark';
           const openText = isMobile ? ('Open in ' + formatHM(diff)) : ('Closed, Open in ' + formatHM(diff));
           statusCell.innerHTML = '<span class="' + colorClass + '">' + openText + '</span>';
-          nameCell.classList.remove('blinking-name');
           setLedState(m.code, 'red');
         } else {
-          let isLunch = false;
-          if (m.hasLunch) {
-            const lStart = timeToMin(m.lunchStart);
+          if (isLunch) {
             const lEnd = timeToMin(m.lunchEnd);
-            if (localMin >= lStart && localMin < lEnd) {
-              isLunch = true;
-              const remLunch = lEnd - localMin;
-              let remainingTotal = closeMin > localMin ? (closeMin - localMin) : (1440 - localMin + closeMin);
-              const pct = Math.max(0, Math.min(100, (remainingTotal / totalSession) * 100));
+            const remLunch = lEnd - localMin;
+            let remainingTotal = closeMin > localMin ? (closeMin - localMin) : (1440 - localMin + closeMin);
+            const pct = Math.max(0, Math.min(100, (remainingTotal / totalSession) * 100));
 
-              statusCell.innerHTML = `
-                <div class="ib-container">
-                  <div class="ib-fill" style="width: ${pct}%;"></div>
-                  <div class="ib-overlay-text blinking-text">Break, Open in ${formatHM(remLunch)}</div>
-                </div>
-              `;
-              nameCell.classList.remove('blinking-name');
-              setLedState(m.code, 'orange');
-            }
-          }
-
-          if (!isLunch) {
+            statusCell.innerHTML = `
+              <div class="ib-container">
+                <div class="ib-fill" style="width: ${pct}%;"></div>
+                <div class="ib-overlay-text blinking-text">Break, Open in ${formatHM(remLunch)}</div>
+              </div>
+            `;
+            setLedState(m.code, 'orange');
+          } else {
             let remaining = closeMin > localMin ? (closeMin - localMin) : (1440 - localMin + closeMin);
             const pct = Math.max(0, Math.min(100, (remaining / totalSession) * 100));
             const isWarning = remaining <= 30;
-
-            if (remaining <= 5) {
-              nameCell.classList.add('blinking-name');
-            } else {
-              nameCell.classList.remove('blinking-name');
-            }
-
-            if (localMin === openMin && localSec === 0 && !soundStates[m.code].opened && !muteEx) {
-              playBeep(1, 0.6, 0.1, true);
-              soundStates[m.code].opened = true;
-            }
 
             statusCell.innerHTML = `
               <div class="ib-container">
@@ -656,9 +758,9 @@
         if (currentSec === 0 && lastTfex1mSec !== 0) {
           if (!muteTfex) {
             if (currentMin % 5 === 0) {
-              playBeep(2, 0.15, 0.1, false);
+              playMorsePattern('-'); // Morse 'T' (5m Alert)
             } else {
-              playBeep(1, 0.15, 0.1, false);
+              playMorsePattern('.'); // Morse 'E' (1m Alert)
             }
           }
         }
