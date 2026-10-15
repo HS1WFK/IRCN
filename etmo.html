@@ -3,28 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.3.2</title>
+  <title>Exchange Times v2.4.0</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
     
-    /* General Hyperlink Styles */
     a { color: inherit; text-decoration: none; transition: opacity 0.2s; }
     a:hover { opacity: 0.8; text-decoration: underline; }
 
-    /* Top Header Default (iPad / PC) */
     .header-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 10px 14px; border-radius: 6px; border: 1px solid #333; margin-bottom: 8px; gap: 8px; }
     .app-title { font-size: 31px; font-weight: bold; color: #00d2ff; cursor: pointer; user-select: none; }
     .app-title:active { opacity: 0.7; }
-    .utc-clock { font-size: 28px; font-weight: bold; color: #ffffff; }
-    .utc-clock a { color: #ffffff; }
-    .controls { display: flex; gap: 14px; font-size: 23px; align-items: center; flex-wrap: wrap; }
-    .controls label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
     
-    .audio-btn { background: #f44336; color: #ffffff; border: none; padding: 8px 18px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 23px; transition: background 0.3s; }
-    .audio-btn.active { background: #4caf50; color: #ffffff; }
+    .utc-clock { font-size: 28px; font-weight: bold; color: #ffffff; cursor: pointer; user-select: none; padding: 2px 8px; border-radius: 4px; transition: background 0.2s; }
+    .utc-clock:hover { background: #2a2a2a; }
+    .utc-clock:active { opacity: 0.7; }
+    .speech-status-tag { font-size: 14px; margin-left: 6px; vertical-align: middle; padding: 2px 6px; border-radius: 3px; font-weight: normal; }
+    .speech-on { background: #2e7d32; color: #fff; }
+    .speech-off { background: #c62828; color: #fff; }
 
-    /* Table Container Default (iPad / PC) */
     .table-container { width: 100%; overflow-x: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; max-height: calc(100vh - 85px); }
     .market-table { width: 100%; border-collapse: collapse; background: #181818; border-radius: 6px; overflow: hidden; }
     
@@ -77,11 +74,9 @@
     .tomorrow-normal { color: #2e7d32; font-weight: bold; font-size: 20px; }
     .tomorrow-close { color: #f44336; font-weight: bold; font-size: 20px; }
 
-    /* Display Responsive Switching */
     .name-full { display: inline; }
     .name-short { display: none; }
 
-    /* 📱 MOBILE / IPHONE OVERRIDE */
     @media screen and (max-width: 600px) {
       body { padding: 6px; }
       .header-panel { padding: 8px 10px; margin-bottom: 6px; }
@@ -89,9 +84,6 @@
       .app-title { font-size: 20px !important; font-weight: 800 !important; }
       .utc-clock { font-size: 18px !important; font-weight: 800 !important; }
       
-      .controls { font-size: 13px; gap: 8px; }
-      .audio-btn { font-size: 13px; padding: 4px 8px; }
-
       .table-container { max-height: calc(100vh - 65px); }
       .market-table th, .market-table td { padding: 4px 6px; }
       .market-table th { font-size: 13px; padding: 4px 6px; }
@@ -122,22 +114,16 @@
 </head>
 <body>
 
-  <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title" onclick="runSoundTest()" title="Click to test Morse sound sequence and voice time announcement">
-      Exchange Times <span style="font-size: 14px; color: #888;">v2.3.2</span>
+    <div class="app-title" onclick="runSoundTest()" title="Click to test Morse sound sequence and Speech announcement">
+      Exchange Times <span style="font-size: 14px; color: #888;">v2.4.0</span>
     </div>
-    <div class="utc-clock">
-      <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClock">UTC: --:--:--</a>
-    </div>
-    <div class="controls">
-      <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
-      <label><input type="checkbox" id="muteExchange" checked> Exchange</label>
-      <label><input type="checkbox" id="muteTFEX" checked> TFEX</label>
+    <div class="utc-clock" onclick="toggleSpeechMode()" title="Click to Toggle Speech On/Off">
+      <span id="utcClock">UTC: --:--:--</span>
+      <span id="speechTag" class="speech-status-tag speech-on">Speech ON</span>
     </div>
   </div>
 
-  <!-- Market Table Wrapper -->
   <div class="table-container">
     <table class="market-table">
       <thead>
@@ -155,7 +141,6 @@
         </tr>
       </thead>
       <tbody id="marketRows">
-        <!-- Rows populated dynamically -->
       </tbody>
     </table>
   </div>
@@ -167,12 +152,12 @@
       "USA": "https://www.investing.com/indices/usa-indices"
     };
 
-    const markets = [
-      // THAILAND
-      { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", link: "", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:00", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
-      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX S50/GO/FX", link: "", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+    const setHolidays = ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"];
 
-      // ASIA
+    const markets = [
+      { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", link: "", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:00", holidays: setHolidays },
+      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX S50/GO/FX", link: "", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: setHolidays },
+
       { zone: "ASIA", code: "ASX", shortName: "ASX", name: "Australia ASX", link: "https://www.investing.com/indices/aus-200", timezone: "Australia/Sydney", open: "10:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-26","2026-04-03","2026-04-06","2026-04-25","2026-06-08","2026-12-25","2026-12-26"] },
       { zone: "ASIA", code: "TSE", shortName: "NIKKEI", name: "NIKKEI (Tokyo)", link: "https://www.investing.com/indices/japan-ni225", timezone: "Asia/Tokyo", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "12:30", holidays: ["2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-07-20","2026-09-21","2026-09-23","2026-10-12","2026-11-03","2026-11-23"] },
       { zone: "ASIA", code: "KRX", shortName: "KOSPI", name: "KOSPI (Korea)", link: "https://www.investing.com/indices/kospi", timezone: "Asia/Seoul", open: "09:00", close: "15:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-05-05","2026-05-24","2026-06-06","2026-08-15","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-09","2026-12-25","2026-12-31"] },
@@ -181,16 +166,13 @@
       { zone: "ASIA", code: "TWSE", shortName: "TWSE", name: "Taiwan Weighted", link: "https://www.investing.com/indices/taiwan-weighted", timezone: "Asia/Taipei", open: "09:00", close: "13:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-28","2026-04-04","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-10"] },
       { zone: "ASIA", code: "HOSE", shortName: "HOSE", name: "Vietnam", link: "https://www.investing.com/indices/vn", timezone: "Asia/Ho_Chi_Minh", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-26","2026-04-30","2026-05-01","2026-09-02"] },
       
-      // EUROPE
       { zone: "EUROPE", code: "LSE", shortName: "FTSE", name: "FTSE (London)", link: "https://www.investing.com/indices/uk-100", timezone: "Europe/London", open: "08:00", close: "16:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-04","2026-05-25","2026-08-31","2026-12-25","2026-12-28"] },
       { zone: "EUROPE", code: "XETRA", shortName: "DAX", name: "DAX (Frankfurt)", link: "https://www.investing.com/indices/germany-30", timezone: "Europe/Berlin", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-24","2026-12-25","2026-12-26","2026-12-31"] },
       { zone: "EUROPE", code: "PAR", shortName: "CAC", name: "CAC (Paris)", link: "https://www.investing.com/indices/france-40", timezone: "Europe/Paris", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-25","2026-12-26"] },
       
-      // USA
       { zone: "USA", code: "NYSE", shortName: "NYSE", name: "NYSE (New York)", link: "https://www.investing.com/indices/us-30", timezone: "America/New_York", open: "09:30", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"] },
 
-      // GLOBAL ASSETS
-      { zone: "GLOBAL ASSETS", code: "TBMA", shortName: "TBMA (BKK)", name: "TBMA - Bonds (BKK)", link: "https://hs1wfk.github.io/IRCN/etmo.html", timezone: "Asia/Bangkok", open: "09:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "GLOBAL ASSETS", code: "TBMA", shortName: "TBMA (BKK)", name: "TBMA - Bonds (BKK)", link: "https://hs1wfk.github.io/IRCN/etmo.html", timezone: "Asia/Bangkok", open: "09:00", close: "17:00", hasLunch: false, holidays: setHolidays },
       { zone: "GLOBAL ASSETS", code: "US10Y", shortName: "US10Y (CHI)", name: "US10Y - (CHI)", link: "https://www.investing.com/rates-bonds/u.s.-10-year-bond-yield", timezone: "America/Chicago", open: "17:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
       { zone: "GLOBAL ASSETS", code: "DXY", shortName: "DXY (NYC)", name: "DXY - (NYC)", link: "https://www.investing.com/currencies/us-dollar-index", timezone: "America/New_York", open: "20:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
       { zone: "GLOBAL ASSETS", code: "BRENT", shortName: "Brent (LON)", name: "Brent - Crude Oil (LON)", link: "https://www.investing.com/commodities/brent-oil", timezone: "Europe/London", open: "01:00", close: "23:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
@@ -202,11 +184,12 @@
     ];
 
     let audioCtx = null;
+    let speechEnabled = true; // Default ON
     const marketStateTracker = {}; 
     const flashingTimers = {};
     let cachedVoices = [];
+    let lastAnnounced15Min = -1;
 
-    // Pre-load voices for iPadOS / iOS
     function loadVoices() {
       if ('speechSynthesis' in window) {
         cachedVoices = window.speechSynthesis.getVoices();
@@ -230,57 +213,79 @@
       }
     }
 
-    // Explicitly target Serena (Enhanced)
-    function getSerenaVoice() {
-      if (cachedVoices.length === 0 && 'speechSynthesis' in window) {
-        cachedVoices = window.speechSynthesis.getVoices();
-      }
-      
-      // 1. Search explicitly for "Serena" (Enhanced/Premium on iPadOS)
-      let serena = cachedVoices.find(v => v.name.includes('Serena'));
-      if (serena) return serena;
-
-      // 2. Fallback to any British Voice (en-GB)
-      let ukVoice = cachedVoices.find(v => v.lang === 'en-GB' || v.lang.startsWith('en_GB'));
-      if (ukVoice) return ukVoice;
-
-      // 3. Fallback to English Voice (en-US)
-      let enVoice = cachedVoices.find(v => v.lang.startsWith('en'));
-      return enVoice || null;
-    }
-
-    function enableAudio() {
+    function toggleSpeechMode() {
       initAudioContext();
       if ('speechSynthesis' in window) {
         window.speechSynthesis.resume();
-        // Warm up speech engine
-        const dummyUtterance = new SpeechSynthesisUtterance("");
-        window.speechSynthesis.speak(dummyUtterance);
       }
-      const btn = document.getElementById('btnAudio');
-      btn.innerText = "Alert On";
-      btn.classList.add('active');
+
+      speechEnabled = !speechEnabled;
+      const tag = document.getElementById('speechTag');
+
+      if (speechEnabled) {
+        tag.innerText = "Speech ON";
+        tag.className = "speech-status-tag speech-on";
+        speakAdaptive("Speech is On", "ระบบเปิดเสียงพูดแล้วค่ะ");
+      } else {
+        tag.innerText = "Speech OFF";
+        tag.className = "speech-status-tag speech-off";
+        speakAdaptive("Speech is Off", "ระบบปิดเสียงพูดแล้วค่ะ", true); // Allow closing announcement
+      }
     }
 
     document.addEventListener('touchstart', function() {
-      enableAudio();
+      initAudioContext();
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.resume();
+      }
     }, { once: true });
 
-    function speakText(text) {
+    // Adaptive Engine: Smart Auto-Detect New iPad (Samantha) vs Old iPad Gen 5 (Kanya)
+    function getAdaptiveVoice() {
+      if (cachedVoices.length === 0 && 'speechSynthesis' in window) {
+        cachedVoices = window.speechSynthesis.getVoices();
+      }
+
+      // 1. New iPad Check: Look for Samantha or Serena
+      let samantha = cachedVoices.find(v => v.name.includes('Samantha') || v.name.includes('Serena'));
+      if (samantha) {
+        return { voice: samantha, lang: 'en-US', type: 'ENG' };
+      }
+
+      // 2. Old iPad Gen 5 Check: Fallback to Kanya (th-TH)
+      let kanya = cachedVoices.find(v => v.name.includes('Kanya') || v.name.includes('Narisa'));
+      if (kanya) {
+        return { voice: kanya, lang: 'th-TH', type: 'THAI' };
+      }
+
+      // 3. Fallback to any Thai voice
+      let thVoice = cachedVoices.find(v => v.lang === 'th-TH' || v.lang.startsWith('th'));
+      if (thVoice) {
+        return { voice: thVoice, lang: 'th-TH', type: 'THAI' };
+      }
+
+      // Default Fallback
+      return { voice: null, lang: 'en-US', type: 'ENG' };
+    }
+
+    function speakAdaptive(englishText, thaiText, bypassCheck = false) {
+      if (!speechEnabled && !bypassCheck) return;
       if (!('speechSynthesis' in window)) return;
 
-      window.speechSynthesis.cancel(); // Clear queue
+      window.speechSynthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
+      const config = getAdaptiveVoice();
+      const textToSpeak = (config.type === 'ENG') ? englishText : thaiText;
+
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.rate = config.type === 'ENG' ? 0.9 : 0.95;
       utterance.pitch = 1.0;
 
-      const targetVoice = getSerenaVoice();
-      if (targetVoice) {
-        utterance.voice = targetVoice;
-        utterance.lang = targetVoice.lang;
+      if (config.voice) {
+        utterance.voice = config.voice;
+        utterance.lang = config.voice.lang;
       } else {
-        utterance.lang = 'en-GB';
+        utterance.lang = config.lang;
       }
 
       window.speechSynthesis.speak(utterance);
@@ -294,10 +299,10 @@
         return;
       }
 
-      const dotDuration = 0.12;              // 1 unit (Dit = 120ms)
-      const dashDuration = dotDuration * 3;  // 3 units (Dash = 360ms)
-      const elementSpace = dotDuration;      // 1 unit between elements
-      const charSpace = dotDuration * 3;     // 3 units between letters
+      const dotDuration = 0.12;              
+      const dashDuration = dotDuration * 3;  
+      const elementSpace = dotDuration;      
+      const charSpace = dotDuration * 3;     
 
       let currentTime = audioCtx.currentTime + 0.05;
 
@@ -335,10 +340,9 @@
       } catch (e) { console.error(e); }
     }
 
-    // Sound Test Sequence (Title Click Switch): O -> V -> VV -> E -> T -> Serena Speech
+    // Sound Test Sequence (Hidden at Exchange Times Title)
     function runSoundTest() {
-      enableAudio();
-
+      initAudioContext();
       playMorsePattern('---', () => {
         setTimeout(() => {
           playMorsePattern('...-', () => {
@@ -348,13 +352,15 @@
                   playMorsePattern('.', () => {
                     setTimeout(() => {
                       playMorsePattern('-', () => {
-                        // After T sound finishes, speak current time using Serena voice
                         setTimeout(() => {
                           const now = new Date();
-                          const hours = String(now.getHours()).padStart(2, '0');
-                          const minutes = String(now.getMinutes()).padStart(2, '0');
-                          speakText(`The time now is ${hours}:${minutes}`);
-                        }, 500);
+                          const hh = String(now.getHours()).padStart(2, '0');
+                          const mm = String(now.getMinutes()).padStart(2, '0');
+
+                          const engText = `The time now is ${hh}:${mm}`;
+                          const thaiText = `ขณะนี้เวลา ${parseInt(hh)} นาฬิกา ${parseInt(mm)} นาทีค่ะ`;
+                          speakAdaptive(engText, thaiText);
+                        }, 400);
                       });
                     }, 400);
                   });
@@ -412,7 +418,6 @@
       led.className = `led-dot led-${state}`;
     }
 
-    // Flashing Controller with Timer Reset
     function triggerFlashingAlert(code) {
       const nameElem = document.getElementById('name-' + code);
       if (!nameElem) return;
@@ -426,7 +431,95 @@
       flashingTimers[code] = setTimeout(() => {
         nameElem.classList.remove('blinking-name');
         delete flashingTimers[code];
-      }, 60000); // 1 minute (60,000ms)
+      }, 60000); 
+    }
+
+    // Exact Market Speech Announcer Generator
+    function announceMarketSpeech(marketName, eventType) {
+      let engMsg = "";
+      let thaiMsg = "";
+
+      switch(eventType) {
+        case 'BEFORE_OPEN_30':
+          engMsg = `${marketName} will open in 30 minutes`;
+          thaiMsg = `ตลาด ${marketName} จะเปิดในอีก 30 นาที`;
+          break;
+        case 'BEFORE_OPEN_15':
+          engMsg = `${marketName} will open in 15 minutes`;
+          thaiMsg = `ตลาด ${marketName} จะเปิดในอีก 15 นาที`;
+          break;
+        case 'BEFORE_OPEN_5':
+          engMsg = `${marketName} will open in 5 minutes`;
+          thaiMsg = `ตลาด ${marketName} จะเปิดในอีก 5 นาที`;
+          break;
+        case 'OPEN':
+          engMsg = `${marketName} is now open`;
+          thaiMsg = `ตลาด ${marketName} เปิดทำการแล้ว`;
+          break;
+        case 'LUNCH_BREAK':
+          engMsg = `${marketName} is on lunch break`;
+          thaiMsg = `ตลาด ${marketName} ปิดพักเบรก`;
+          break;
+        case 'AFTER_LUNCH':
+          engMsg = `${marketName} reopened after lunch break`;
+          thaiMsg = `ตลาด ${marketName} เปิดหลังพักเบรก`;
+          break;
+        case 'BEFORE_CLOSE_30':
+          engMsg = `${marketName} will close in 30 minutes`;
+          thaiMsg = `ตลาด ${marketName} จะปิดในอีก 30 นาที`;
+          break;
+        case 'BEFORE_CLOSE_5':
+          engMsg = `${marketName} will close in 5 minutes`;
+          thaiMsg = `ตลาด ${marketName} จะปิดในอีก 5 นาที`;
+          break;
+        case 'CLOSED':
+          engMsg = `${marketName} is now closed`;
+          thaiMsg = `ตลาด ${marketName} ปิดทำการแล้ว`;
+          break;
+      }
+
+      if (engMsg && thaiMsg) {
+        speakAdaptive(engMsg, thaiMsg);
+      }
+    }
+
+    // 15-Minute Periodic Time Announcer (09:45 - 17:00 Thai Trading Hours Only)
+    function handle15MinTimeAnnouncement(now) {
+      const thP = getZonedParts(now, "Asia/Bangkok");
+      const thMin = parseInt(thP.hour, 10) * 60 + parseInt(thP.minute, 10);
+      const thSec = parseInt(thP.second, 10);
+      const thDateStr = thP.year + '-' + thP.month + '-' + thP.day;
+      const isThWeekend = (thP.weekday === 'Sat' || thP.weekday === 'Sun');
+      const isThHoliday = setHolidays.indexOf(thDateStr) !== -1;
+
+      // Restrict only during Thailand Market Operating Window: 09:45 (585) to 17:00 (1020) on Weekdays
+      if (isThWeekend || isThHoliday || thMin < 585 || thMin > 1020) return;
+
+      const mins = parseInt(thP.minute, 10);
+      const hours = parseInt(thP.hour, 10);
+
+      if ((mins === 0 || mins === 15 || mins === 30 || mins === 45) && thSec === 0) {
+        if (lastAnnounced15Min !== mins) {
+          lastAnnounced15Min = mins;
+
+          let engTime = "";
+          let thaiTime = "";
+
+          if (mins === 0) {
+            engTime = `The time now is ${hours} hours exactly`;
+            thaiTime = `ขณะนี้เป็นเวลา ${hours} นาฬิกาตรง`;
+          } else {
+            engTime = `The time now is ${hours}:${String(mins).padStart(2, '0')}`;
+            thaiTime = `ขณะนี้เป็นเวลา ${hours} นาฬิกา ${mins} นาที`;
+          }
+
+          speakAdaptive(engTime, thaiTime);
+        }
+      } else {
+        if (thSec !== 0) {
+          lastAnnounced15Min = -1; // Reset trigger
+        }
+      }
     }
 
     function initTable() {
@@ -510,17 +603,15 @@
       const utcHM = now.toISOString().substr(11, 8);
       document.getElementById('utcClock').innerText = 'UTC: ' + utcHM;
 
-      const muteEx = !document.getElementById('muteExchange').checked;
-      const muteTfex = !document.getElementById('muteTFEX').checked;
+      // Handle 15-Min Periodic Time Announcements
+      handle15MinTimeAnnouncement(now);
 
-      // Direct calculation for TFEX Day & Night Trading Status
       const thP = getZonedParts(now, "Asia/Bangkok");
       const thMin = parseInt(thP.hour, 10) * 60 + parseInt(thP.minute, 10);
       const thSec = parseInt(thP.second, 10);
       const thDateStr = thP.year + '-' + thP.month + '-' + thP.day;
       const isThWeekend = (thP.weekday === 'Sat' || thP.weekday === 'Sun');
-      const tfexHolidays = ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"];
-      const isThHoliday = tfexHolidays.indexOf(thDateStr) !== -1;
+      const isThHoliday = setHolidays.indexOf(thDateStr) !== -1;
 
       let isTfexTrading = false;
       let isTfexBreak = false;
@@ -615,7 +706,7 @@
         const statusCell = document.getElementById('status-' + m.code);
 
         if (!marketStateTracker[m.code]) {
-          marketStateTracker[m.code] = { state: 'UNKNOWN' };
+          marketStateTracker[m.code] = { state: 'UNKNOWN', announcedEvents: {} };
         }
 
         if (isTodayWeekend || isTodayHoliday) {
@@ -631,17 +722,25 @@
           if (isTfexTrading) currentState = 'OPEN';
           else if (isTfexBreak) currentState = 'BREAK';
 
-          // STATE CHANGE DETECTOR & FLASHING TRIGGER FOR TFEX
+          // STATE CHANGE DETECTOR & SPEECH / MORSE ANNOUNCER FOR TFEX
           if (marketStateTracker[m.code].state !== 'UNKNOWN' && marketStateTracker[m.code].state !== currentState) {
-            if (!muteEx) {
-              if (currentState === 'OPEN') {
-                playMorsePattern('---'); // Morse 'O' for Open
-              } else if (currentState === 'BREAK') {
-                playMorsePattern('...-'); // Morse 'V' for Break
-              } else if (currentState === 'CLOSED') {
-                playMorsePattern('...- ...-'); // Morse 'V V' for Close
+            let lastState = marketStateTracker[m.code].state;
+
+            if (currentState === 'OPEN') {
+              playMorsePattern('---'); // Morse 'O'
+              if (lastState === 'BREAK') {
+                announceMarketSpeech(m.shortName, 'AFTER_LUNCH');
+              } else {
+                announceMarketSpeech(m.shortName, 'OPEN');
               }
+            } else if (currentState === 'BREAK') {
+              playMorsePattern('...-'); // Morse 'V'
+              announceMarketSpeech(m.shortName, 'LUNCH_BREAK');
+            } else if (currentState === 'CLOSED') {
+              playMorsePattern('...- ...-'); // Morse 'V V'
+              announceMarketSpeech(m.shortName, 'CLOSED');
             }
+
             if (currentState === 'OPEN' || currentState === 'CLOSED') {
               triggerFlashingAlert(m.code);
             }
@@ -652,6 +751,17 @@
             let totalSession = isNightSession ? (1440 - nightOpen + nightClose) : (dayClose - dayOpen);
             let pct = Math.max(0, Math.min(100, (remainingTfexMinutes / totalSession) * 100));
             let isWarning = remainingTfexMinutes <= 30;
+
+            // Countdown Speech Alerts for TFEX
+            if (localSec === 0) {
+              if (remainingTfexMinutes === 30 && !marketStateTracker[m.code].announcedEvents['CLOSE_30']) {
+                announceMarketSpeech(m.shortName, 'BEFORE_CLOSE_30');
+                marketStateTracker[m.code].announcedEvents['CLOSE_30'] = true;
+              } else if (remainingTfexMinutes === 5 && !marketStateTracker[m.code].announcedEvents['CLOSE_5']) {
+                announceMarketSpeech(m.shortName, 'BEFORE_CLOSE_5');
+                marketStateTracker[m.code].announcedEvents['CLOSE_5'] = true;
+              }
+            }
 
             statusCell.innerHTML = `
               <div class="ib-container">
@@ -670,18 +780,29 @@
             `;
             setLedState(m.code, 'orange');
           } else {
+            let diffDay = 0;
+            if (localMin < dayOpen) diffDay = dayOpen - localMin;
+            else diffDay = (1440 - localMin) + dayOpen;
+
+            if (localSec === 0) {
+              if (diffDay === 30 && !marketStateTracker[m.code].announcedEvents['OPEN_30']) {
+                announceMarketSpeech(m.shortName, 'BEFORE_OPEN_30');
+                marketStateTracker[m.code].announcedEvents['OPEN_30'] = true;
+              } else if (diffDay === 15 && !marketStateTracker[m.code].announcedEvents['OPEN_15']) {
+                announceMarketSpeech(m.shortName, 'BEFORE_OPEN_15');
+                marketStateTracker[m.code].announcedEvents['OPEN_15'] = true;
+              } else if (diffDay === 5 && !marketStateTracker[m.code].announcedEvents['OPEN_5']) {
+                announceMarketSpeech(m.shortName, 'BEFORE_OPEN_5');
+                marketStateTracker[m.code].announcedEvents['OPEN_5'] = true;
+              }
+            }
+
             if (localMin >= dayClose && localMin < nightOpen) {
               let diffNight = nightOpen - localMin;
               let colorClass = diffNight <= 60 ? 'status-close' : 'status-close-dark';
               let textNight = isMobile ? ('Night Open in ' + formatHM(diffNight)) : ('Day Closed, Night Open in ' + formatHM(diffNight));
               statusCell.innerHTML = '<span class="' + colorClass + '">' + textNight + '</span>';
             } else {
-              let diffDay = 0;
-              if (localMin < dayOpen) {
-                diffDay = dayOpen - localMin;
-              } else {
-                diffDay = (1440 - localMin) + dayOpen;
-              }
               let colorClass = diffDay <= 60 ? 'status-close' : 'status-close-dark';
               let textDay = isMobile ? ('Day Open in ' + formatHM(diffDay)) : ('Closed, Day Open in ' + formatHM(diffDay));
               statusCell.innerHTML = '<span class="' + colorClass + '">' + textDay + '</span>';
@@ -716,17 +837,25 @@
         if (isTradingNow && !isLunch) currentState = 'OPEN';
         else if (isLunch) currentState = 'BREAK';
 
-        // STATE CHANGE DETECTOR & FLASHING TRIGGER FOR STANDARD MARKETS
+        // STATE CHANGE DETECTOR & SPEECH / MORSE ANNOUNCER FOR STANDARD MARKETS
         if (marketStateTracker[m.code].state !== 'UNKNOWN' && marketStateTracker[m.code].state !== currentState) {
-          if (!muteEx) {
-            if (currentState === 'OPEN') {
-              playMorsePattern('---'); // Morse 'O' for Open
-            } else if (currentState === 'BREAK') {
-              playMorsePattern('...-'); // Morse 'V' for Break
-            } else if (currentState === 'CLOSED') {
-              playMorsePattern('...- ...-'); // Morse 'V V' for Close
+          let lastState = marketStateTracker[m.code].state;
+
+          if (currentState === 'OPEN') {
+            playMorsePattern('---'); // Morse 'O'
+            if (lastState === 'BREAK') {
+              announceMarketSpeech(m.shortName, 'AFTER_LUNCH');
+            } else {
+              announceMarketSpeech(m.shortName, 'OPEN');
             }
+          } else if (currentState === 'BREAK') {
+            playMorsePattern('...-'); // Morse 'V'
+            announceMarketSpeech(m.shortName, 'LUNCH_BREAK');
+          } else if (currentState === 'CLOSED') {
+            playMorsePattern('...- ...-'); // Morse 'V V'
+            announceMarketSpeech(m.shortName, 'CLOSED');
           }
+
           if (currentState === 'OPEN' || currentState === 'CLOSED') {
             triggerFlashingAlert(m.code);
           }
@@ -740,6 +869,21 @@
           } else {
             diff = (1440 - localMin) + openMin;
           }
+
+          // Countdown Speech Alerts Before Market Open
+          if (localSec === 0) {
+            if (diff === 30 && !marketStateTracker[m.code].announcedEvents['OPEN_30']) {
+              announceMarketSpeech(m.shortName, 'BEFORE_OPEN_30');
+              marketStateTracker[m.code].announcedEvents['OPEN_30'] = true;
+            } else if (diff === 15 && !marketStateTracker[m.code].announcedEvents['OPEN_15']) {
+              announceMarketSpeech(m.shortName, 'BEFORE_OPEN_15');
+              marketStateTracker[m.code].announcedEvents['OPEN_15'] = true;
+            } else if (diff === 5 && !marketStateTracker[m.code].announcedEvents['OPEN_5']) {
+              announceMarketSpeech(m.shortName, 'BEFORE_OPEN_5');
+              marketStateTracker[m.code].announcedEvents['OPEN_5'] = true;
+            }
+          }
+
           const colorClass = diff <= 60 ? 'status-close' : 'status-close-dark';
           const openText = isMobile ? ('Open in ' + formatHM(diff)) : ('Closed, Open in ' + formatHM(diff));
           statusCell.innerHTML = '<span class="' + colorClass + '">' + openText + '</span>';
@@ -763,6 +907,17 @@
             const pct = Math.max(0, Math.min(100, (remaining / totalSession) * 100));
             const isWarning = remaining <= 30;
 
+            // Countdown Speech Alerts Before Market Close
+            if (localSec === 0) {
+              if (remaining === 30 && !marketStateTracker[m.code].announcedEvents['CLOSE_30']) {
+                announceMarketSpeech(m.shortName, 'BEFORE_CLOSE_30');
+                marketStateTracker[m.code].announcedEvents['CLOSE_30'] = true;
+              } else if (remaining === 5 && !marketStateTracker[m.code].announcedEvents['CLOSE_5']) {
+                announceMarketSpeech(m.shortName, 'BEFORE_CLOSE_5');
+                marketStateTracker[m.code].announcedEvents['CLOSE_5'] = true;
+              }
+            }
+
             statusCell.innerHTML = `
               <div class="ib-container">
                 <div class="ib-fill ${isWarning ? 'warning' : ''}" style="width: ${pct}%;"></div>
@@ -774,9 +929,8 @@
         }
       });
 
-      // TFEX SPECIAL CYCLES (1 Min & 5 Min)
-      const tfexP = getZonedParts(now, "Asia/Bangkok");
-      const tfexHM = tfexP.hour + ':' + tfexP.minute;
+      // TFEX Special Cycles (1 Min & 5 Min Morse Alerts)
+      const tfexHM = thP.hour + ':' + thP.minute;
       document.getElementById('time-TFEX-1M').innerText = tfexHM;
       document.getElementById('time-TFEX-5M').innerText = tfexHM;
 
@@ -820,12 +974,10 @@
         setLedState('TFEX-5M', 'green');
 
         if (currentSec === 0 && lastTfex1mSec !== 0) {
-          if (!muteTfex) {
-            if (currentMin % 5 === 0) {
-              playMorsePattern('-'); // Morse 'T' (5m Alert)
-            } else {
-              playMorsePattern('.'); // Morse 'E' (1m Alert)
-            }
+          if (currentMin % 5 === 0) {
+            playMorsePattern('-'); // Morse 'T'
+          } else {
+            playMorsePattern('.'); // Morse 'E'
           }
         }
       }
