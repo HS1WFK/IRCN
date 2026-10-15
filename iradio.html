@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News - Header Meter V.1.8.6</title>
+  <title>Global News - Header Meter V.1.8.7</title>
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
@@ -266,13 +266,25 @@
     }
     canvas#oscilloscope { display: block; width: 100%; height: 100%; }
 
-    .audio-content-stats { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: none; margin-top: 4px; padding-left: 2px; color: var(--text-muted); }
+    .audio-content-stats { 
+      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace; 
+      display: none; margin-top: 4px; padding-left: 2px; color: var(--text-muted); 
+    }
     
     .stats-main-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
-    .channels-indicator { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; display: flex; align-items: center; color: var(--text-main); text-shadow: var(--text-shadow-strong); }
+    .channels-indicator { 
+      font-size: 18px; 
+      font-weight: 700; 
+      letter-spacing: 0.5px; 
+      white-space: nowrap; 
+      display: flex; 
+      align-items: center; 
+      color: var(--text-main); 
+      text-shadow: var(--text-shadow-strong); 
+    }
     
     .video-btn {
-      font-size: 15px; font-weight: 700; padding: 2px 8px; margin-right: 8px;
+      font-size: 14px; font-weight: 700; padding: 2px 7px; margin-right: 8px;
       border-radius: 4px; border: 1px solid var(--panel-border); color: var(--stat-term-gray); background: transparent;
       cursor: pointer; transition: all 0.2s ease; user-select: none;
       letter-spacing: 0.5px; line-height: 1.2;
@@ -293,7 +305,7 @@
 
     .buf-meter-container { 
       display: flex; align-items: center; gap: 10px; 
-      font-size: 20px; font-weight: 700; color: var(--stat-conn-blue); 
+      font-size: 18px; font-weight: 700; color: var(--stat-conn-blue); 
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace; 
       white-space: nowrap; width: 50%; 
       text-shadow: var(--text-shadow-strong);
@@ -305,7 +317,7 @@
     .buf-bar-fill.red-status { background-color: #ef4444 !important; }
 
     .connection-status-line {
-      margin-top: 3px; font-size: 18px; line-height: 1.2; font-weight: 600;
+      margin-top: 3px; font-size: 18px; line-height: 1.2; font-weight: 700;
       font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Roboto Mono", monospace;
       color: var(--stat-conn-blue); letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; width: 100%;
       text-shadow: var(--text-shadow-strong);
@@ -410,12 +422,12 @@
       .station-fixed-title, .station-ticker-text { font-size: 18px !important; }
       .theme-icon { font-size: 18px; }
       .feed-status-tag { font-size: 15px; }
-      .channels-indicator { font-size: 15px; }
+      .channels-indicator { font-size: 14px; }
       
-      .video-btn { font-size: 12px; padding: 2px 5px; margin-right: 4px; }
+      .video-btn { font-size: 11px; padding: 2px 4px; margin-right: 4px; }
       
-      .buf-meter-container { font-size: 14px; width: 52%; }
-      .connection-status-line { font-size: 12px; letter-spacing: 0px; }
+      .buf-meter-container { font-size: 13px; width: 52%; }
+      .connection-status-line { font-size: 13px; letter-spacing: 0px; }
       .conn-right-group { width: 52%; }
       .vu-container-global { --bar-h: 11px; --label-h: 17px; width: 52%; }
       .vu-scale-labels { font-size: 12px; }
@@ -477,7 +489,7 @@
           </div>
 
           <div class="buf-meter-container">
-            <span>Buf: <span id="buf-val" class="status-highlight-red">0.0</span>s</span>
+            <span>BUF: <span id="buf-val" class="status-highlight-red">0.0</span>s</span>
             <div class="buf-bar-bg">
               <div class="buf-bar-fill" id="buf-bar"></div>
             </div>
@@ -491,8 +503,8 @@
             <span class="audio-text-indicator" id="audio-text-tag">Audio</span>
           </div>
           <div class="conn-right-group">
-            <span id="wrap-br">Bitrate: <span class="status-highlight-red" id="conn-br">-- kbps</span> <span id="sep-br">|</span> </span>
-            <span>Data Received <span class="status-highlight-red" id="conn-rx">0.00 MB</span></span>
+            <span id="wrap-br">BR: <span class="status-highlight-red" id="conn-br">-- kbps</span></span>
+            <span>Data: <span class="status-highlight-red" id="conn-rx">0.00 MB</span></span>
           </div>
         </div>
 
@@ -515,7 +527,7 @@
 
   <div class="playlist-container" id="playlist"></div>
 
-  <div class="page-version-footer">ver.1.8.6</div>
+  <div class="page-version-footer">ver.1.8.7</div>
 
   <script>
     const channels = [
@@ -531,9 +543,6 @@
       { name: "France 24 Fr", location: "Paris, France", cityCode: "PAR", utc: "UTC+2", tz: "Europe/Paris", about: "The French-language domestic and international channel of France 24.", url: "https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8", rss: "https://www.france24.com/fr/rss" },
       { name: "GB News", location: "London, UK", cityCode: "LON", utc: "UTC+1", tz: "Europe/London", about: "A British free-to-air news and opinion channel.", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-gbnewsnz-samsungnz/playlist.m3u8", rss: "https://www.gbnews.com/feeds/news.rss" },
       { name: "Tagesschau24", location: "Hamburg, Germany", cityCode: "HAM", utc: "UTC+2", tz: "Europe/Berlin", about: "A German specialized news channel operated by ARD.", url: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8", rss: "https://www.tagesschau.de/xml/rss2/" },
-      
-      /* --- ThaiPBS + Fallback URLs --- */
-      { name: "ThaiPBS", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Public Broadcasting Service (องค์การกระจายเสียงและแพร่ภาพสาธารณะแห่งประเทศไทย) สื่อสาธารณะแห่งแรกของประเทศไทย", url: "https://thaipbs-live.cdn.byteark.com/live/playlist_1080p/index.m3u8", fallbackUrl: "https://thaipbs-live.cdn.byteark.com/live/playlist_720p/index.m3u8", rss: null },
       { name: "TPTV", location: "Bangkok, Thailand", cityCode: "BKK", utc: "UTC+7", tz: "Asia/Bangkok", about: "Thai Parliament Television.", url: "https://tv-live.tpchannel.org/live/tv_1080p.m3u8?vhost=tv-live.tpchannel.org", rss: null },
       
       { name: "Classic FM", location: "London, UK", cityCode: "LON", utc: "UTC+1", tz: "Europe/London", about: "UK classic music radio stream based in Leicester Square, London.", url: "http://media-ice.musicradio.com/ClassicFMMP3", kbps: 128, rss: null },
@@ -688,6 +697,7 @@
       }
     }
 
+    /* --- RSS Feed Engine (Multi-Proxy Bypass) --- */
     async function updateTickerContent(ch) {
       activeRssFetchId++;
       const currentFetchId = activeRssFetchId;
@@ -708,20 +718,32 @@
         ]);
       };
 
+      const parseXmlHeadlines = (xmlText) => {
+        const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
+        const items = xmlDoc.querySelectorAll("item");
+        if (!items || items.length === 0) throw new Error("No items");
+        const headlines = Array.from(items).slice(0, 8)
+          .map(i => i.querySelector("title")?.textContent?.trim()).filter(Boolean);
+        if (headlines.length === 0) throw new Error("No titles");
+        return headlines.join(' \u00A0\u00A0•\u00A0\u00A0 ');
+      };
+
+      // Direct Request
       const pDirect = fetchWithTimeout(fetch(ch.rss, { cache: 'no-cache' }), 3500)
         .then(async res => {
           if (!res.ok) throw new Error("Direct Failed");
-          const xmlText = await res.text();
-          const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
-          const items = xmlDoc.querySelectorAll("item");
-          if (!items || items.length === 0) throw new Error("No items");
-          const headlines = Array.from(items).slice(0, 8)
-            .map(i => i.querySelector("title")?.textContent?.trim()).filter(Boolean);
-          if (headlines.length === 0) throw new Error("No titles");
-          return headlines.join(' \u00A0\u00A0•\u00A0\u00A0 ');
+          return parseXmlHeadlines(await res.text());
         });
 
-      const pRss2Json = fetchWithTimeout(fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(ch.rss)}`), 3500)
+      // AllOrigins Proxy
+      const pAllOrigins = fetchWithTimeout(fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(ch.rss)}`), 4000)
+        .then(async res => {
+          if (!res.ok) throw new Error("AllOrigins Failed");
+          return parseXmlHeadlines(await res.text());
+        });
+
+      // RSS2JSON Proxy
+      const pRss2Json = fetchWithTimeout(fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(ch.rss)}`), 4000)
         .then(async res => {
           const data = await res.json();
           if (data && data.status === 'ok' && data.items && data.items.length > 0) {
@@ -731,7 +753,7 @@
         });
 
       try {
-        const fastestHeadlines = await Promise.any([pDirect, pRss2Json]);
+        const fastestHeadlines = await Promise.any([pDirect, pAllOrigins, pRss2Json]);
         if (currentFetchId === activeRssFetchId && fastestHeadlines) {
           setRssTicker(fastestHeadlines);
         }
