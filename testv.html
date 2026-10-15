@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Voice Test - Edd / Samantha</title>
+  <title>Voice Test - Eddy / Samantha / Narisa</title>
   <style>
     body {
       background-color: #121212;
@@ -42,14 +42,14 @@
       color: #aaa;
       text-align: center;
       max-width: 90%;
-      line-height: 1.5;
+      line-height: 1.6;
     }
   </style>
 </head>
 <body>
 
   <button id="btnToggle" class="toggle-btn" onclick="toggleSpeech()">Speak</button>
-  <div id="voiceStatus" class="info-box">Targeting Voice: Edd (en-GB) or Samantha (en-US)</div>
+  <div id="voiceStatus" class="info-box">Targeting Voices: Eddy (UK) / Samantha (US) / Narisa (TH)</div>
 
   <script>
     let isSpeaking = false;
@@ -69,30 +69,45 @@
       }
     }
 
-    // Target Edd (UK) or Samantha (US) Specifically
-    function getTargetVoice() {
+    // Target English Voice: Eddy (UK) -> Samantha (US) -> Fallback
+    function getEnglishVoice() {
       if (cachedVoices.length === 0 && 'speechSynthesis' in window) {
         cachedVoices = window.speechSynthesis.getVoices();
       }
-      
-      // 1. Target "Edd" (English UK)
-      let edd = cachedVoices.find(v => v.name.includes('Edd'));
-      if (edd) return edd;
+
+      // 1. Target "Eddy" (English UK)
+      let eddy = cachedVoices.find(v => v.name.includes('Eddy'));
+      if (eddy) return eddy;
 
       // 2. Target "Samantha" (English US)
       let samantha = cachedVoices.find(v => v.name.includes('Samantha'));
       if (samantha) return samantha;
 
-      // 3. Fallback to alternative female/male UK voices (Rishi, Oliver, Serena, Kate)
+      // 3. Fallback to alternative UK voice
       let ukAlt = cachedVoices.find(v => (v.lang === 'en-GB' || v.lang.startsWith('en_GB')) && !v.name.includes('Daniel'));
       if (ukAlt) return ukAlt;
 
-      // 4. Fallback to alternative US voices (Karen, Victoria, Allison, Ava)
+      // 4. Fallback to alternative US voice
       let usAlt = cachedVoices.find(v => v.lang === 'en-US' || v.lang.startsWith('en_US'));
       if (usAlt) return usAlt;
 
       // 5. Fallback to any English voice
       return cachedVoices.find(v => v.lang.startsWith('en')) || null;
+    }
+
+    // Target Thai Voice: Narisa (Enhanced) -> Fallback
+    function getThaiVoice() {
+      if (cachedVoices.length === 0 && 'speechSynthesis' in window) {
+        cachedVoices = window.speechSynthesis.getVoices();
+      }
+
+      // 1. Target "Narisa" (Enhanced / Premium)
+      let narisa = cachedVoices.find(v => v.name.includes('Narisa'));
+      if (narisa) return narisa;
+
+      // 2. Fallback to any Thai voice
+      let thVoice = cachedVoices.find(v => v.lang === 'th-TH' || v.lang.startsWith('th'));
+      return thVoice || null;
     }
 
     function toggleSpeech() {
@@ -114,42 +129,72 @@
       // Unlock Speech Engine on iOS/iPadOS
       window.speechSynthesis.resume();
 
-      // Format time as hh:ss
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
 
-      const textToSpeak = `Hello, it's a beautiful day and wonderful night, time now is ${hh}:${ss}`;
+      // Prepare text strings
+      const englishText = `Hello, it's a beautiful day and wonderful night, time now is ${hh}:${ss}`;
+      const thaiText = `ขณะนี้เวลา ${hh}:${mm} นาฬิกา ค่ะ`;
 
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
+      const engVoice = getEnglishVoice();
+      const thVoice = getThaiVoice();
 
-      const selectedVoice = getTargetVoice();
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-        utterance.lang = selectedVoice.lang;
-        status.innerText = `Using Voice: ${selectedVoice.name} (${selectedVoice.lang})`;
+      // Display Status
+      let statusLog = [];
+      if (engVoice) statusLog.push(`English: ${engVoice.name} (${engVoice.lang})`);
+      else statusLog.push('English: Default');
+
+      if (thVoice) statusLog.push(`Thai: ${thVoice.name} (${thVoice.lang})`);
+      else statusLog.push('Thai: Default th-TH');
+
+      status.innerHTML = statusLog.join('<br>');
+
+      // Utterance 1: English
+      const engUtterance = new SpeechSynthesisUtterance(englishText);
+      engUtterance.rate = 0.9;
+      engUtterance.pitch = 1.0;
+      if (engVoice) {
+        engUtterance.voice = engVoice;
+        engUtterance.lang = engVoice.lang;
       } else {
-        utterance.lang = 'en-US';
-        status.innerText = 'Edd / Samantha not found, using default English voice';
+        engUtterance.lang = 'en-US';
       }
 
-      utterance.onstart = function() {
+      // Utterance 2: Thai
+      const thaiUtterance = new SpeechSynthesisUtterance(thaiText);
+      thaiUtterance.rate = 0.95;
+      thaiUtterance.pitch = 1.0;
+      if (thVoice) {
+        thaiUtterance.voice = thVoice;
+        thaiUtterance.lang = thVoice.lang;
+      } else {
+        thaiUtterance.lang = 'th-TH';
+      }
+
+      // Chain Event Handlers
+      engUtterance.onstart = function() {
         isSpeaking = true;
         btn.innerText = 'Stop';
         btn.classList.add('speaking');
       };
 
-      utterance.onend = function() {
+      engUtterance.onerror = function() {
         resetButton();
       };
 
-      utterance.onerror = function() {
+      thaiUtterance.onend = function() {
         resetButton();
       };
 
-      window.speechSynthesis.speak(utterance);
+      thaiUtterance.onerror = function() {
+        resetButton();
+      };
+
+      // Queue utterances sequentially
+      window.speechSynthesis.speak(engUtterance);
+      window.speechSynthesis.speak(thaiUtterance);
     }
 
     function resetButton() {
