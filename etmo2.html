@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.5.1</title>
+  <title>Exchange Times v2.5.2</title>
   <!-- hls.js Library for Streaming HLS Video -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -176,33 +176,6 @@
       object-fit: contain;
     }
 
-    /* Half-page Left Overlay for Mute/Unmute Toggle */
-    .audio-toggle-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 50%;
-      height: 100%;
-      z-index: 10;
-      cursor: pointer;
-      display: flex;
-      align-items: flex-start;
-      justify-content: flex-start;
-      padding: 16px;
-    }
-
-    .audio-status-badge {
-      background: rgba(0, 0, 0, 0.65);
-      color: #00d2ff;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: bold;
-      border: 1px solid rgba(0, 210, 255, 0.4);
-      pointer-events: none;
-      backdrop-filter: blur(4px);
-    }
-
     /* 📱 MOBILE / IPHONE OVERRIDE */
     @media screen and (max-width: 600px) {
       body { padding: 6px; }
@@ -276,7 +249,7 @@
   <div class="header-panel">
     <div class="header-top-row">
       <div class="app-title" onclick="toggleSpeechState()" title="Click to toggle Speech ON -> Speech TEST -> Speech OFF">
-        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.1</span>
+        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.2</span>
       </div>
 
       <!-- Right-aligned UTC Clock Position (Interactive Toggle) -->
@@ -323,9 +296,6 @@
 
   <!-- Video Stream Wrapper (PC/iPad View Only) -->
   <div id="videoContainer">
-    <div class="audio-toggle-overlay" onclick="toggleVideoAudio()" title="Click Left Half-screen to Mute/Unmute Audio">
-      <div class="audio-status-badge" id="audioStatusBadge">🔇 Muted (Click left side to unmute)</div>
-    </div>
     <video id="videoPlayer" autoplay playsinline muted></video>
   </div>
 
@@ -396,8 +366,9 @@
     let weatherLat = 13.78;
     let weatherLon = 100.36;
 
-    // Video Stream Variables
-    let allClosedSeconds = 0;
+    // Video Stream & Timing Control Variables (v2.5.2)
+    let allClosedSeconds = 0;       // Count seconds on Exchange view when all markets are closed
+    let videoActiveSeconds = 0;    // Count seconds on Video view when markets are open
     let isVideoModeActive = false;
     let hlsInstance = null;
     const bbcStreamUrl = "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8";
@@ -549,7 +520,7 @@
     }
 
     // ==========================================
-    // 🎥 VIDEO STREAM & DISPLAY TOGGLE
+    // 🎥 VIDEO STREAM & DISPLAY TOGGLE (v2.5.2)
     // ==========================================
     function startHlsStream() {
       const video = document.getElementById('videoPlayer');
@@ -596,33 +567,20 @@
         tableContainer.style.display = 'none';
         videoContainer.style.display = 'block';
         isVideoModeActive = true;
+        videoActiveSeconds = 0; // Reset video watch timer
         startHlsStream();
       } else {
         videoContainer.style.display = 'none';
         tableContainer.style.display = 'block';
         isVideoModeActive = false;
+        allClosedSeconds = 0; // Reset table wait timer
         stopHlsStream();
       }
     }
 
     function toggleMainDisplayView() {
       if (window.innerWidth <= 600) return;
-      // Reset timer to 0 every time user manually toggles back to Exchange Table
-      allClosedSeconds = 0;
       switchDisplayMode(!isVideoModeActive);
-    }
-
-    function toggleVideoAudio() {
-      const video = document.getElementById('videoPlayer');
-      const badge = document.getElementById('audioStatusBadge');
-      if (!video || !badge) return;
-
-      video.muted = !video.muted;
-      if (video.muted) {
-        badge.innerText = "🔇 Muted (Click left side to unmute)";
-      } else {
-        badge.innerText = "🔊 Audio On (Click left side to mute)";
-      }
     }
 
     function loadVoices() {
@@ -1283,26 +1241,31 @@
         }
       });
 
-      // ====================================================
-      // ⏱ ALL MARKETS CLOSED CHECK & AUTOMATIC VIDEO LOOP
-      // ====================================================
+      // ==========================================================
+      // ⏱ DYNAMIC MARKET STATUS & AUTOMATIC SWITCH LOGIC (v2.5.2)
+      // ==========================================================
       if (!anyMarketOpen) {
+        // 🛑 ALL MARKETS CLOSED MODE
         utcHeaderElem.classList.add('dimmed');
-        
-        // Count seconds only when viewing Exchange Table
+
         if (!isVideoModeActive) {
+          // Viewing Exchange Table -> Count up to 3 mins (180s) then switch to Video
           allClosedSeconds++;
           if (allClosedSeconds >= 180 && !isMobile) {
             switchDisplayMode(true);
           }
         }
       } else {
+        // 🟢 MARKET ACTIVE MODE
         utcHeaderElem.classList.remove('dimmed');
-        allClosedSeconds = 0;
+        allClosedSeconds = 0; // Reset closed timer
 
-        // Dynamic Real-time Check: If any market opens, force close Video mode & restore Exchange Table
-        if (isVideoModeActive && !isMobile) {
-          switchDisplayMode(false);
+        if (isVideoModeActive) {
+          // Viewing Video while Markets are Active -> Count up to 3 mins (180s) then switch back to Exchange Table
+          videoActiveSeconds++;
+          if (videoActiveSeconds >= 180 && !isMobile) {
+            switchDisplayMode(false);
+          }
         }
       }
 
