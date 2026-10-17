@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.3.9</title>
+  <title>Exchange Times v2.4.0</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -89,18 +89,6 @@
     .wx-val { color: #00d2ff; font-weight: 600; }
     .wx-sep { color: #a0aec0; margin: 0 2px; }
 
-    /* Speech Toggle Badge */
-    .speech-badge {
-      font-size: 11px;
-      font-weight: bold;
-      padding: 3px 8px;
-      border-radius: 4px;
-      text-transform: uppercase;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-    }
-    .speech-off { background: #4a5568; color: #cbd5e0; }
-    .speech-on { background: #2f855a; color: #68d391; }
-
     .mobile-weather-row { display: none; }
 
     /* Table Container Default (iPad / PC) */
@@ -122,7 +110,7 @@
     .zone-header { background: #1f2d3d !important; color: #00d2ff !important; font-weight: bold; font-size: 23px; text-transform: uppercase; padding: 5px 10px !important; }
     .zone-header a { color: #00d2ff !important; }
 
-    .ex-name-container { display: flex; align-items: center; gap: 10px; }
+    .ex-name-container { display: flex; align-items: center; gap: 4px; }
     .ex-name { font-weight: bold; font-size: 25px; }
     .ex-time { font-size: 23px; color: #aaa; font-weight: 500; }
     .blinking-name { animation: blink-red 1s infinite; color: #ff5252 !important; }
@@ -218,7 +206,7 @@
       
       .zone-header { font-size: 14px; padding: 3px 6px !important; }
       
-      .ex-name-container { gap: 5px; }
+      .ex-name-container { gap: 2px; }
       .ex-name { font-size: 14px; }
       .ex-time { font-size: 13px; }
 
@@ -246,9 +234,8 @@
   <!-- Top Navigation Panel -->
   <div class="header-panel">
     <div class="header-left">
-      <div class="app-title" onclick="toggleSpeechState()" title="Click to toggle Speech ON / Speech OFF">
-        Exchange Times <span style="font-size: 12px; color: #888;">v2.3.9</span>
-        <span id="speechBadge" class="speech-badge speech-off">Speech OFF</span>
+      <div class="app-title" onclick="toggleSpeechState()" title="Click to toggle Speech ON -> Speech TEST -> Speech OFF">
+        Exchange Times <span style="font-size: 12px; color: #888;">v2.4.0</span>
       </div>
     </div>
 
@@ -335,7 +322,8 @@
     ];
 
     let audioCtx = null;
-    let audioActive = false;
+    // 3-State Speech: 0 = OFF, 1 = ON, 2 = TEST
+    let speechState = 0; 
 
     const marketStateTracker = {}; 
     const flashingTimers = {};
@@ -492,25 +480,24 @@
       return enVoice || null;
     }
 
-    // Toggle Speech ON / Speech OFF via Clicking "Exchange Times"
+    // Toggle 3-State Speech via Clicking "Exchange Times" Loop: 0 (OFF) -> 1 (ON) -> 2 (TEST) -> 0
     function toggleSpeechState() {
       initAudioContext();
       if ('speechSynthesis' in window) {
         window.speechSynthesis.resume();
       }
 
-      audioActive = !audioActive;
-      const badge = document.getElementById('speechBadge');
+      speechState = (speechState + 1) % 3;
+      const v = getPreferredVoice();
 
-      if (audioActive) {
-        badge.innerText = "Speech ON";
-        badge.className = "speech-badge speech-on";
-        const v = getPreferredVoice();
+      if (speechState === 1) {
+        // Speech ON
         speakDirect(v && v.lang === 'th-TH' ? "ระบบเปิดเสียงพูดแล้วค่ะ" : "Speech is On");
+      } else if (speechState === 2) {
+        // Speech TEST (Scan Report)
+        triggerScanReport();
       } else {
-        badge.innerText = "Speech OFF";
-        badge.className = "speech-badge speech-off";
-        const v = getPreferredVoice();
+        // Speech OFF
         speakDirect(v && v.lang === 'th-TH' ? "ระบบปิดเสียงพูดแล้วค่ะ" : "Speech is Off");
       }
     }
@@ -527,7 +514,7 @@
     }
 
     function speakText(text, pauseBeforeMs = 0) {
-      if (!audioActive || !('speechSynthesis' in window)) return;
+      if (speechState === 0 || !('speechSynthesis' in window)) return; // Don't speak if OFF
 
       window.speechSynthesis.cancel();
 
@@ -546,6 +533,73 @@
 
         window.speechSynthesis.speak(utterance);
       }, pauseBeforeMs);
+    }
+
+    function triggerScanReport() {
+      const now = new Date();
+      const optionsDay = { weekday: 'long' };
+      const optionsDate = { month: 'long', day: 'numeric', year: 'numeric' };
+      
+      const dayStr = now.toLocaleDateString('en-US', optionsDay);
+      const dateStr = now.toLocaleDateString('en-US', optionsDate);
+      const timeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+      let openMarkets = [];
+
+      markets.forEach(m => {
+        const p = getZonedParts(now, m.timezone);
+        const localMin = parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10);
+        const dateStrIso = p.year + '-' + p.month + '-' + p.day;
+        
+        const thP = getZonedParts(now, "Asia/Bangkok");
+        const thDay = thP.weekday;
+        const isBkkWeekend = (thDay === 'Sat' || thDay === 'Sun');
+        const isWeekend = m.isFutures ? isBkkWeekend : (p.weekday === 'Sat' || p.weekday === 'Sun');
+        const isHoliday = m.holidays.indexOf(dateStrIso) !== -1;
+
+        if (!isWeekend && !isHoliday) {
+          const openMin = timeToMin(m.open);
+          const closeMin = timeToMin(m.close);
+          let isTrading = false;
+
+          if (closeMin > openMin) {
+            isTrading = (localMin >= openMin && localMin < closeMin);
+          } else {
+            isTrading = (localMin >= openMin || localMin < closeMin);
+          }
+
+          if (m.hasLunch) {
+            const lStart = timeToMin(m.lunchStart);
+            const lEnd = timeToMin(m.lunchEnd);
+            if (localMin >= lStart && localMin < lEnd) isTrading = false;
+          }
+
+          if (isTrading) {
+            openMarkets.push(`${m.name} ${m.city}`);
+          }
+        }
+      });
+
+      let intro = `Today is ${dayStr}, ${dateStr}. The time is now ${timeStr}. `;
+      if (currentWxState.temp !== "--") {
+        intro += `Temperature ${currentWxState.temp} degrees Celsius, ${currentWxState.condition}. `;
+      }
+
+      if (openMarkets.length > 0) {
+        intro += `The remaining open exchange `;
+        speakDirect(intro);
+        setTimeout(() => {
+          if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(openMarkets.join(", "));
+            const targetVoice = getPreferredVoice();
+            if (targetVoice) utterance.voice = targetVoice;
+            window.speechSynthesis.speak(utterance);
+          }
+        }, 1000);
+      } else {
+        intro += `All markets closed.`;
+        speakDirect(intro);
+      }
     }
 
     function playMorsePattern(patternString, callback) {
@@ -697,13 +751,14 @@
           </tr>
         `;
 
+        // TFEX Rows: Removed local time in TIME column, Added 2 spaces (&nbsp;&nbsp;) after LED dot
         if (m.code === 'TFEX') {
           tbody.innerHTML += `
             <tr id="row-TFEX-1M">
-              <td class="ex-time" id="time-TFEX-1M">--:--</td>
+              <td class="ex-time" id="time-TFEX-1M"></td>
               <td class="ex-name">
                 <div class="ex-name-container">
-                  <span class="led-dot led-red" id="led-TFEX-1M"></span>
+                  <span class="led-dot led-red" id="led-TFEX-1M"></span>&nbsp;&nbsp;
                   <span class="name-full">TFEX 1 นาที</span>
                   <span class="name-short">TFEX 1m</span>
                   <span class="candle-counter" id="candle-count-1m">--</span>
@@ -713,10 +768,10 @@
               <td class="tomorrow-normal" id="tomorrow-TFEX-1M"></td>
             </tr>
             <tr id="row-TFEX-5M">
-              <td class="ex-time" id="time-TFEX-5M">--:--</td>
+              <td class="ex-time" id="time-TFEX-5M"></td>
               <td class="ex-name">
                 <div class="ex-name-container">
-                  <span class="led-dot led-red" id="led-TFEX-5M"></span>
+                  <span class="led-dot led-red" id="led-TFEX-5M"></span>&nbsp;&nbsp;
                   <span class="name-full">TFEX 5 นาที</span>
                   <span class="name-short">TFEX 5m</span>
                   <span class="candle-counter" id="candle-count-5m">--</span>
@@ -1048,10 +1103,6 @@
 
       // TFEX SPECIAL CYCLES
       const tfexP = getZonedParts(now, "Asia/Bangkok");
-      const tfexHM = tfexP.hour + ':' + tfexP.minute;
-      document.getElementById('time-TFEX-1M').innerText = tfexHM;
-      document.getElementById('time-TFEX-5M').innerText = tfexHM;
-
       const currentSec = now.getSeconds();
       const currentMin = now.getMinutes();
 
