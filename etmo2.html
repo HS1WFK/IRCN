@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.4.2</title>
+  <title>Exchange Times v2.5.0</title>
+  <!-- hls.js Library for Streaming HLS Video -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -24,6 +26,8 @@
       margin-bottom: 8px; 
       gap: 4px; 
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+      position: relative;
+      z-index: 100;
     }
 
     .header-top-row {
@@ -47,7 +51,7 @@
     }
     .app-title:active { opacity: 0.7; }
 
-    /* Right-aligned UTC Clock on PC/iPad matched to 20px */
+    /* Right-aligned UTC Clock on PC/iPad */
     .pc-utc-container {
       display: block;
       margin-left: auto;
@@ -61,8 +65,14 @@
       font-family: monospace; 
       white-space: nowrap; 
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.3s ease;
     }
-    .utc-clock a { color: #ffffff; }
+    .utc-clock.dimmed {
+      color: #2e7d32 !important;
+      text-shadow: none;
+    }
 
     /* Sub-row containing WX Left-aligned (PC/iPad) */
     .header-sub-row {
@@ -148,6 +158,51 @@
     .name-full { display: inline; }
     .name-short { display: none; }
 
+    /* Video Player Container (PC/iPad Only) */
+    #videoContainer {
+      display: none;
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 100px);
+      background-color: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.8);
+    }
+
+    #videoPlayer {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Half-page Left Overlay for Mute/Unmute Toggle */
+    .audio-toggle-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 50%;
+      height: 100%;
+      z-index: 10;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 16px;
+    }
+
+    .audio-status-badge {
+      background: rgba(0, 0, 0, 0.65);
+      color: #00d2ff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      border: 1px solid rgba(0, 210, 255, 0.4);
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+
     /* 📱 MOBILE / IPHONE OVERRIDE */
     @media screen and (max-width: 600px) {
       body { padding: 6px; }
@@ -171,7 +226,6 @@
 
       .utc-clock { font-size: 15px !important; }
 
-      /* Mobile WX Row Styling with 1 space after icon */
       .mobile-weather-row { 
         display: block; 
         width: 100%;
@@ -206,6 +260,9 @@
 
       .name-full { display: none; }
       .name-short { display: inline; }
+      
+      /* Disable Video Mode on Mobile */
+      #videoContainer { display: none !important; }
     }
 
     .blinking-text { animation: blink-anim 1s infinite; }
@@ -219,14 +276,12 @@
   <div class="header-panel">
     <div class="header-top-row">
       <div class="app-title" onclick="toggleSpeechState()" title="Click to toggle Speech ON -> Speech TEST -> Speech OFF">
-        Exchange Times <span style="font-size: 12px; color: #888;">v2.4.2</span>
+        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.0</span>
       </div>
 
-      <!-- Right-aligned UTC Clock Position (PC & Mobile) -->
+      <!-- Right-aligned UTC Clock Position (Interactive Toggle) -->
       <div class="pc-utc-container">
-        <div class="utc-clock">
-          <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClockHeader">UTC --:--:--</a>
-        </div>
+        <div class="utc-clock" id="utcClockHeader" onclick="toggleMainDisplayView()" title="Click to toggle Exchange Table / Live Video">UTC --:--:--</div>
       </div>
     </div>
 
@@ -244,7 +299,7 @@
   </div>
 
   <!-- Market Table Wrapper -->
-  <div class="table-container">
+  <div class="table-container" id="exchangeTableContainer">
     <table class="market-table">
       <thead>
         <tr>
@@ -264,6 +319,14 @@
         <!-- Rows populated dynamically -->
       </tbody>
     </table>
+  </div>
+
+  <!-- Video Stream Wrapper (PC/iPad View Only) -->
+  <div id="videoContainer">
+    <div class="audio-toggle-overlay" onclick="toggleVideoAudio()" title="Click Left Half-screen to Mute/Unmute Audio">
+      <div class="audio-status-badge" id="audioStatusBadge">🔇 Muted (Click left side to unmute)</div>
+    </div>
+    <video id="videoPlayer" autoplay playsinline muted></video>
   </div>
 
   <script>
@@ -333,6 +396,13 @@
     let weatherLat = 13.78;
     let weatherLon = 100.36;
 
+    // Video Stream Variables (v2.5.0)
+    let allClosedTimer = null;
+    let allClosedSeconds = 0;
+    let isVideoModeActive = false;
+    let hlsInstance = null;
+    const bbcStreamUrl = "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8";
+
     const wmoMap = {
       0: { text: "Clear sky", iconDay: "☀️", iconNight: "🌙" },
       1: { text: "Mainly clear", iconDay: "🌤", iconNight: "🌙" },
@@ -372,7 +442,7 @@
       return "#e040fb";                     // 11+ Extreme: Bright Purple
     }
 
-    // Helper: White Arrow Trend HTML Generator (Matching UTC color)
+    // Helper: White Arrow Trend HTML Generator
     function getTrendArrowHtml(curr, prev) {
       if (curr === null || prev === null || isNaN(curr) || isNaN(prev) || curr === prev) return "";
       if (curr > prev) return `<span class="arrow-trend">⬆︎</span>`;
@@ -393,12 +463,10 @@
       } else {
         fetchWeather();
       }
-      // Refresh WX every 5 minutes (300,000 ms)
       setInterval(fetchWeather, 300000);
     }
 
     async function fetchWeather() {
-      // Show Sand-Clock indicator during load
       const pcElem = document.getElementById('weatherPC');
       const mobileElem = document.getElementById('weatherMobile');
       if (pcElem) pcElem.innerHTML = `<span class="wx-label">⏳ WX: Refreshing...</span>`;
@@ -462,7 +530,6 @@
       const uArr = getTrendArrowHtml(currentWxState.uv, p.uv);
       const pArr = getTrendArrowHtml(currentWxState.pressure, p.pressure);
 
-      // PC Display Format (Left-aligned, No UTC prefix)
       if (pcElem) {
         pcElem.innerHTML = `
           <span>${currentWxState.icon}</span> 
@@ -475,11 +542,85 @@
         `;
       }
 
-      // Mobile Display Format (1 space between Icon and WX)
       if (mobileElem) {
         mobileElem.innerHTML = `
           <span>${currentWxState.icon}</span> <span class="wx-label">WX:</span><span class="wx-val" style="color:${tempColor};">${tempVal}°C${tArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${huVal}%${hArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${wsVal}km/h(${currentWxState.windCardinal})${wArr}</span><span class="wx-sep">|</span><span class="wx-label">UV:</span><span class="wx-val" style="color:${uvColor};">${uvVal}${uArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${hpaVal}${pArr}</span>
         `;
+      }
+    }
+
+    // ==========================================
+    // 🎥 VIDEO STREAM & DISPLAY TOGGLE (v2.5.0)
+    // ==========================================
+    function startHlsStream() {
+      const video = document.getElementById('videoPlayer');
+      if (!video) return;
+
+      if (Hls.isSupported()) {
+        if (hlsInstance) {
+          hlsInstance.destroy();
+        }
+        hlsInstance = new Hls({ enableWorker: true });
+        hlsInstance.loadSource(bbcStreamUrl);
+        hlsInstance.attachMedia(video);
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+          video.play().catch(e => console.log("Autoplay blocked", e));
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = bbcStreamUrl;
+        video.addEventListener('loadedmetadata', function() {
+          video.play().catch(e => console.log("Autoplay blocked", e));
+        });
+      }
+    }
+
+    function stopHlsStream() {
+      const video = document.getElementById('videoPlayer');
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
+      if (video) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      }
+    }
+
+    function switchDisplayMode(showVideo) {
+      if (window.innerWidth <= 600) return; // Only for PC/iPad
+
+      const tableContainer = document.getElementById('exchangeTableContainer');
+      const videoContainer = document.getElementById('videoContainer');
+
+      if (showVideo) {
+        tableContainer.style.display = 'none';
+        videoContainer.style.display = 'block';
+        isVideoModeActive = true;
+        startHlsStream();
+      } else {
+        videoContainer.style.display = 'none';
+        tableContainer.style.display = 'block';
+        isVideoModeActive = false;
+        stopHlsStream();
+      }
+    }
+
+    function toggleMainDisplayView() {
+      if (window.innerWidth <= 600) return;
+      switchDisplayMode(!isVideoModeActive);
+    }
+
+    function toggleVideoAudio() {
+      const video = document.getElementById('videoPlayer');
+      const badge = document.getElementById('audioStatusBadge');
+      if (!video || !badge) return;
+
+      video.muted = !video.muted;
+      if (video.muted) {
+        badge.innerText = "🔇 Muted (Click left side to unmute)";
+      } else {
+        badge.innerText = "🔊 Audio On (Click left side to mute)";
       }
     }
 
@@ -706,7 +847,7 @@
       } catch(e) {
         return {
           hour: String(date.getHours()).padStart(2, '0'),
-          minute: String(date.getMinutes()).padStart(2, '0'),
+          minute: String(date.getSeconds()).padStart(2, '0'),
           second: String(date.getSeconds()).padStart(2, '0'),
           year: date.getFullYear(),
           month: String(date.getMonth() + 1).padStart(2, '0'),
@@ -884,7 +1025,8 @@
       const utcHM = now.toISOString().substr(11, 8);
       const utcText = 'UTC ' + utcHM;
 
-      document.getElementById('utcClockHeader').innerText = utcText;
+      const utcHeaderElem = document.getElementById('utcClockHeader');
+      utcHeaderElem.innerText = utcText;
 
       checkScheduledSpeechAnnouncements(now);
 
@@ -958,6 +1100,7 @@
       }
 
       let closing5mList = [];
+      let anyMarketOpen = false; // Flag to track if any market is open
 
       markets.forEach(m => {
         const p = getZonedParts(now, m.timezone);
@@ -1011,8 +1154,8 @@
         // Processing TFEX Row
         if (m.code === 'TFEX') {
           let currentState = 'CLOSED';
-          if (isTfexTrading) currentState = 'OPEN';
-          else if (isTfexBreak) currentState = 'BREAK';
+          if (isTfexTrading) { currentState = 'OPEN'; anyMarketOpen = true; }
+          else if (isTfexBreak) { currentState = 'BREAK'; }
 
           if (marketStateTracker[m.code].state !== 'UNKNOWN' && marketStateTracker[m.code].state !== currentState) {
             if (currentState === 'OPEN') playMorsePattern('---');
@@ -1084,8 +1227,8 @@
         }
 
         let currentState = 'CLOSED';
-        if (isTradingNow && !isLunch) currentState = 'OPEN';
-        else if (isLunch) currentState = 'BREAK';
+        if (isTradingNow && !isLunch) { currentState = 'OPEN'; anyMarketOpen = true; }
+        else if (isLunch) { currentState = 'BREAK'; }
 
         if (marketStateTracker[m.code].state !== 'UNKNOWN' && marketStateTracker[m.code].state !== currentState) {
           if (currentState === 'OPEN') playMorsePattern('---');
@@ -1138,6 +1281,29 @@
           }
         }
       });
+
+      // ====================================================
+      // ⏱ ALL MARKETS CLOSED CHECK & AUTOMATIC VIDEO TRIGGER
+      // ====================================================
+      if (!anyMarketOpen) {
+        // Dim UTC Clock
+        utcHeaderElem.classList.add('dimmed');
+        
+        allClosedSeconds++;
+        // Check 3 Minutes Threshold (180 Seconds)
+        if (allClosedSeconds >= 180 && !isVideoModeActive && !isMobile) {
+          switchDisplayMode(true);
+        }
+      } else {
+        // Restore UTC Brightness
+        utcHeaderElem.classList.remove('dimmed');
+        allClosedSeconds = 0;
+
+        // Dynamic Real-time Check: If any market opens, force closed Video mode & restore Exchange Table
+        if (isVideoModeActive && !isMobile) {
+          switchDisplayMode(false);
+        }
+      }
 
       // TFEX SPECIAL CYCLES
       const tfexP = getZonedParts(now, "Asia/Bangkok");
