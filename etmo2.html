@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.5.6</title>
+  <title>Exchange Times v2.5.7</title>
+  <!-- Leaflet CSS & JS for RainViewer Radar Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- hls.js Library for Streaming HLS Video -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -37,7 +40,7 @@
       width: 100%;
     }
 
-    /* Left-aligned Title & WX Text in Top Row */
+    /* Left-aligned Title */
     .app-title { 
       font-size: 31px; 
       font-weight: bold; 
@@ -51,6 +54,11 @@
       white-space: nowrap;
     }
     .app-title:active { opacity: 0.7; }
+    .app-title.title-blink { animation: blink-title 1.2s infinite ease-in-out; }
+    @keyframes blink-title {
+      0%, 100% { color: #00d2ff; opacity: 1; text-shadow: 0 0 12px #00d2ff; }
+      50% { color: #ffffff; opacity: 0.3; text-shadow: none; }
+    }
 
     /* Weather condition in Top Row (PC/iPad) */
     .top-wx-container {
@@ -64,11 +72,13 @@
       min-height: 30px;
     }
 
-    /* Right-aligned UTC Clock on PC/iPad */
-    .pc-utc-container {
-      display: block;
+    /* Right-aligned Header Controls Container */
+    .pc-right-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
       margin-left: auto;
-      padding-right: 1ch;
+      gap: 4px;
     }
 
     .utc-clock { 
@@ -81,10 +91,42 @@
       cursor: pointer;
       user-select: none;
       transition: color 0.3s ease;
+      padding-right: 2px;
     }
     .utc-clock.dimmed {
       color: #2e7d32 !important;
       text-shadow: none;
+    }
+
+    /* Control Buttons Under UTC Clock */
+    .header-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ctrl-btn {
+      background: #1a202c;
+      color: #a0aec0;
+      border: 1px solid #2d3748;
+      padding: 2px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .ctrl-btn:hover {
+      border-color: #00d2ff;
+      color: #ffffff;
+    }
+    .ctrl-btn.btn-active {
+      background: #2e7d32;
+      color: #ffffff;
+      border-color: #4caf50;
+      box-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
     }
 
     /* Sub-row containing WX Metrics Starting Left-aligned with Temp (PC/iPad) */
@@ -98,12 +140,9 @@
       min-height: 28px;
     }
 
-    /* Styling Gray Labels vs Dynamic Data Values */
     .wx-label { color: #a0aec0; }
     .wx-val { font-weight: 600; }
     .wx-sep { color: #a0aec0; margin: 0 2px; }
-
-    /* White Trend Arrows matching UTC Color */
     .arrow-trend { color: #ffffff; font-size: 0.85em; margin-left: 1px; font-weight: normal; }
 
     .mobile-weather-row { display: none; }
@@ -161,7 +200,7 @@
       overflow-x: auto; 
       overflow-y: auto; 
       -webkit-overflow-scrolling: touch; 
-      max-height: calc(100vh - 100px); 
+      max-height: calc(100vh - 110px); 
       border-radius: 8px;
       box-shadow: 0 8px 16px rgba(0,0,0,0.5);
     }
@@ -219,12 +258,12 @@
     .name-full { display: inline; }
     .name-short { display: none; }
 
-    /* Video Player Container (PC/iPad Only) */
-    #videoContainer {
+    /* Video Player & Map Containers (PC/iPad Only) */
+    #mediaDisplayWrapper {
       display: none;
       position: relative;
       width: 100%;
-      height: calc(100vh - 100px);
+      height: calc(100vh - 110px);
       background-color: #000;
       border-radius: 8px;
       overflow: hidden;
@@ -236,6 +275,22 @@
       height: 100%;
       object-fit: contain;
       cursor: pointer;
+      display: block;
+    }
+
+    #tmdRadarFrame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none;
+      background: #111;
+    }
+
+    #rainViewerMap {
+      width: 100%;
+      height: 100%;
+      display: none;
+      background: #111;
     }
 
     /* 📱 MOBILE / IPHONE OVERRIDE */
@@ -254,14 +309,18 @@
       .app-title { font-size: 19px !important; font-weight: 800 !important; }
 
       .top-wx-container { display: none; }
-
       .header-sub-row { display: none; }
 
-      .pc-utc-container {
-        padding-right: 1ch;
+      .pc-right-header {
+        align-items: flex-end;
       }
 
       .utc-clock { font-size: 15px !important; }
+
+      .ctrl-btn {
+        padding: 1px 6px;
+        font-size: 11px;
+      }
 
       .mobile-weather-row { 
         display: block; 
@@ -298,8 +357,7 @@
       .name-full { display: none; }
       .name-short { display: inline; }
       
-      /* Disable Video Mode on Mobile */
-      #videoContainer { display: none !important; }
+      #mediaDisplayWrapper { display: none !important; }
     }
 
     .blinking-text { animation: blink-anim 1s infinite; }
@@ -312,8 +370,9 @@
   <!-- Top Navigation Panel -->
   <div class="header-panel">
     <div class="header-top-row">
-      <div class="app-title" onclick="toggleSpeechState()" title="Click to toggle Speech ON -> Speech TEST -> Speech OFF">
-        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.6</span>
+      <!-- Title with Initial Blink Warning for iOS Sound Activation -->
+      <div class="app-title title-blink" id="appTitleHeader" onclick="toggleSpeechState()" title="Click to toggle Speech ON -> Speech TEST -> Speech OFF">
+        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.7</span>
       </div>
 
       <!-- Top Row WX Condition Display (PC/iPad) -->
@@ -321,9 +380,13 @@
         <span class="wx-label">⏳ WX: Loading...</span>
       </div>
 
-      <!-- Right-aligned UTC Clock Position (Interactive Toggle) -->
-      <div class="pc-utc-container">
+      <!-- Right-aligned UTC Clock & Control Buttons Container -->
+      <div class="pc-right-header">
         <div class="utc-clock" id="utcClockHeader" onclick="toggleMainDisplayView()" title="Click to toggle Exchange Table / Live Video">UTC --:--:--</div>
+        <div class="header-btn-group">
+          <button class="ctrl-btn" id="newsBtn" onclick="handleNewsBtnClick()">NEWS</button>
+          <button class="ctrl-btn" id="wxMapBtn" onclick="handleWxMapBtnClick()">WX Map</button>
+        </div>
       </div>
     </div>
 
@@ -363,9 +426,16 @@
     </table>
   </div>
 
-  <!-- Video Stream Wrapper (PC/iPad View Only) -->
-  <div id="videoContainer">
+  <!-- Media Display Wrapper (PC/iPad View Only) -->
+  <div id="mediaDisplayWrapper">
+    <!-- BBC Video Stream Player -->
     <video id="videoPlayer" autoplay playsinline muted onclick="toggleVideoMute()"></video>
+
+    <!-- TMD Thai Weather Radar Frame -->
+    <iframe id="tmdRadarFrame" src="https://weather.tmd.go.th/bkmLoop.php" title="TMD Thai Weather Radar"></iframe>
+
+    <!-- RainViewer Interactive Leaflet Radar Map -->
+    <div id="rainViewerMap"></div>
   </div>
 
   <script>
@@ -435,17 +505,21 @@
     let weatherLat = 13.78;
     let weatherLon = 100.36;
 
-    // Animation & Timing Schedule Variables (v2.5.6)
-    let animationSchedule = [2, 1, 2]; // Default 5 min schedule
+    // Animation & Timing Schedule Variables (v2.5.7)
+    let animationSchedule = [2, 1, 2];
     let scheduleIndex = 0;
     let nextAnimTimeout = null;
     let isAnimating = false;
 
-    // Video Stream Variables
+    // Video Stream & Display Media Variables
     let allClosedSeconds = 0;       
     let videoActiveSeconds = 0;    
     let isVideoModeActive = false;
+    let currentDisplayMode = "VIDEO"; // "VIDEO", "TMD", "RAINVIEWER"
+    let wxMapStateIndex = 0; // 0: Standby (WX Map), 1: TMD Radar, 2: RainViewer
     let hlsInstance = null;
+    let leafletMap = null;
+    let rainViewerRadarLayer = null;
     const bbcStreamUrl = "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8";
 
     // Complete WMO Weather Codes (0–99) Mapping
@@ -550,12 +624,11 @@
       }
     }
 
-    // Weather Fetching with 8s Timeout Fallback Guard
     async function fetchWeather() {
       generateRandomSchedule();
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8-second Timeout Limit
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       try {
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherLat}&longitude=${weatherLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=uv_index&timezone=auto`;
@@ -594,7 +667,7 @@
         renderWeatherUI();
       } catch (e) {
         console.warn("Weather fetch failed or timed out. Falling back to previous state.", e);
-        renderWeatherUI(); // Gracefully fallback to previous cached data
+        renderWeatherUI();
       } finally {
         scheduleNextAnimationStep();
       }
@@ -664,7 +737,6 @@
       const uArr = getTrendArrowHtml(currentWxState.uv, p.uv);
       const pArr = getTrendArrowHtml(currentWxState.pressure, p.pressure);
 
-      // Reset DOM structures for Animation
       topWxPC.innerHTML = `
         <span>${currentWxState.icon}</span>
         <span class="wx-label" style="margin-left: 4px;">WX:</span>
@@ -687,12 +759,10 @@
         </span>
       `;
 
-      // Phase 1: Cursor Blinks 3 times (3 seconds total)
       setTimeout(() => {
         const cursor = document.getElementById('dosCursor');
         if (cursor) cursor.classList.remove('blink');
 
-        // Phase 2: Smooth Fast Typewriter Text Effect
         const textElem = document.getElementById('typedWxText');
         const fullText = currentWxState.condition;
         let charIndex = 0;
@@ -703,14 +773,12 @@
             charIndex++;
           } else {
             clearInterval(typingInterval);
-            if (cursor) cursor.remove(); // Clear cursor after typing
+            if (cursor) cursor.remove();
 
-            // Phase 3: Temp Slide Up
             setTimeout(() => {
               const tempElem = document.getElementById('tempSlideElem');
               if (tempElem) tempElem.classList.add('slide-up');
 
-              // Phase 4: Metrics Fade In
               setTimeout(() => {
                 const fadeElem = document.getElementById('metricsFadeElem');
                 if (fadeElem) fadeElem.classList.add('fade-in');
@@ -721,22 +789,20 @@
 
             }, 200);
           }
-        }, 45); // Smooth & fast typing rate
+        }, 45);
 
       }, 3000);
     }
 
     // ==========================================
-    // 🎥 VIDEO STREAM & DISPLAY TOGGLE (v2.5.6)
+    // 🎥 MEDIA DISPLAY, MAPS & TOGGLES (v2.5.7)
     // ==========================================
     function startHlsStream() {
       const video = document.getElementById('videoPlayer');
       if (!video) return;
 
       if (Hls.isSupported()) {
-        if (hlsInstance) {
-          hlsInstance.destroy();
-        }
+        if (hlsInstance) hlsInstance.destroy();
         hlsInstance = new Hls({ enableWorker: true });
         hlsInstance.loadSource(bbcStreamUrl);
         hlsInstance.attachMedia(video);
@@ -770,30 +836,131 @@
       video.muted = !video.muted;
     }
 
-    function switchDisplayMode(showVideo) {
-      if (window.innerWidth <= 600) return; 
+    function initRainViewerMap() {
+      if (leafletMap) return;
+
+      const targetLat = (weatherLat && !isNaN(weatherLat)) ? parseFloat(weatherLat) : 13.75;
+      const targetLon = (weatherLon && !isNaN(weatherLon)) ? parseFloat(weatherLon) : 100.50;
+
+      leafletMap = L.map('rainViewerMap').setView([targetLat, targetLon], 6);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 18
+      }).addTo(leafletMap);
+
+      fetch("https://api.rainviewer.com/public/weather-maps.json")
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.radar && data.radar.past && data.radar.past.length > 0) {
+            const latestFrame = data.radar.past[data.radar.past.length - 1];
+            const tilePath = latestFrame.path;
+            
+            rainViewerRadarLayer = L.tileLayer(`https://tilecache.rainviewer.com${tilePath}/256/{z}/{x}/{y}/2/1_1.png`, {
+              opacity: 0.65,
+              maxZoom: 18
+            }).addTo(leafletMap);
+          }
+        })
+        .catch(err => console.error("RainViewer API Error", err));
+    }
+
+    function switchMediaSubView(mode) {
+      currentDisplayMode = mode;
+      const video = document.getElementById('videoPlayer');
+      const tmd = document.getElementById('tmdRadarFrame');
+      const rv = document.getElementById('rainViewerMap');
+
+      if (mode === "VIDEO") {
+        video.style.display = "block";
+        tmd.style.display = "none";
+        rv.style.display = "none";
+        startHlsStream();
+      } else if (mode === "TMD") {
+        stopHlsStream();
+        video.style.display = "none";
+        tmd.style.display = "block";
+        rv.style.display = "none";
+      } else if (mode === "RAINVIEWER") {
+        stopHlsStream();
+        video.style.display = "none";
+        tmd.style.display = "none";
+        rv.style.display = "block";
+        initRainViewerMap();
+        setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 200);
+      }
+    }
+
+    function switchDisplayMode(showContainer, subMode = "VIDEO") {
+      if (window.innerWidth <= 600) return;
 
       const tableContainer = document.getElementById('exchangeTableContainer');
-      const videoContainer = document.getElementById('videoContainer');
+      const mediaWrapper = document.getElementById('mediaDisplayWrapper');
+      const newsBtn = document.getElementById('newsBtn');
 
-      if (showVideo) {
+      if (showContainer) {
         tableContainer.style.display = 'none';
-        videoContainer.style.display = 'block';
+        mediaWrapper.style.display = 'block';
         isVideoModeActive = true;
-        videoActiveSeconds = 0; 
-        startHlsStream();
+        videoActiveSeconds = 0;
+        
+        if (subMode === "VIDEO") {
+          newsBtn.classList.add('btn-active');
+        } else {
+          newsBtn.classList.remove('btn-active');
+        }
+        switchMediaSubView(subMode);
       } else {
-        videoContainer.style.display = 'none';
+        mediaWrapper.style.display = 'none';
         tableContainer.style.display = 'block';
         isVideoModeActive = false;
-        allClosedSeconds = 0; 
+        allClosedSeconds = 0;
+        newsBtn.classList.remove('btn-active');
         stopHlsStream();
+      }
+    }
+
+    function handleNewsBtnClick() {
+      if (window.innerWidth <= 600) return;
+
+      // Reset WX Map State back to Standby
+      wxMapStateIndex = 0;
+      const wxMapBtn = document.getElementById('wxMapBtn');
+      wxMapBtn.innerText = "WX Map";
+      wxMapBtn.classList.remove('btn-active');
+
+      if (isVideoModeActive && currentDisplayMode === "VIDEO") {
+        switchDisplayMode(false);
+      } else {
+        switchDisplayMode(true, "VIDEO");
+      }
+    }
+
+    function handleWxMapBtnClick() {
+      if (window.innerWidth <= 600) return;
+
+      const wxMapBtn = document.getElementById('wxMapBtn');
+      const newsBtn = document.getElementById('newsBtn');
+      newsBtn.classList.remove('btn-active');
+
+      if (wxMapStateIndex === 0 || wxMapStateIndex === 2) {
+        // Switch to TMD Radar
+        wxMapStateIndex = 1;
+        wxMapBtn.innerText = "TMD Radar";
+        wxMapBtn.classList.add('btn-active');
+        switchDisplayMode(true, "TMD");
+      } else {
+        // Switch to RainViewer
+        wxMapStateIndex = 2;
+        wxMapBtn.innerText = "RainViewer";
+        wxMapBtn.classList.add('btn-active');
+        switchDisplayMode(true, "RAINVIEWER");
       }
     }
 
     function toggleMainDisplayView() {
       if (window.innerWidth <= 600) return;
-      switchDisplayMode(!isVideoModeActive);
+      handleNewsBtnClick();
     }
 
     function loadVoices() {
@@ -842,12 +1009,16 @@
 
       speechState = (speechState + 1) % 3;
       const v = getPreferredVoice();
+      const titleElem = document.getElementById('appTitleHeader');
 
       if (speechState === 1) {
+        if (titleElem) titleElem.classList.remove('title-blink'); // Stop blinking on activation
         speakDirect(v && v.lang === 'th-TH' ? "ระบบเปิดเสียงพูดแล้วค่ะ" : "Speech is On");
       } else if (speechState === 2) {
+        if (titleElem) titleElem.classList.remove('title-blink');
         triggerScanReport();
       } else {
+        if (titleElem) titleElem.classList.add('title-blink'); // Resume blinking when Speech is OFF
         speakDirect(v && v.lang === 'th-TH' ? "ระบบปิดเสียงพูดแล้วค่ะ" : "Speech is Off");
       }
     }
@@ -1457,16 +1628,16 @@
       // Dynamic Auto Switch View Logic
       if (!anyMarketOpen) {
         utcHeaderElem.classList.add('dimmed');
-        if (!isVideoModeActive) {
+        if (!isVideoModeActive && currentDisplayMode === "VIDEO") {
           allClosedSeconds++;
           if (allClosedSeconds >= 180 && !isMobile) {
-            switchDisplayMode(true);
+            switchDisplayMode(true, "VIDEO");
           }
         }
       } else {
         utcHeaderElem.classList.remove('dimmed');
         allClosedSeconds = 0; 
-        if (isVideoModeActive) {
+        if (isVideoModeActive && currentDisplayMode === "VIDEO") {
           videoActiveSeconds++;
           if (videoActiveSeconds >= 180 && !isMobile) {
             switchDisplayMode(false);
