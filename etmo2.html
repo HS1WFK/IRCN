@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.5.5</title>
+  <title>Exchange Times v2.5.6</title>
   <!-- hls.js Library for Streaming HLS Video -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -61,6 +61,7 @@
       color: #00d2ff;
       margin-left: 12px;
       white-space: nowrap;
+      min-height: 30px;
     }
 
     /* Right-aligned UTC Clock on PC/iPad */
@@ -94,6 +95,7 @@
       white-space: nowrap;
       width: 100%;
       font-family: monospace;
+      min-height: 28px;
     }
 
     /* Styling Gray Labels vs Dynamic Data Values */
@@ -105,6 +107,53 @@
     .arrow-trend { color: #ffffff; font-size: 0.85em; margin-left: 1px; font-weight: normal; }
 
     .mobile-weather-row { display: none; }
+
+    /* WX Animation CSS Effects */
+    .dos-cursor {
+      display: inline-block;
+      width: 10px;
+      height: 20px;
+      background-color: #00d2ff;
+      margin-left: 4px;
+      vertical-align: middle;
+      box-shadow: 0 0 6px #00d2ff;
+    }
+    .dos-cursor.blink {
+      animation: dos-blink 1s steps(2, start) infinite;
+    }
+    @keyframes dos-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* Temp Slide Up Container */
+    .temp-slide-wrapper {
+      display: inline-block;
+      overflow: hidden;
+      vertical-align: bottom;
+      height: 28px;
+      line-height: 28px;
+    }
+    .temp-slide-content {
+      display: inline-block;
+      transform: translateY(100%);
+      opacity: 0;
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease;
+    }
+    .temp-slide-content.slide-up {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Fade In for Sub Metrics */
+    .metrics-fade-group {
+      display: inline-block;
+      opacity: 0;
+      transition: opacity 0.6s ease-in-out;
+    }
+    .metrics-fade-group.fade-in {
+      opacity: 1;
+    }
 
     /* Table Container Default (iPad / PC) */
     .table-container { 
@@ -264,7 +313,7 @@
   <div class="header-panel">
     <div class="header-top-row">
       <div class="app-title" onclick="toggleSpeechState()" title="Click to toggle Speech ON -> Speech TEST -> Speech OFF">
-        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.5</span>
+        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.6</span>
       </div>
 
       <!-- Top Row WX Condition Display (PC/iPad) -->
@@ -369,7 +418,7 @@
     let announcedClosingMarkets = [];
     let lastTimeAnnouncedKey = "";
 
-    // Prev Weather State for White Arrow Trend Indicators
+    // Weather Data State
     let prevWxState = null;
     let currentWxState = {
       temp: null,
@@ -386,9 +435,15 @@
     let weatherLat = 13.78;
     let weatherLon = 100.36;
 
-    // Video Stream & Timing Control Variables (v2.5.5)
-    let allClosedSeconds = 0;       // Count seconds on Exchange view when all markets are closed
-    let videoActiveSeconds = 0;    // Count seconds on Video view when markets are open
+    // Animation & Timing Schedule Variables (v2.5.6)
+    let animationSchedule = [2, 1, 2]; // Default 5 min schedule
+    let scheduleIndex = 0;
+    let nextAnimTimeout = null;
+    let isAnimating = false;
+
+    // Video Stream Variables
+    let allClosedSeconds = 0;       
+    let videoActiveSeconds = 0;    
     let isVideoModeActive = false;
     let hlsInstance = null;
     const bbcStreamUrl = "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8";
@@ -430,31 +485,53 @@
       return dirs[Math.round(deg / 45) % 8];
     }
 
-    // Helper: Temperature Color Code (5 Standard Ranges)
     function getTempColor(temp) {
       if (temp === null || isNaN(temp)) return "#00d2ff";
-      if (temp <= 1) return "#78909c";      // <= 1°C: Blue-Gray
-      if (temp <= 11) return "#4dd0e1";     // 2-11°C: Cyan-Gray
-      if (temp <= 21) return "#ffeb3b";     // 12-21°C: Yellow
-      if (temp <= 31) return "#ff9800";     // 22-31°C: Orange
-      return "#ff1744";                     // >= 32°C: Red
+      if (temp <= 1) return "#78909c";      
+      if (temp <= 11) return "#4dd0e1";     
+      if (temp <= 21) return "#ffeb3b";     
+      if (temp <= 31) return "#ff9800";     
+      return "#ff1744";                     
     }
 
-    // Helper: UV Hazard Color Code (5 Standard Tiers)
     function getUvColor(uv) {
       if (uv === null || isNaN(uv)) return "#00d2ff";
-      if (uv <= 2) return "#00e676";        // 0-2 Low: Green
-      if (uv <= 5) return "#ffeb3b";        // 3-5 Moderate: Yellow
-      if (uv <= 7) return "#ff6b00";        // 6-7 High: Bright Orange
-      if (uv <= 10) return "#ff1744";       // 8-10 Very High: Bright Red
-      return "#e040fb";                     // 11+ Extreme: Bright Purple
+      if (uv <= 2) return "#00e676";        
+      if (uv <= 5) return "#ffeb3b";        
+      if (uv <= 7) return "#ff6b00";        
+      if (uv <= 10) return "#ff1744";       
+      return "#e040fb";                     
     }
 
-    // Helper: White Arrow Trend HTML Generator
     function getTrendArrowHtml(curr, prev) {
       if (curr === null || prev === null || isNaN(curr) || isNaN(prev) || curr === prev) return "";
       if (curr > prev) return `<span class="arrow-trend">⬆︎</span>`;
       return `<span class="arrow-trend">⬇︎</span>`;
+    }
+
+    function generateRandomSchedule() {
+      scheduleIndex = 0;
+      animationSchedule = [
+        Math.floor(Math.random() * 2) + 1,
+        Math.floor(Math.random() * 2) + 1,
+        Math.floor(Math.random() * 2) + 1
+      ];
+    }
+
+    function scheduleNextAnimationStep() {
+      if (nextAnimTimeout) clearTimeout(nextAnimTimeout);
+
+      if (scheduleIndex < animationSchedule.length) {
+        const minutesToWait = animationSchedule[scheduleIndex];
+        scheduleIndex++;
+        nextAnimTimeout = setTimeout(() => {
+          runWxAnimation(() => {
+            scheduleNextAnimationStep();
+          });
+        }, minutesToWait * 60 * 1000);
+      } else {
+        fetchWeather();
+      }
     }
 
     function initWeather() {
@@ -471,22 +548,21 @@
       } else {
         fetchWeather();
       }
-      setInterval(fetchWeather, 300000);
     }
 
+    // Weather Fetching with 8s Timeout Fallback Guard
     async function fetchWeather() {
-      const topWxPC = document.getElementById('topWxContainerPC');
-      const metricsPC = document.getElementById('weatherMetricsPC');
-      const mobileElem = document.getElementById('weatherMobile');
+      generateRandomSchedule();
 
-      if (topWxPC) topWxPC.innerHTML = `<span class="wx-label">⏳ WX: Refreshing...</span>`;
-      if (metricsPC) metricsPC.innerHTML = `<span class="wx-label">⏳ Loading Metrics...</span>`;
-      if (mobileElem) mobileElem.innerHTML = `<span>⏳</span> <span class="wx-label">WX: Refreshing...</span>`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8-second Timeout Limit
 
       try {
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherLat}&longitude=${weatherLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=uv_index&timezone=auto`;
-        const res = await fetch(url);
-        if (!res.ok) return;
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) throw new Error("API Error Response");
         const data = await res.json();
         
         const c = data.current;
@@ -517,14 +593,25 @@
 
         renderWeatherUI();
       } catch (e) {
-        console.error("Weather fetch failed", e);
+        console.warn("Weather fetch failed or timed out. Falling back to previous state.", e);
+        renderWeatherUI(); // Gracefully fallback to previous cached data
+      } finally {
+        scheduleNextAnimationStep();
       }
     }
 
     function renderWeatherUI() {
-      const topWxPC = document.getElementById('topWxContainerPC');
-      const metricsPC = document.getElementById('weatherMetricsPC');
+      const isMobile = window.innerWidth <= 600;
+      if (!isMobile) {
+        runWxAnimation();
+      } else {
+        renderMobileWeatherUI();
+      }
+    }
+
+    function renderMobileWeatherUI() {
       const mobileElem = document.getElementById('weatherMobile');
+      if (!mobileElem) return;
 
       const tempVal = currentWxState.temp !== null ? currentWxState.temp : "--";
       const huVal = currentWxState.humidity !== null ? currentWxState.humidity : "--";
@@ -542,36 +629,105 @@
       const uArr = getTrendArrowHtml(currentWxState.uv, p.uv);
       const pArr = getTrendArrowHtml(currentWxState.pressure, p.pressure);
 
-      // PC/iPad: Top Row (Icon WX: Condition)
-      if (topWxPC) {
-        topWxPC.innerHTML = `
-          <span>${currentWxState.icon}</span> 
-          <span class="wx-label" style="margin-left: 4px;">WX:</span>
-          <span class="wx-val" style="color:#00d2ff; margin-left: 4px;">${currentWxState.condition}</span>
-        `;
+      mobileElem.innerHTML = `
+        <span>${currentWxState.icon}</span> <span class="wx-label">WX:</span><span class="wx-val" style="color:${tempColor};">${tempVal}°C${tArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${huVal}%${hArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${wsVal}km/h(${currentWxState.windCardinal})${wArr}</span><span class="wx-sep">|</span><span class="wx-label">UV:</span><span class="wx-val" style="color:${uvColor};">${uvVal}${uArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${hpaVal}${pArr}</span>
+      `;
+    }
+
+    // WX Animation Engine (PC/iPad View)
+    function runWxAnimation(callback) {
+      if (isAnimating) return;
+      isAnimating = true;
+
+      const topWxPC = document.getElementById('topWxContainerPC');
+      const metricsPC = document.getElementById('weatherMetricsPC');
+
+      if (!topWxPC || !metricsPC) {
+        isAnimating = false;
+        if (callback) callback();
+        return;
       }
 
-      // PC/iPad: Sub-row (Left-aligned starting with Temp)
-      if (metricsPC) {
-        metricsPC.innerHTML = `
-          <span class="wx-label">Temp:</span><span class="wx-val" style="color:${tempColor};">${tempVal}°C${tArr}</span><span class="wx-sep">|</span>
+      const tempVal = currentWxState.temp !== null ? currentWxState.temp : "--";
+      const huVal = currentWxState.humidity !== null ? currentWxState.humidity : "--";
+      const wsVal = currentWxState.windSpeed !== null ? currentWxState.windSpeed : "--";
+      const uvVal = currentWxState.uv !== null ? currentWxState.uv : "--";
+      const hpaVal = currentWxState.pressure !== null ? currentWxState.pressure : "--";
+
+      const tempColor = getTempColor(currentWxState.temp);
+      const uvColor = getUvColor(currentWxState.uv);
+
+      const p = prevWxState || {};
+      const tArr = getTrendArrowHtml(currentWxState.temp, p.temp);
+      const hArr = getTrendArrowHtml(currentWxState.humidity, p.humidity);
+      const wArr = getTrendArrowHtml(currentWxState.windSpeed, p.windSpeed);
+      const uArr = getTrendArrowHtml(currentWxState.uv, p.uv);
+      const pArr = getTrendArrowHtml(currentWxState.pressure, p.pressure);
+
+      // Reset DOM structures for Animation
+      topWxPC.innerHTML = `
+        <span>${currentWxState.icon}</span>
+        <span class="wx-label" style="margin-left: 4px;">WX:</span>
+        <span class="wx-val" id="typedWxText" style="color:#00d2ff; margin-left: 4px;"></span>
+        <span class="dos-cursor blink" id="dosCursor"></span>
+      `;
+
+      metricsPC.innerHTML = `
+        <span class="temp-slide-wrapper">
+          <span class="temp-slide-content" id="tempSlideElem">
+            <span class="wx-label">Temp:</span><span class="wx-val" style="color:${tempColor};">${tempVal}°C${tArr}</span>
+          </span>
+        </span>
+        <span class="metrics-fade-group" id="metricsFadeElem">
+          <span class="wx-sep">|</span>
           <span class="wx-label">Hu:</span><span class="wx-val" style="color:#00d2ff;">${huVal}%${hArr}</span><span class="wx-sep">|</span>
           <span class="wx-label">WS:</span><span class="wx-val" style="color:#00d2ff;">${wsVal} km/h(${currentWxState.windCardinal})${wArr}</span><span class="wx-sep">|</span>
           <span class="wx-label">UV:</span><span class="wx-val" style="color:${uvColor};">${uvVal}${uArr}</span><span class="wx-sep">|</span>
           <span class="wx-label">hPa:</span><span class="wx-val" style="color:#00d2ff;">${hpaVal}${pArr}</span>
-        `;
-      }
+        </span>
+      `;
 
-      // iPhone/Mobile: Unchanged
-      if (mobileElem) {
-        mobileElem.innerHTML = `
-          <span>${currentWxState.icon}</span> <span class="wx-label">WX:</span><span class="wx-val" style="color:${tempColor};">${tempVal}°C${tArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${huVal}%${hArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${wsVal}km/h(${currentWxState.windCardinal})${wArr}</span><span class="wx-sep">|</span><span class="wx-label">UV:</span><span class="wx-val" style="color:${uvColor};">${uvVal}${uArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${hpaVal}${pArr}</span>
-        `;
-      }
+      // Phase 1: Cursor Blinks 3 times (3 seconds total)
+      setTimeout(() => {
+        const cursor = document.getElementById('dosCursor');
+        if (cursor) cursor.classList.remove('blink');
+
+        // Phase 2: Smooth Fast Typewriter Text Effect
+        const textElem = document.getElementById('typedWxText');
+        const fullText = currentWxState.condition;
+        let charIndex = 0;
+
+        const typingInterval = setInterval(() => {
+          if (charIndex < fullText.length) {
+            if (textElem) textElem.textContent += fullText.charAt(charIndex);
+            charIndex++;
+          } else {
+            clearInterval(typingInterval);
+            if (cursor) cursor.remove(); // Clear cursor after typing
+
+            // Phase 3: Temp Slide Up
+            setTimeout(() => {
+              const tempElem = document.getElementById('tempSlideElem');
+              if (tempElem) tempElem.classList.add('slide-up');
+
+              // Phase 4: Metrics Fade In
+              setTimeout(() => {
+                const fadeElem = document.getElementById('metricsFadeElem');
+                if (fadeElem) fadeElem.classList.add('fade-in');
+
+                isAnimating = false;
+                if (callback) callback();
+              }, 400);
+
+            }, 200);
+          }
+        }, 45); // Smooth & fast typing rate
+
+      }, 3000);
     }
 
     // ==========================================
-    // 🎥 VIDEO STREAM & DISPLAY TOGGLE (v2.5.5)
+    // 🎥 VIDEO STREAM & DISPLAY TOGGLE (v2.5.6)
     // ==========================================
     function startHlsStream() {
       const video = document.getElementById('videoPlayer');
@@ -615,7 +771,7 @@
     }
 
     function switchDisplayMode(showVideo) {
-      if (window.innerWidth <= 600) return; // Only for PC/iPad
+      if (window.innerWidth <= 600) return; 
 
       const tableContainer = document.getElementById('exchangeTableContainer');
       const videoContainer = document.getElementById('videoContainer');
@@ -624,13 +780,13 @@
         tableContainer.style.display = 'none';
         videoContainer.style.display = 'block';
         isVideoModeActive = true;
-        videoActiveSeconds = 0; // Reset video watch timer
+        videoActiveSeconds = 0; 
         startHlsStream();
       } else {
         videoContainer.style.display = 'none';
         tableContainer.style.display = 'block';
         isVideoModeActive = false;
-        allClosedSeconds = 0; // Reset table wait timer
+        allClosedSeconds = 0; 
         stopHlsStream();
       }
     }
@@ -1298,27 +1454,19 @@
         }
       });
 
-      // ==========================================================
-      // ⏱ DYNAMIC MARKET STATUS & AUTOMATIC SWITCH LOGIC (v2.5.5)
-      // ==========================================================
+      // Dynamic Auto Switch View Logic
       if (!anyMarketOpen) {
-        // 🛑 ALL MARKETS CLOSED MODE
         utcHeaderElem.classList.add('dimmed');
-
         if (!isVideoModeActive) {
-          // Viewing Exchange Table -> Count up to 3 mins (180s) then switch to Video
           allClosedSeconds++;
           if (allClosedSeconds >= 180 && !isMobile) {
             switchDisplayMode(true);
           }
         }
       } else {
-        // 🟢 MARKET ACTIVE MODE
         utcHeaderElem.classList.remove('dimmed');
-        allClosedSeconds = 0; // Reset closed timer
-
+        allClosedSeconds = 0; 
         if (isVideoModeActive) {
-          // Viewing Video while Markets are Active -> Count up to 3 mins (180s) then switch back to Exchange Table
           videoActiveSeconds++;
           if (videoActiveSeconds >= 180 && !isMobile) {
             switchDisplayMode(false);
@@ -1326,7 +1474,7 @@
         }
       }
 
-      // TFEX SPECIAL CYCLES
+      // TFEX Special Bar Cycles
       const tfexP = getZonedParts(now, "Asia/Bangkok");
       const currentSec = now.getSeconds();
       const currentMin = now.getMinutes();
