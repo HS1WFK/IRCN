@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.3.4</title>
+  <title>Exchange Times v2.3.5</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -125,7 +125,7 @@
   <!-- Top Navigation Panel -->
   <div class="header-panel">
     <div class="app-title" onclick="triggerScanReport()" title="Click to trigger market scan speech report">
-      Exchange Times <span style="font-size: 14px; color: #888;">v2.3.4</span>
+      Exchange Times <span style="font-size: 14px; color: #888;">v2.3.5</span>
     </div>
     <div class="utc-clock">
       <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClock">UTC: --:--:--</a>
@@ -207,6 +207,7 @@
     const flashingTimers = {};
     let cachedVoices = [];
     let announcedClosingMarkets = []; // Track 5-min closing alerts
+    let lastTimeAnnouncedKey = ""; // Prevent double time announcements
 
     function loadVoices() {
       if ('speechSynthesis' in window) {
@@ -231,26 +232,21 @@
       }
     }
 
-    // Targeted Voice Selection: Samantha (Enhanced/New iPad) vs Kanya (Thai/Old iPad Gen 5)
     function getPreferredVoice() {
       if (cachedVoices.length === 0 && 'speechSynthesis' in window) {
         cachedVoices = window.speechSynthesis.getVoices();
       }
       
-      // 1. Target Samantha (Enhanced) or Samantha (English)
       let samantha = cachedVoices.find(v => v.name.includes('Samantha'));
       if (samantha) return samantha;
 
-      // 2. Target Kanya (Thai for iPad Gen 5)
       let kanya = cachedVoices.find(v => v.name.includes('Kanya') || v.lang === 'th-TH');
       if (kanya) return kanya;
 
-      // 3. Fallback to English Voice
       let enVoice = cachedVoices.find(v => v.lang.startsWith('en'));
       return enVoice || null;
     }
 
-    // Speech Toggle Button Logic
     function toggleAudio() {
       initAudioContext();
       if ('speechSynthesis' in window) {
@@ -284,7 +280,7 @@
     function speakText(text, pauseBeforeMs = 0) {
       if (!audioActive || !('speechSynthesis' in window)) return;
 
-      window.speechSynthesis.cancel(); // Clear queue
+      window.speechSynthesis.cancel();
 
       setTimeout(() => {
         const utterance = new SpeechSynthesisUtterance(text);
@@ -303,10 +299,9 @@
       }, pauseBeforeMs);
     }
 
-    // Full Market Scan Speech Report on Title Click
     function triggerScanReport() {
       if (!audioActive) {
-        toggleAudio(); // Automatically activate speech if OFF
+        toggleAudio();
       }
 
       const now = new Date();
@@ -324,7 +319,6 @@
         const localMin = parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10);
         const dateStrIso = p.year + '-' + p.month + '-' + p.day;
         
-        // Accurate Weekend Check for Global Assets / Futures
         const thP = getZonedParts(now, "Asia/Bangkok");
         const thDay = thP.weekday;
         const isBkkWeekend = (thDay === 'Sat' || thDay === 'Sun');
@@ -359,7 +353,6 @@
       if (openMarkets.length > 0) {
         intro += `The remaining open exchange `;
         speakText(intro);
-        // Pause 1 sec before speaking open assets list
         setTimeout(() => {
           if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(openMarkets.join(", "));
@@ -374,7 +367,6 @@
       }
     }
 
-    // Morse Code Engine
     function playMorsePattern(patternString, callback) {
       initAudioContext();
       if (!audioCtx || audioCtx.state !== 'running') {
@@ -559,6 +551,64 @@
 
     let lastTfex1mSec = -1;
 
+    // Check Scheduled Time Announcements (v2.3.5)
+    function checkScheduledSpeechAnnouncements(now) {
+      const thP = getZonedParts(now, "Asia/Bangkok");
+      const currentHour = parseInt(thP.hour, 10);
+      const currentMin = parseInt(thP.minute, 10);
+      const currentSec = parseInt(thP.second, 10);
+      const isWeekend = (thP.weekday === 'Sat' || thP.weekday === 'Sun');
+
+      // Trigger strictly at second 55
+      if (currentSec !== 55) return;
+
+      let shouldAnnounce = false;
+      let targetHour = currentHour;
+      let targetMin = currentMin + 1; // Time to speak is the next minute boundary
+
+      if (targetMin === 60) {
+        targetMin = 0;
+        targetHour = (targetHour + 1) % 24;
+      }
+
+      if (!isWeekend) {
+        // Weekday Logic
+        if (currentHour >= 9 && currentHour < 17) {
+          // 09:00 - 17:00: Every 15 mins (14:55, 29:55, 44:55, 59:55)
+          if (currentMin === 14 || currentMin === 29 || currentMin === 44 || currentMin === 59) {
+            shouldAnnounce = true;
+          }
+        } else if (currentHour >= 17 && currentHour < 20) {
+          // 17:00 - 20:00: Every hour at hh:59:55 (stops after 20:00)
+          if (currentMin === 59) {
+            shouldAnnounce = true;
+          }
+        }
+      } else {
+        // Weekend Logic
+        if (currentHour >= 9 && currentHour < 20) {
+          // 09:00 - 20:00: Every hour at hh:59:55 (stops after 20:00)
+          if (currentMin === 59) {
+            shouldAnnounce = true;
+          }
+        }
+      }
+
+      if (shouldAnnounce) {
+        const announceKey = `${targetHour}:${targetMin}`;
+        if (lastTimeAnnouncedKey !== announceKey) {
+          lastTimeAnnouncedKey = announceKey;
+          
+          // Play Tone 'T' (-) first, then announce time
+          playMorsePattern('-', () => {
+            const hStr = String(targetHour).padStart(2, '0');
+            const mStr = String(targetMin).padStart(2, '0');
+            speakText(`The time is now ${hStr}:${mStr}`);
+          });
+        }
+      }
+    }
+
     function updateEngine() {
       const now = new Date();
       const isMobile = window.innerWidth <= 600;
@@ -568,6 +618,9 @@
 
       const muteEx = !document.getElementById('muteExchange').checked;
       const muteTfex = !document.getElementById('muteTFEX').checked;
+
+      // Check Periodic Time Speech Alerts
+      checkScheduledSpeechAnnouncements(now);
 
       const thP = getZonedParts(now, "Asia/Bangkok");
       const thMin = parseInt(thP.hour, 10) * 60 + parseInt(thP.minute, 10);
@@ -664,7 +717,7 @@
           tomCell.className = "tomorrow-normal";
         }
 
-        // Today Weekend Check (Special Logic for Global Asset Futures)
+        // Today Weekend Check
         const isBkkWeekend = (thP.weekday === 'Sat' || thP.weekday === 'Sun');
         const isTodayWeekend = m.isFutures ? isBkkWeekend : (p.weekday === 'Sat' || p.weekday === 'Sun');
         const isTodayHoliday = m.holidays.indexOf(dateStr) !== -1;
@@ -674,7 +727,6 @@
           marketStateTracker[m.code] = { state: 'UNKNOWN' };
         }
 
-        // Mobile Responsive CLOSED Format
         const closedWeekendText = isMobile ? 'CLOSED' : 'CLOSED, weekend';
         const closedHolidayText = isMobile ? 'CLOSED' : 'CLOSED, holiday';
 
@@ -719,7 +771,6 @@
             `;
             setLedState(m.code, 'green');
 
-            // 5-Min Closing Warning check
             if (remainingTfexMinutes <= 5 && remainingTfexMinutes > 0 && !announcedClosingMarkets.includes("TFEX")) {
               closing5mList.push("TFEX");
               announcedClosingMarkets.push("TFEX");
@@ -818,7 +869,6 @@
             `;
             setLedState(m.code, 'green');
 
-            // 5-Min Closing Warning check
             if (remaining <= 5 && remaining > 0 && !announcedClosingMarkets.includes(m.name)) {
               closing5mList.push(m.name);
               announcedClosingMarkets.push(m.name);
@@ -840,7 +890,7 @@
       const tfex5Cell = document.getElementById('status-TFEX-5M');
 
       if (isTfexBreak || !isTfexTrading) {
-        tfex1Cell.innerHTML = ''; // Leave blank for TFEX 1m/5m during break/closed
+        tfex1Cell.innerHTML = '';
         tfex5Cell.innerHTML = '';
         setLedState('TFEX-1M', isTfexBreak ? 'orange' : 'red');
         setLedState('TFEX-5M', isTfexBreak ? 'orange' : 'red');
