@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.5.0</title>
+  <title>Exchange Times v2.5.1</title>
   <!-- hls.js Library for Streaming HLS Video -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -276,7 +276,7 @@
   <div class="header-panel">
     <div class="header-top-row">
       <div class="app-title" onclick="toggleSpeechState()" title="Click to toggle Speech ON -> Speech TEST -> Speech OFF">
-        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.0</span>
+        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.1</span>
       </div>
 
       <!-- Right-aligned UTC Clock Position (Interactive Toggle) -->
@@ -396,8 +396,7 @@
     let weatherLat = 13.78;
     let weatherLon = 100.36;
 
-    // Video Stream Variables (v2.5.0)
-    let allClosedTimer = null;
+    // Video Stream Variables
     let allClosedSeconds = 0;
     let isVideoModeActive = false;
     let hlsInstance = null;
@@ -550,7 +549,7 @@
     }
 
     // ==========================================
-    // 🎥 VIDEO STREAM & DISPLAY TOGGLE (v2.5.0)
+    // 🎥 VIDEO STREAM & DISPLAY TOGGLE
     // ==========================================
     function startHlsStream() {
       const video = document.getElementById('videoPlayer');
@@ -608,6 +607,8 @@
 
     function toggleMainDisplayView() {
       if (window.innerWidth <= 600) return;
+      // Reset timer to 0 every time user manually toggles back to Exchange Table
+      allClosedSeconds = 0;
       switchDisplayMode(!isVideoModeActive);
     }
 
@@ -847,7 +848,7 @@
       } catch(e) {
         return {
           hour: String(date.getHours()).padStart(2, '0'),
-          minute: String(date.getSeconds()).padStart(2, '0'),
+          minute: String(date.getMinutes()).padStart(2, '0'),
           second: String(date.getSeconds()).padStart(2, '0'),
           year: date.getFullYear(),
           month: String(date.getMonth() + 1).padStart(2, '0'),
@@ -1100,7 +1101,7 @@
       }
 
       let closing5mList = [];
-      let anyMarketOpen = false; // Flag to track if any market is open
+      let anyMarketOpen = false;
 
       markets.forEach(m => {
         const p = getZonedParts(now, m.timezone);
@@ -1283,23 +1284,23 @@
       });
 
       // ====================================================
-      // ⏱ ALL MARKETS CLOSED CHECK & AUTOMATIC VIDEO TRIGGER
+      // ⏱ ALL MARKETS CLOSED CHECK & AUTOMATIC VIDEO LOOP
       // ====================================================
       if (!anyMarketOpen) {
-        // Dim UTC Clock
         utcHeaderElem.classList.add('dimmed');
         
-        allClosedSeconds++;
-        // Check 3 Minutes Threshold (180 Seconds)
-        if (allClosedSeconds >= 180 && !isVideoModeActive && !isMobile) {
-          switchDisplayMode(true);
+        // Count seconds only when viewing Exchange Table
+        if (!isVideoModeActive) {
+          allClosedSeconds++;
+          if (allClosedSeconds >= 180 && !isMobile) {
+            switchDisplayMode(true);
+          }
         }
       } else {
-        // Restore UTC Brightness
         utcHeaderElem.classList.remove('dimmed');
         allClosedSeconds = 0;
 
-        // Dynamic Real-time Check: If any market opens, force closed Video mode & restore Exchange Table
+        // Dynamic Real-time Check: If any market opens, force close Video mode & restore Exchange Table
         if (isVideoModeActive && !isMobile) {
           switchDisplayMode(false);
         }
