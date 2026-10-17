@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.3.3</title>
+  <title>Exchange Times v2.3.4</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -125,7 +125,7 @@
   <!-- Top Navigation Panel -->
   <div class="header-panel">
     <div class="app-title" onclick="triggerScanReport()" title="Click to trigger market scan speech report">
-      Exchange Times <span style="font-size: 14px; color: #888;">v2.3.3</span>
+      Exchange Times <span style="font-size: 14px; color: #888;">v2.3.4</span>
     </div>
     <div class="utc-clock">
       <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClock">UTC: --:--:--</a>
@@ -147,7 +147,7 @@
             <a href="https://www.investing.com/indices/major-indices" target="_blank" rel="noopener">EXCHANGE / ASSET</a>
           </th>
           <th style="width: 36%;">
-            <a href="https://www.investing.com/news" target="_blank" rel="noopener">STATUS/NEWS</a>
+            <a href="https://www.investing.com/news" target="_blank" rel="noopener">STATUS</a>
           </th>
           <th style="width: 15%;">
             <a href="https://www.investing.com/economic-calendar" target="_blank" rel="noopener">TOMORROW</a>
@@ -191,11 +191,11 @@
 
       // GLOBAL ASSETS
       { zone: "GLOBAL ASSETS", code: "TBMA", shortName: "TBMA (BKK)", name: "TBMA - Bonds (BKK)", city: "Bangkok", link: "https://hs1wfk.github.io/IRCN/etmo.html", timezone: "Asia/Bangkok", open: "09:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
-      { zone: "GLOBAL ASSETS", code: "US10Y", shortName: "US10Y (CHI)", name: "US 10 Year Bond", city: "Chicago", link: "https://www.investing.com/rates-bonds/u.s.-10-year-bond-yield", timezone: "America/Chicago", open: "17:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "DXY", shortName: "DXY (NYC)", name: "DXY - (NYC)", city: "New York", link: "https://www.investing.com/currencies/us-dollar-index", timezone: "America/New_York", open: "20:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "BRENT", shortName: "Brent (LON)", name: "Brent - Crude Oil (LON)", city: "London", link: "https://www.investing.com/commodities/brent-oil", timezone: "Europe/London", open: "01:00", close: "23:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "GOLD", shortName: "Gold (NYC)", name: "Gold - Spot (NYC)", city: "New York", link: "https://www.investing.com/commodities/gold", timezone: "America/New_York", open: "18:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "VIX", shortName: "VIX (CHI)", name: "VIX - (CHI)", city: "Chicago", link: "https://www.investing.com/indices/volatility-s-p-500", timezone: "America/Chicago", open: "02:15", close: "16:15", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "US10Y", shortName: "US10Y (CHI)", name: "US 10 Year Bond", city: "Chicago", link: "https://www.investing.com/rates-bonds/u.s.-10-year-bond-yield", timezone: "America/Chicago", open: "17:00", close: "16:00", hasLunch: false, isFutures: true, holidays: ["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "DXY", shortName: "DXY (NYC)", name: "DXY - (NYC)", city: "New York", link: "https://www.investing.com/currencies/us-dollar-index", timezone: "America/New_York", open: "20:00", close: "17:00", hasLunch: false, isFutures: true, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "BRENT", shortName: "Brent (LON)", name: "Brent - Crude Oil (LON)", city: "London", link: "https://www.investing.com/commodities/brent-oil", timezone: "Europe/London", open: "01:00", close: "23:00", hasLunch: false, isFutures: true, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "GOLD", shortName: "Gold (NYC)", name: "Gold - Spot (NYC)", city: "New York", link: "https://www.investing.com/commodities/gold", timezone: "America/New_York", open: "18:00", close: "17:00", hasLunch: false, isFutures: true, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "VIX", shortName: "VIX (CHI)", name: "VIX - (CHI)", city: "Chicago", link: "https://www.investing.com/indices/volatility-s-p-500", timezone: "America/Chicago", open: "02:15", close: "16:15", hasLunch: false, isFutures: true, holidays: ["2026-01-01","2026-12-25"] },
       { zone: "GLOBAL ASSETS", code: "FOREX", shortName: "FOREX (LON)", name: "FOREX - Global FX (LON)", city: "London", link: "https://www.investing.com/currencies/streaming-forex-rates-majors", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
       { zone: "GLOBAL ASSETS", code: "MSCI_FX", shortName: "MSCI FX (LON)", name: "MSCI FX (LON)", city: "London", link: "https://www.investing.com/indices/msci-intl-em-currency", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
       { zone: "GLOBAL ASSETS", code: "MSCI_WORLD", shortName: "MSCI World (LON)", name: "MSCI World Index (LON)", city: "London", link: "https://www.investing.com/indices/msci-world", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] }
@@ -323,7 +323,12 @@
         const p = getZonedParts(now, m.timezone);
         const localMin = parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10);
         const dateStrIso = p.year + '-' + p.month + '-' + p.day;
-        const isWeekend = (p.weekday === 'Sat' || p.weekday === 'Sun');
+        
+        // Accurate Weekend Check for Global Assets / Futures
+        const thP = getZonedParts(now, "Asia/Bangkok");
+        const thDay = thP.weekday;
+        const isBkkWeekend = (thDay === 'Sat' || thDay === 'Sun');
+        const isWeekend = m.isFutures ? isBkkWeekend : (p.weekday === 'Sat' || p.weekday === 'Sun');
         const isHoliday = m.holidays.indexOf(dateStrIso) !== -1;
 
         if (!isWeekend && !isHoliday) {
@@ -659,8 +664,9 @@
           tomCell.className = "tomorrow-normal";
         }
 
-        // Today Check
-        const isTodayWeekend = (p.weekday === 'Sat' || p.weekday === 'Sun');
+        // Today Weekend Check (Special Logic for Global Asset Futures)
+        const isBkkWeekend = (thP.weekday === 'Sat' || thP.weekday === 'Sun');
+        const isTodayWeekend = m.isFutures ? isBkkWeekend : (p.weekday === 'Sat' || p.weekday === 'Sun');
         const isTodayHoliday = m.holidays.indexOf(dateStr) !== -1;
         const statusCell = document.getElementById('status-' + m.code);
 
@@ -668,14 +674,17 @@
           marketStateTracker[m.code] = { state: 'UNKNOWN' };
         }
 
-        // CLOSED Status Text Formatting with Single Space
+        // Mobile Responsive CLOSED Format
+        const closedWeekendText = isMobile ? 'CLOSED' : 'CLOSED, weekend';
+        const closedHolidayText = isMobile ? 'CLOSED' : 'CLOSED, holiday';
+
         if (isTodayWeekend) {
-          statusCell.innerHTML = '<span class="status-close-dark">CLOSED, weekend</span>';
+          statusCell.innerHTML = `<span class="status-close-dark">${closedWeekendText}</span>`;
           setLedState(m.code, 'red');
           marketStateTracker[m.code].state = 'CLOSED';
           return;
         } else if (isTodayHoliday) {
-          statusCell.innerHTML = '<span class="status-close-dark">CLOSED, holiday</span>';
+          statusCell.innerHTML = `<span class="status-close-dark">${closedHolidayText}</span>`;
           setLedState(m.code, 'red');
           marketStateTracker[m.code].state = 'CLOSED';
           return;
