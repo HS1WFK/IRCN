@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.3.2</title>
+  <title>Exchange Times v2.3.3</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -124,14 +124,14 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title" onclick="runSoundTest()" title="Click to test Morse sound sequence and voice time announcement">
-      Exchange Times <span style="font-size: 14px; color: #888;">v2.3.2</span>
+    <div class="app-title" onclick="triggerScanReport()" title="Click to trigger market scan speech report">
+      Exchange Times <span style="font-size: 14px; color: #888;">v2.3.3</span>
     </div>
     <div class="utc-clock">
       <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClock">UTC: --:--:--</a>
     </div>
     <div class="controls">
-      <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
+      <button id="btnAudio" class="audio-btn" onclick="toggleAudio()">Speech OFF</button>
       <label><input type="checkbox" id="muteExchange" checked> Exchange</label>
       <label><input type="checkbox" id="muteTFEX" checked> TFEX</label>
     </div>
@@ -169,44 +169,45 @@
 
     const markets = [
       // THAILAND
-      { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", link: "", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:00", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
-      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX S50/GO/FX", link: "", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", city: "Bangkok", link: "", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:00", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX S50/GO/FX", city: "Bangkok", link: "", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
 
       // ASIA
-      { zone: "ASIA", code: "ASX", shortName: "ASX", name: "Australia ASX", link: "https://www.investing.com/indices/aus-200", timezone: "Australia/Sydney", open: "10:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-26","2026-04-03","2026-04-06","2026-04-25","2026-06-08","2026-12-25","2026-12-26"] },
-      { zone: "ASIA", code: "TSE", shortName: "NIKKEI", name: "NIKKEI (Tokyo)", link: "https://www.investing.com/indices/japan-ni225", timezone: "Asia/Tokyo", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "12:30", holidays: ["2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-07-20","2026-09-21","2026-09-23","2026-10-12","2026-11-03","2026-11-23"] },
-      { zone: "ASIA", code: "KRX", shortName: "KOSPI", name: "KOSPI (Korea)", link: "https://www.investing.com/indices/kospi", timezone: "Asia/Seoul", open: "09:00", close: "15:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-05-05","2026-05-24","2026-06-06","2026-08-15","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-09","2026-12-25","2026-12-31"] },
-      { zone: "ASIA", code: "HKEX", shortName: "HSI", name: "HANG SENG (HKG)", link: "https://www.investing.com/indices/hang-sen-40", timezone: "Asia/Hong_Kong", open: "09:30", close: "16:00", hasLunch: true, lunchStart: "12:00", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-17","2026-02-18","2026-02-19","2026-04-03","2026-04-06","2026-04-30","2026-05-01","2026-05-25","2026-07-01","2026-09-26","2026-10-01","2026-10-19","2026-12-25","2026-12-26"] },
-      { zone: "ASIA", code: "SSE", shortName: "SSE", name: "Shanghai (China)", link: "https://www.investing.com/indices/shanghai-composite", timezone: "Asia/Shanghai", open: "09:30", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-01","2026-10-02","2026-10-05","2026-10-06","2026-10-07"] },
-      { zone: "ASIA", code: "TWSE", shortName: "TWSE", name: "Taiwan Weighted", link: "https://www.investing.com/indices/taiwan-weighted", timezone: "Asia/Taipei", open: "09:00", close: "13:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-28","2026-04-04","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-10"] },
-      { zone: "ASIA", code: "HOSE", shortName: "HOSE", name: "Vietnam", link: "https://www.investing.com/indices/vn", timezone: "Asia/Ho_Chi_Minh", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-26","2026-04-30","2026-05-01","2026-09-02"] },
+      { zone: "ASIA", code: "ASX", shortName: "ASX", name: "Australia ASX", city: "Sydney", link: "https://www.investing.com/indices/aus-200", timezone: "Australia/Sydney", open: "10:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-26","2026-04-03","2026-04-06","2026-04-25","2026-06-08","2026-12-25","2026-12-26"] },
+      { zone: "ASIA", code: "TSE", shortName: "NIKKEI", name: "NIKKEI (Tokyo)", city: "Tokyo", link: "https://www.investing.com/indices/japan-ni225", timezone: "Asia/Tokyo", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "12:30", holidays: ["2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-07-20","2026-09-21","2026-09-23","2026-10-12","2026-11-03","2026-11-23"] },
+      { zone: "ASIA", code: "KRX", shortName: "KOSPI", name: "KOSPI (Korea)", city: "Seoul", link: "https://www.investing.com/indices/kospi", timezone: "Asia/Seoul", open: "09:00", close: "15:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-05-05","2026-05-24","2026-06-06","2026-08-15","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-09","2026-12-25","2026-12-31"] },
+      { zone: "ASIA", code: "HKEX", shortName: "HSI", name: "HANG SENG (HKG)", city: "Hong Kong", link: "https://www.investing.com/indices/hang-sen-40", timezone: "Asia/Hong_Kong", open: "09:30", close: "16:00", hasLunch: true, lunchStart: "12:00", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-17","2026-02-18","2026-02-19","2026-04-03","2026-04-06","2026-04-30","2026-05-01","2026-05-25","2026-07-01","2026-09-26","2026-10-01","2026-10-19","2026-12-25","2026-12-26"] },
+      { zone: "ASIA", code: "SSE", shortName: "SSE", name: "Shanghai (China)", city: "Shanghai", link: "https://www.investing.com/indices/shanghai-composite", timezone: "Asia/Shanghai", open: "09:30", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-01","2026-10-02","2026-10-05","2026-10-06","2026-10-07"] },
+      { zone: "ASIA", code: "TWSE", shortName: "TWSE", name: "Taiwan Weighted", city: "Taipei", link: "https://www.investing.com/indices/taiwan-weighted", timezone: "Asia/Taipei", open: "09:00", close: "13:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-28","2026-04-04","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-10"] },
+      { zone: "ASIA", code: "HOSE", shortName: "HOSE", name: "Vietnam", city: "Ho Chi Minh", link: "https://www.investing.com/indices/vn", timezone: "Asia/Ho_Chi_Minh", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-26","2026-04-30","2026-05-01","2026-09-02"] },
       
       // EUROPE
-      { zone: "EUROPE", code: "LSE", shortName: "FTSE", name: "FTSE (London)", link: "https://www.investing.com/indices/uk-100", timezone: "Europe/London", open: "08:00", close: "16:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-04","2026-05-25","2026-08-31","2026-12-25","2026-12-28"] },
-      { zone: "EUROPE", code: "XETRA", shortName: "DAX", name: "DAX (Frankfurt)", link: "https://www.investing.com/indices/germany-30", timezone: "Europe/Berlin", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-24","2026-12-25","2026-12-26","2026-12-31"] },
-      { zone: "EUROPE", code: "PAR", shortName: "CAC", name: "CAC (Paris)", link: "https://www.investing.com/indices/france-40", timezone: "Europe/Paris", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-25","2026-12-26"] },
+      { zone: "EUROPE", code: "LSE", shortName: "FTSE", name: "FTSE (London)", city: "London", link: "https://www.investing.com/indices/uk-100", timezone: "Europe/London", open: "08:00", close: "16:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-04","2026-05-25","2026-08-31","2026-12-25","2026-12-28"] },
+      { zone: "EUROPE", code: "XETRA", shortName: "DAX", name: "DAX (Frankfurt)", city: "Frankfurt", link: "https://www.investing.com/indices/germany-30", timezone: "Europe/Berlin", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-24","2026-12-25","2026-12-26","2026-12-31"] },
+      { zone: "EUROPE", code: "PAR", shortName: "CAC", name: "CAC (Paris)", city: "Paris", link: "https://www.investing.com/indices/france-40", timezone: "Europe/Paris", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-25","2026-12-26"] },
       
       // USA
-      { zone: "USA", code: "NYSE", shortName: "NYSE", name: "NYSE (New York)", link: "https://www.investing.com/indices/us-30", timezone: "America/New_York", open: "09:30", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"] },
+      { zone: "USA", code: "NYSE", shortName: "NYSE", name: "NYSE (New York)", city: "New York", link: "https://www.investing.com/indices/us-30", timezone: "America/New_York", open: "09:30", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"] },
 
       // GLOBAL ASSETS
-      { zone: "GLOBAL ASSETS", code: "TBMA", shortName: "TBMA (BKK)", name: "TBMA - Bonds (BKK)", link: "https://hs1wfk.github.io/IRCN/etmo.html", timezone: "Asia/Bangkok", open: "09:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
-      { zone: "GLOBAL ASSETS", code: "US10Y", shortName: "US10Y (CHI)", name: "US10Y - (CHI)", link: "https://www.investing.com/rates-bonds/u.s.-10-year-bond-yield", timezone: "America/Chicago", open: "17:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "DXY", shortName: "DXY (NYC)", name: "DXY - (NYC)", link: "https://www.investing.com/currencies/us-dollar-index", timezone: "America/New_York", open: "20:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "BRENT", shortName: "Brent (LON)", name: "Brent - Crude Oil (LON)", link: "https://www.investing.com/commodities/brent-oil", timezone: "Europe/London", open: "01:00", close: "23:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "GOLD", shortName: "Gold (NYC)", name: "Gold - Spot (NYC)", link: "https://www.investing.com/commodities/gold", timezone: "America/New_York", open: "18:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "VIX", shortName: "VIX (CHI)", name: "VIX - (CHI)", link: "https://www.investing.com/indices/volatility-s-p-500", timezone: "America/Chicago", open: "02:15", close: "16:15", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "FOREX", shortName: "FOREX (LON)", name: "FOREX - Global FX (LON)", link: "https://www.investing.com/currencies/streaming-forex-rates-majors", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
-      { zone: "GLOBAL ASSETS", code: "MSCI_FX", shortName: "MSCI FX (LON)", name: "MSCI FX (LON)", link: "https://www.investing.com/indices/msci-intl-em-currency", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
-      { zone: "GLOBAL ASSETS", code: "MSCI_WORLD", shortName: "MSCI World (LON)", name: "MSCI World Index (LON)", link: "https://www.investing.com/indices/msci-world", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] }
+      { zone: "GLOBAL ASSETS", code: "TBMA", shortName: "TBMA (BKK)", name: "TBMA - Bonds (BKK)", city: "Bangkok", link: "https://hs1wfk.github.io/IRCN/etmo.html", timezone: "Asia/Bangkok", open: "09:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "GLOBAL ASSETS", code: "US10Y", shortName: "US10Y (CHI)", name: "US 10 Year Bond", city: "Chicago", link: "https://www.investing.com/rates-bonds/u.s.-10-year-bond-yield", timezone: "America/Chicago", open: "17:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "DXY", shortName: "DXY (NYC)", name: "DXY - (NYC)", city: "New York", link: "https://www.investing.com/currencies/us-dollar-index", timezone: "America/New_York", open: "20:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "BRENT", shortName: "Brent (LON)", name: "Brent - Crude Oil (LON)", city: "London", link: "https://www.investing.com/commodities/brent-oil", timezone: "Europe/London", open: "01:00", close: "23:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "GOLD", shortName: "Gold (NYC)", name: "Gold - Spot (NYC)", city: "New York", link: "https://www.investing.com/commodities/gold", timezone: "America/New_York", open: "18:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "VIX", shortName: "VIX (CHI)", name: "VIX - (CHI)", city: "Chicago", link: "https://www.investing.com/indices/volatility-s-p-500", timezone: "America/Chicago", open: "02:15", close: "16:15", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "FOREX", shortName: "FOREX (LON)", name: "FOREX - Global FX (LON)", city: "London", link: "https://www.investing.com/currencies/streaming-forex-rates-majors", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
+      { zone: "GLOBAL ASSETS", code: "MSCI_FX", shortName: "MSCI FX (LON)", name: "MSCI FX (LON)", city: "London", link: "https://www.investing.com/indices/msci-intl-em-currency", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
+      { zone: "GLOBAL ASSETS", code: "MSCI_WORLD", shortName: "MSCI World (LON)", name: "MSCI World Index (LON)", city: "London", link: "https://www.investing.com/indices/msci-world", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] }
     ];
 
     let audioCtx = null;
+    let audioActive = false; // Speech starts OFF as default
     const marketStateTracker = {}; 
     const flashingTimers = {};
     let cachedVoices = [];
+    let announcedClosingMarkets = []; // Track 5-min closing alerts
 
-    // Pre-load voices for iPadOS / iOS
     function loadVoices() {
       if ('speechSynthesis' in window) {
         cachedVoices = window.speechSynthesis.getVoices();
@@ -230,63 +231,145 @@
       }
     }
 
-    // Explicitly target Serena (Enhanced)
-    function getSerenaVoice() {
+    // Targeted Voice Selection: Samantha (Enhanced/New iPad) vs Kanya (Thai/Old iPad Gen 5)
+    function getPreferredVoice() {
       if (cachedVoices.length === 0 && 'speechSynthesis' in window) {
         cachedVoices = window.speechSynthesis.getVoices();
       }
       
-      // 1. Search explicitly for "Serena" (Enhanced/Premium on iPadOS)
-      let serena = cachedVoices.find(v => v.name.includes('Serena'));
-      if (serena) return serena;
+      // 1. Target Samantha (Enhanced) or Samantha (English)
+      let samantha = cachedVoices.find(v => v.name.includes('Samantha'));
+      if (samantha) return samantha;
 
-      // 2. Fallback to any British Voice (en-GB)
-      let ukVoice = cachedVoices.find(v => v.lang === 'en-GB' || v.lang.startsWith('en_GB'));
-      if (ukVoice) return ukVoice;
+      // 2. Target Kanya (Thai for iPad Gen 5)
+      let kanya = cachedVoices.find(v => v.name.includes('Kanya') || v.lang === 'th-TH');
+      if (kanya) return kanya;
 
-      // 3. Fallback to English Voice (en-US)
+      // 3. Fallback to English Voice
       let enVoice = cachedVoices.find(v => v.lang.startsWith('en'));
       return enVoice || null;
     }
 
-    function enableAudio() {
+    // Speech Toggle Button Logic
+    function toggleAudio() {
       initAudioContext();
       if ('speechSynthesis' in window) {
         window.speechSynthesis.resume();
-        // Warm up speech engine
-        const dummyUtterance = new SpeechSynthesisUtterance("");
-        window.speechSynthesis.speak(dummyUtterance);
       }
+      
       const btn = document.getElementById('btnAudio');
-      btn.innerText = "Alert On";
-      btn.classList.add('active');
+      audioActive = !audioActive;
+
+      if (audioActive) {
+        btn.innerText = "Speech ON";
+        btn.classList.add('active');
+        const v = getPreferredVoice();
+        if (v && v.lang === 'th-TH') {
+          speakText("ระบบเปิดเสียงพูดแล้วค่ะ");
+        } else {
+          speakText("Speech is On");
+        }
+      } else {
+        btn.innerText = "Speech OFF";
+        btn.classList.remove('active');
+        const v = getPreferredVoice();
+        if (v && v.lang === 'th-TH') {
+          speakText("ระบบปิดเสียงพูดแล้วค่ะ");
+        } else {
+          speakText("Speech is Off");
+        }
+      }
     }
 
-    document.addEventListener('touchstart', function() {
-      enableAudio();
-    }, { once: true });
-
-    function speakText(text) {
-      if (!('speechSynthesis' in window)) return;
+    function speakText(text, pauseBeforeMs = 0) {
+      if (!audioActive || !('speechSynthesis' in window)) return;
 
       window.speechSynthesis.cancel(); // Clear queue
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
 
-      const targetVoice = getSerenaVoice();
-      if (targetVoice) {
-        utterance.voice = targetVoice;
-        utterance.lang = targetVoice.lang;
-      } else {
-        utterance.lang = 'en-GB';
-      }
+        const targetVoice = getPreferredVoice();
+        if (targetVoice) {
+          utterance.voice = targetVoice;
+          utterance.lang = targetVoice.lang;
+        } else {
+          utterance.lang = 'en-US';
+        }
 
-      window.speechSynthesis.speak(utterance);
+        window.speechSynthesis.speak(utterance);
+      }, pauseBeforeMs);
     }
 
-    // Morse Code Engine (+50% Dit duration & 1:3 Dash Ratio)
+    // Full Market Scan Speech Report on Title Click
+    function triggerScanReport() {
+      if (!audioActive) {
+        toggleAudio(); // Automatically activate speech if OFF
+      }
+
+      const now = new Date();
+      const optionsDay = { weekday: 'long' };
+      const optionsDate = { month: 'long', day: 'numeric', year: 'numeric' };
+      
+      const dayStr = now.toLocaleDateString('en-US', optionsDay);
+      const dateStr = now.toLocaleDateString('en-US', optionsDate);
+      const timeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+      let openMarkets = [];
+
+      markets.forEach(m => {
+        const p = getZonedParts(now, m.timezone);
+        const localMin = parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10);
+        const dateStrIso = p.year + '-' + p.month + '-' + p.day;
+        const isWeekend = (p.weekday === 'Sat' || p.weekday === 'Sun');
+        const isHoliday = m.holidays.indexOf(dateStrIso) !== -1;
+
+        if (!isWeekend && !isHoliday) {
+          const openMin = timeToMin(m.open);
+          const closeMin = timeToMin(m.close);
+          let isTrading = false;
+
+          if (closeMin > openMin) {
+            isTrading = (localMin >= openMin && localMin < closeMin);
+          } else {
+            isTrading = (localMin >= openMin || localMin < closeMin);
+          }
+
+          if (m.hasLunch) {
+            const lStart = timeToMin(m.lunchStart);
+            const lEnd = timeToMin(m.lunchEnd);
+            if (localMin >= lStart && localMin < lEnd) isTrading = false;
+          }
+
+          if (isTrading) {
+            openMarkets.push(`${m.name} ${m.city}`);
+          }
+        }
+      });
+
+      let intro = `Today is ${dayStr}, ${dateStr}. The time is now ${timeStr}. `;
+
+      if (openMarkets.length > 0) {
+        intro += `The remaining open exchange `;
+        speakText(intro);
+        // Pause 1 sec before speaking open assets list
+        setTimeout(() => {
+          if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(openMarkets.join(", "));
+            const targetVoice = getPreferredVoice();
+            if (targetVoice) utterance.voice = targetVoice;
+            window.speechSynthesis.speak(utterance);
+          }
+        }, 1000);
+      } else {
+        intro += `All markets closed.`;
+        speakText(intro);
+      }
+    }
+
+    // Morse Code Engine
     function playMorsePattern(patternString, callback) {
       initAudioContext();
       if (!audioCtx || audioCtx.state !== 'running') {
@@ -294,10 +377,10 @@
         return;
       }
 
-      const dotDuration = 0.12;              // 1 unit (Dit = 120ms)
-      const dashDuration = dotDuration * 3;  // 3 units (Dash = 360ms)
-      const elementSpace = dotDuration;      // 1 unit between elements
-      const charSpace = dotDuration * 3;     // 3 units between letters
+      const dotDuration = 0.12;
+      const dashDuration = dotDuration * 3;
+      const elementSpace = dotDuration;
+      const charSpace = dotDuration * 3;
 
       let currentTime = audioCtx.currentTime + 0.05;
 
@@ -333,37 +416,6 @@
         osc.start(startTime);
         osc.stop(startTime + duration);
       } catch (e) { console.error(e); }
-    }
-
-    // Sound Test Sequence (Title Click Switch): O -> V -> VV -> E -> T -> Serena Speech
-    function runSoundTest() {
-      enableAudio();
-
-      playMorsePattern('---', () => {
-        setTimeout(() => {
-          playMorsePattern('...-', () => {
-            setTimeout(() => {
-              playMorsePattern('...- ...-', () => {
-                setTimeout(() => {
-                  playMorsePattern('.', () => {
-                    setTimeout(() => {
-                      playMorsePattern('-', () => {
-                        // After T sound finishes, speak current time using Serena voice
-                        setTimeout(() => {
-                          const now = new Date();
-                          const hours = String(now.getHours()).padStart(2, '0');
-                          const minutes = String(now.getMinutes()).padStart(2, '0');
-                          speakText(`The time now is ${hours}:${minutes}`);
-                        }, 500);
-                      });
-                    }, 400);
-                  });
-                }, 400);
-              });
-            }, 400);
-          });
-        }, 400);
-      });
     }
 
     function getZonedParts(date, timeZone) {
@@ -412,7 +464,6 @@
       led.className = `led-dot led-${state}`;
     }
 
-    // Flashing Controller with Timer Reset
     function triggerFlashingAlert(code) {
       const nameElem = document.getElementById('name-' + code);
       if (!nameElem) return;
@@ -426,7 +477,7 @@
       flashingTimers[code] = setTimeout(() => {
         nameElem.classList.remove('blinking-name');
         delete flashingTimers[code];
-      }, 60000); // 1 minute (60,000ms)
+      }, 60000);
     }
 
     function initTable() {
@@ -481,7 +532,7 @@
                 </div>
               </td>
               <td id="status-TFEX-1M">--</td>
-              <td class="tomorrow-normal">Normal</td>
+              <td class="tomorrow-normal" id="tomorrow-TFEX-1M"></td>
             </tr>
             <tr id="row-TFEX-5M">
               <td class="ex-time" id="time-TFEX-5M">--:--</td>
@@ -494,7 +545,7 @@
                 </div>
               </td>
               <td id="status-TFEX-5M">--</td>
-              <td class="tomorrow-normal">Normal</td>
+              <td class="tomorrow-normal" id="tomorrow-TFEX-5M"></td>
             </tr>
           `;
         }
@@ -513,10 +564,8 @@
       const muteEx = !document.getElementById('muteExchange').checked;
       const muteTfex = !document.getElementById('muteTFEX').checked;
 
-      // Direct calculation for TFEX Day & Night Trading Status
       const thP = getZonedParts(now, "Asia/Bangkok");
       const thMin = parseInt(thP.hour, 10) * 60 + parseInt(thP.minute, 10);
-      const thSec = parseInt(thP.second, 10);
       const thDateStr = thP.year + '-' + thP.month + '-' + thP.day;
       const isThWeekend = (thP.weekday === 'Sat' || thP.weekday === 'Sun');
       const tfexHolidays = ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"];
@@ -584,11 +633,12 @@
         }
       }
 
+      let closing5mList = [];
+
       markets.forEach(m => {
         const p = getZonedParts(now, m.timezone);
         const localHM = p.hour + ':' + p.minute;
         const localMin = parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10);
-        const localSec = parseInt(p.second, 10);
         const dateStr = p.year + '-' + p.month + '-' + p.day;
 
         document.getElementById('time-' + m.code).innerText = localHM;
@@ -618,8 +668,14 @@
           marketStateTracker[m.code] = { state: 'UNKNOWN' };
         }
 
-        if (isTodayWeekend || isTodayHoliday) {
-          statusCell.innerHTML = '<span class="status-close-dark">CLOSED (Holiday/Weekend)</span>';
+        // CLOSED Status Text Formatting with Single Space
+        if (isTodayWeekend) {
+          statusCell.innerHTML = '<span class="status-close-dark">CLOSED, weekend</span>';
+          setLedState(m.code, 'red');
+          marketStateTracker[m.code].state = 'CLOSED';
+          return;
+        } else if (isTodayHoliday) {
+          statusCell.innerHTML = '<span class="status-close-dark">CLOSED, holiday</span>';
           setLedState(m.code, 'red');
           marketStateTracker[m.code].state = 'CLOSED';
           return;
@@ -631,20 +687,13 @@
           if (isTfexTrading) currentState = 'OPEN';
           else if (isTfexBreak) currentState = 'BREAK';
 
-          // STATE CHANGE DETECTOR & FLASHING TRIGGER FOR TFEX
           if (marketStateTracker[m.code].state !== 'UNKNOWN' && marketStateTracker[m.code].state !== currentState) {
             if (!muteEx) {
-              if (currentState === 'OPEN') {
-                playMorsePattern('---'); // Morse 'O' for Open
-              } else if (currentState === 'BREAK') {
-                playMorsePattern('...-'); // Morse 'V' for Break
-              } else if (currentState === 'CLOSED') {
-                playMorsePattern('...- ...-'); // Morse 'V V' for Close
-              }
+              if (currentState === 'OPEN') playMorsePattern('---');
+              else if (currentState === 'BREAK') playMorsePattern('...-');
+              else if (currentState === 'CLOSED') playMorsePattern('...- ...-');
             }
-            if (currentState === 'OPEN' || currentState === 'CLOSED') {
-              triggerFlashingAlert(m.code);
-            }
+            if (currentState === 'OPEN' || currentState === 'CLOSED') triggerFlashingAlert(m.code);
           }
           marketStateTracker[m.code].state = currentState;
 
@@ -660,6 +709,12 @@
               </div>
             `;
             setLedState(m.code, 'green');
+
+            // 5-Min Closing Warning check
+            if (remainingTfexMinutes <= 5 && remainingTfexMinutes > 0 && !announcedClosingMarkets.includes("TFEX")) {
+              closing5mList.push("TFEX");
+              announcedClosingMarkets.push("TFEX");
+            }
           } else if (isTfexBreak) {
             let remBreak = dayLunchEnd - localMin;
             statusCell.innerHTML = `
@@ -677,11 +732,8 @@
               statusCell.innerHTML = '<span class="' + colorClass + '">' + textNight + '</span>';
             } else {
               let diffDay = 0;
-              if (localMin < dayOpen) {
-                diffDay = dayOpen - localMin;
-              } else {
-                diffDay = (1440 - localMin) + dayOpen;
-              }
+              if (localMin < dayOpen) diffDay = dayOpen - localMin;
+              else diffDay = (1440 - localMin) + dayOpen;
               let colorClass = diffDay <= 60 ? 'status-close' : 'status-close-dark';
               let textDay = isMobile ? ('Day Open in ' + formatHM(diffDay)) : ('Closed, Day Open in ' + formatHM(diffDay));
               statusCell.innerHTML = '<span class="' + colorClass + '">' + textDay + '</span>';
@@ -697,53 +749,39 @@
         const totalSession = closeMin > openMin ? (closeMin - openMin) : (1440 - openMin + closeMin);
 
         let isTradingNow = false;
-        if (closeMin > openMin) {
-          isTradingNow = (localMin >= openMin && localMin < closeMin);
-        } else {
-          isTradingNow = (localMin >= openMin || localMin < closeMin);
-        }
+        if (closeMin > openMin) isTradingNow = (localMin >= openMin && localMin < closeMin);
+        else isTradingNow = (localMin >= openMin || localMin < closeMin);
 
         let isLunch = false;
         if (m.hasLunch) {
           const lStart = timeToMin(m.lunchStart);
           const lEnd = timeToMin(m.lunchEnd);
-          if (localMin >= lStart && localMin < lEnd) {
-            isLunch = true;
-          }
+          if (localMin >= lStart && localMin < lEnd) isLunch = true;
         }
 
         let currentState = 'CLOSED';
         if (isTradingNow && !isLunch) currentState = 'OPEN';
         else if (isLunch) currentState = 'BREAK';
 
-        // STATE CHANGE DETECTOR & FLASHING TRIGGER FOR STANDARD MARKETS
         if (marketStateTracker[m.code].state !== 'UNKNOWN' && marketStateTracker[m.code].state !== currentState) {
           if (!muteEx) {
-            if (currentState === 'OPEN') {
-              playMorsePattern('---'); // Morse 'O' for Open
-            } else if (currentState === 'BREAK') {
-              playMorsePattern('...-'); // Morse 'V' for Break
-            } else if (currentState === 'CLOSED') {
-              playMorsePattern('...- ...-'); // Morse 'V V' for Close
-            }
+            if (currentState === 'OPEN') playMorsePattern('---');
+            else if (currentState === 'BREAK') playMorsePattern('...-');
+            else if (currentState === 'CLOSED') playMorsePattern('...- ...-');
           }
-          if (currentState === 'OPEN' || currentState === 'CLOSED') {
-            triggerFlashingAlert(m.code);
-          }
+          if (currentState === 'OPEN' || currentState === 'CLOSED') triggerFlashingAlert(m.code);
         }
         marketStateTracker[m.code].state = currentState;
 
         if (!isTradingNow) {
           let diff = 0;
-          if (localMin < openMin) {
-            diff = openMin - localMin;
-          } else {
-            diff = (1440 - localMin) + openMin;
-          }
+          if (localMin < openMin) diff = openMin - localMin;
+          else diff = (1440 - localMin) + openMin;
           const colorClass = diff <= 60 ? 'status-close' : 'status-close-dark';
           const openText = isMobile ? ('Open in ' + formatHM(diff)) : ('Closed, Open in ' + formatHM(diff));
           statusCell.innerHTML = '<span class="' + colorClass + '">' + openText + '</span>';
           setLedState(m.code, 'red');
+          announcedClosingMarkets = announcedClosingMarkets.filter(item => item !== m.name);
         } else {
           if (isLunch) {
             const lEnd = timeToMin(m.lunchEnd);
@@ -770,11 +808,17 @@
               </div>
             `;
             setLedState(m.code, 'green');
+
+            // 5-Min Closing Warning check
+            if (remaining <= 5 && remaining > 0 && !announcedClosingMarkets.includes(m.name)) {
+              closing5mList.push(m.name);
+              announcedClosingMarkets.push(m.name);
+            }
           }
         }
       });
 
-      // TFEX SPECIAL CYCLES (1 Min & 5 Min)
+      // TFEX SPECIAL CYCLES (1 Min & 5 Min UI Handling)
       const tfexP = getZonedParts(now, "Asia/Bangkok");
       const tfexHM = tfexP.hour + ':' + tfexP.minute;
       document.getElementById('time-TFEX-1M').innerText = tfexHM;
@@ -786,16 +830,11 @@
       const tfex1Cell = document.getElementById('status-TFEX-1M');
       const tfex5Cell = document.getElementById('status-TFEX-5M');
 
-      if (isTfexBreak) {
-        tfex1Cell.innerHTML = '<span class="status-close blinking-text">Break</span>';
-        tfex5Cell.innerHTML = '<span class="status-close blinking-text">Break</span>';
-        setLedState('TFEX-1M', 'orange');
-        setLedState('TFEX-5M', 'orange');
-      } else if (!isTfexTrading) {
-        tfex1Cell.innerHTML = '<span class="status-close-dark">Closed</span>';
-        tfex5Cell.innerHTML = '<span class="status-close-dark">Closed</span>';
-        setLedState('TFEX-1M', 'red');
-        setLedState('TFEX-5M', 'red');
+      if (isTfexBreak || !isTfexTrading) {
+        tfex1Cell.innerHTML = ''; // Leave blank for TFEX 1m/5m during break/closed
+        tfex5Cell.innerHTML = '';
+        setLedState('TFEX-1M', isTfexBreak ? 'orange' : 'red');
+        setLedState('TFEX-5M', isTfexBreak ? 'orange' : 'red');
       } else {
         const remSec1M = 60 - currentSec;
         const pct1M = (remSec1M / 60) * 100;
@@ -821,15 +860,25 @@
 
         if (currentSec === 0 && lastTfex1mSec !== 0) {
           if (!muteTfex) {
-            if (currentMin % 5 === 0) {
-              playMorsePattern('-'); // Morse 'T' (5m Alert)
-            } else {
-              playMorsePattern('.'); // Morse 'E' (1m Alert)
-            }
+            if (currentMin % 5 === 0) playMorsePattern('-');
+            else playMorsePattern('.');
           }
         }
       }
       lastTfex1mSec = currentSec;
+
+      // Announce 5-minute closing warnings
+      if (closing5mList.length === 1) {
+        speakText(`Attention please, attention`);
+        setTimeout(() => {
+          speakText(`${closing5mList[0]} is closing in 5 minutes`);
+        }, 1000);
+      } else if (closing5mList.length > 1) {
+        speakText(`Attention please, attention`);
+        setTimeout(() => {
+          speakText(`The ${closing5mList.join(", ")} will be closed within 5 minutes from now`);
+        }, 1000);
+      }
     }
 
     initTable();
