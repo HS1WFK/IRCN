@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.3.6</title>
+  <title>Exchange Times v2.3.7</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -12,37 +12,51 @@
     a { color: inherit; text-decoration: none; transition: opacity 0.2s; }
     a:hover { opacity: 0.8; text-decoration: underline; }
 
-    /* Top Header Panel Layout (PC / iPad) */
+    /* Top Header Panel Layout (PC / iPad) with Floating 3D Shadows */
     .header-panel { 
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
-      background: #1e1e1e; 
+      background: linear-gradient(145deg, #1f242d, #161a22); 
       padding: 10px 14px; 
-      border-radius: 6px; 
-      border: 1px solid #333; 
+      border-radius: 8px; 
+      border: 1px solid #2d3748; 
       margin-bottom: 8px; 
       gap: 12px; 
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     .header-left {
       display: flex;
       align-items: center;
       gap: 16px;
-      padding-left: 1ch; /* Space 1 character from left border */
+      padding-left: 1ch;
     }
 
-    .app-title { font-size: 26px; font-weight: bold; color: #00d2ff; cursor: pointer; user-select: none; }
+    /* Increased Title Font Size (+1 level) & Drop-shadow */
+    .app-title { 
+      font-size: 31px; 
+      font-weight: bold; 
+      color: #00d2ff; 
+      cursor: pointer; 
+      user-select: none; 
+      text-shadow: 0 2px 8px rgba(0, 210, 255, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     .app-title:active { opacity: 0.7; }
-    
+
+    /* Reduced UTC Font Size (-1 level) & Monospace lock */
     .utc-clock { 
-      font-size: 24px; 
+      font-size: 20px; 
       font-weight: bold; 
       color: #ffffff; 
       font-family: monospace; 
       white-space: nowrap; 
       display: inline-block;
-      min-width: 175px; /* Lock width to prevent layout jitter */
+      min-width: 150px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
     }
     .utc-clock a { color: #ffffff; }
 
@@ -53,35 +67,40 @@
       gap: 8px;
       font-size: 15px;
       color: #00d2ff;
-      background: #141414;
+      background: #12161f;
       padding: 6px 12px;
-      border-radius: 4px;
-      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      border: 1px solid #2b3544;
       white-space: nowrap;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
     }
 
-    .controls { display: flex; align-items: center; gap: 8px; }
-    
-    /* Reduced Speech Button size by 50% on PC */
-    .audio-btn { 
-      background: #f44336; 
-      color: #ffffff; 
-      border: none; 
-      padding: 4px 9px; 
-      font-weight: bold; 
-      border-radius: 4px; 
-      cursor: pointer; 
-      font-size: 11.5px; 
-      transition: background 0.3s; 
+    /* 3-State Speech Tag Indicator */
+    .speech-badge {
+      font-size: 11px;
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
     }
-    .audio-btn.active { background: #4caf50; color: #ffffff; }
+    .speech-off { background: #4a5568; color: #cbd5e0; }
+    .speech-on { background: #2f855a; color: #68d391; }
+    .speech-test { background: #d69e2e; color: #faf089; }
 
-    /* Mobile Only Weather Display Element */
     .mobile-weather-row { display: none; }
 
     /* Table Container Default (iPad / PC) */
-    .table-container { width: 100%; overflow-x: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; max-height: calc(100vh - 85px); }
-    .market-table { width: 100%; border-collapse: collapse; background: #181818; border-radius: 6px; overflow: hidden; }
+    .table-container { 
+      width: 100%; 
+      overflow-x: auto; 
+      overflow-y: auto; 
+      -webkit-overflow-scrolling: touch; 
+      max-height: calc(100vh - 85px); 
+      border-radius: 8px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    }
+    .market-table { width: 100%; border-collapse: collapse; background: #181818; border-radius: 8px; overflow: hidden; }
     
     .market-table th, .market-table td { padding: 5px 10px; text-align: left; border-bottom: 1px solid #2a2a2a; vertical-align: middle; }
     .market-table th { background: #252525; color: #888; font-size: 21px; text-transform: uppercase; position: sticky; top: 0; z-index: 10; padding: 6px 10px; }
@@ -143,7 +162,7 @@
         align-items: flex-start; 
         padding: 8px 10px; 
         margin-bottom: 6px; 
-        gap: 6px; 
+        gap: 4px; 
       }
       
       .header-left { 
@@ -152,10 +171,11 @@
         padding-left: 1ch; 
       }
 
-      .utc-clock { font-size: 17px !important; min-width: 135px; }
-      .app-title { font-size: 19px !important; font-weight: 800 !important; }
+      /* Mobile Font Adjustments: Title 22px, UTC 15px */
+      .app-title { font-size: 22px !important; font-weight: 800 !important; }
+      .utc-clock { font-size: 15px !important; min-width: 115px; }
 
-      .weather-center { display: none; } /* Hide PC Center Bar on Mobile */
+      .weather-center { display: none; }
 
       .mobile-weather-row { 
         display: block; 
@@ -164,19 +184,10 @@
         margin-top: 2px; 
         padding-left: 1ch;
         font-family: monospace;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
       }
 
-      .controls { 
-        width: 100%; 
-        display: flex; 
-        justify-content: flex-start; 
-        margin-top: 2px; 
-        padding-left: 1ch;
-      }
-
-      .audio-btn { font-size: 11px; padding: 4px 8px; }
-
-      .table-container { max-height: calc(100vh - 105px); }
+      .table-container { max-height: calc(100vh - 95px); }
       .market-table th, .market-table td { padding: 4px 6px; }
       .market-table th { font-size: 13px; padding: 4px 6px; }
       
@@ -212,18 +223,15 @@
       <div class="utc-clock">
         <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClock">UTC: --:--:--</a>
       </div>
-      <div class="app-title" onclick="triggerScanReport()" title="Click to trigger market scan speech report">
-        Exchange Times <span style="font-size: 12px; color: #888;">v2.3.6</span>
+      <div class="app-title" onclick="toggleSpeechState()" title="Click to toggle Speech OFF -> Speech ON -> Speech TEST">
+        Exchange Times <span style="font-size: 12px; color: #888;">v2.3.7</span>
+        <span id="speechBadge" class="speech-badge speech-off">Speech OFF</span>
       </div>
     </div>
 
     <!-- Center Weather Display (PC/iPad) -->
     <div class="weather-center" id="weatherPC">
       <span>🌤 WX: Loading...</span>
-    </div>
-
-    <div class="controls">
-      <button id="btnAudio" class="audio-btn" onclick="toggleAudio()">Speech OFF</button>
     </div>
 
     <!-- Sub-row Weather Display (Mobile) -->
@@ -297,14 +305,15 @@
     ];
 
     let audioCtx = null;
-    let audioActive = false;
+    // 3-State Speech: 0 = OFF, 1 = ON, 2 = TEST
+    let speechState = 0; 
+
     const marketStateTracker = {}; 
     const flashingTimers = {};
     let cachedVoices = [];
     let announcedClosingMarkets = [];
     let lastTimeAnnouncedKey = "";
 
-    // Global Weather State Container
     let currentWxState = {
       temp: "--",
       humidity: "--",
@@ -317,7 +326,6 @@
       icon: "☀️"
     };
 
-    // Open-Meteo Weather Service
     let weatherLat = 13.78;
     let weatherLon = 100.36;
 
@@ -354,7 +362,7 @@
       } else {
         fetchWeather();
       }
-      setInterval(fetchWeather, 300000); // Poll every 5 mins
+      setInterval(fetchWeather, 300000);
     }
 
     async function fetchWeather() {
@@ -396,12 +404,10 @@
       const pcElem = document.getElementById('weatherPC');
       const mobileElem = document.getElementById('weatherMobile');
 
-      // PC Display Format
       if (pcElem) {
         pcElem.innerHTML = `<span>${currentWxState.icon} WX: ${currentWxState.condition} | Temp: ${currentWxState.temp}°C | Hu: ${currentWxState.humidity}% | WS: ${currentWxState.windSpeed} km/h | UV: ${currentWxState.uv} | hPa: ${currentWxState.pressure}</span>`;
       }
 
-      // Mobile Display Format with Icon
       if (mobileElem) {
         mobileElem.innerHTML = `${currentWxState.icon} WX: ${currentWxState.temp}°C | ${currentWxState.humidity}% | ${currentWxState.windSpeed}km/h (${currentWxState.windCardinal})`;
       }
@@ -445,38 +451,49 @@
       return enVoice || null;
     }
 
-    function toggleAudio() {
+    // Toggle 3-State Speech via Clicking "Exchange Times"
+    function toggleSpeechState() {
       initAudioContext();
       if ('speechSynthesis' in window) {
         window.speechSynthesis.resume();
       }
-      
-      const btn = document.getElementById('btnAudio');
-      audioActive = !audioActive;
 
-      if (audioActive) {
-        btn.innerText = "Speech ON";
-        btn.classList.add('active');
+      speechState = (speechState + 1) % 3; // Loop 0 -> 1 -> 2
+      const badge = document.getElementById('speechBadge');
+
+      if (speechState === 0) {
+        // Speech OFF
+        badge.innerText = "Speech OFF";
+        badge.className = "speech-badge speech-off";
         const v = getPreferredVoice();
-        if (v && v.lang === 'th-TH') {
-          speakText("ระบบเปิดเสียงพูดแล้วค่ะ");
-        } else {
-          speakText("Speech is On");
-        }
-      } else {
-        btn.innerText = "Speech OFF";
-        btn.classList.remove('active');
+        speakDirect(v && v.lang === 'th-TH' ? "ระบบปิดเสียงพูดแล้วค่ะ" : "Speech is Off");
+      } else if (speechState === 1) {
+        // Speech ON
+        badge.innerText = "Speech ON";
+        badge.className = "speech-badge speech-on";
         const v = getPreferredVoice();
-        if (v && v.lang === 'th-TH') {
-          speakText("ระบบปิดเสียงพูดแล้วค่ะ");
-        } else {
-          speakText("Speech is Off");
-        }
+        speakDirect(v && v.lang === 'th-TH' ? "ระบบเปิดเสียงพูดแล้วค่ะ" : "Speech is On");
+      } else if (speechState === 2) {
+        // Speech TEST (Scan Report)
+        badge.innerText = "Speech TEST";
+        badge.className = "speech-badge speech-test";
+        triggerScanReport();
       }
     }
 
+    function speakDirect(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      const targetVoice = getPreferredVoice();
+      if (targetVoice) utterance.voice = targetVoice;
+      window.speechSynthesis.speak(utterance);
+    }
+
     function speakText(text, pauseBeforeMs = 0) {
-      if (!audioActive || !('speechSynthesis' in window)) return;
+      if (speechState === 0 || !('speechSynthesis' in window)) return; // Don't speak if OFF
 
       window.speechSynthesis.cancel();
 
@@ -498,10 +515,6 @@
     }
 
     function triggerScanReport() {
-      if (!audioActive) {
-        toggleAudio();
-      }
-
       const now = new Date();
       const optionsDay = { weekday: 'long' };
       const optionsDate = { month: 'long', day: 'numeric', year: 'numeric' };
@@ -553,7 +566,7 @@
 
       if (openMarkets.length > 0) {
         intro += `The remaining open exchange `;
-        speakText(intro);
+        speakDirect(intro);
         setTimeout(() => {
           if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(openMarkets.join(", "));
@@ -564,7 +577,7 @@
         }, 1000);
       } else {
         intro += `All markets closed.`;
-        speakText(intro);
+        speakDirect(intro);
       }
     }
 
@@ -1066,7 +1079,7 @@
         }
       });
 
-      // TFEX SPECIAL CYCLES (1 Min & 5 Min UI Handling)
+      // TFEX SPECIAL CYCLES
       const tfexP = getZonedParts(now, "Asia/Bangkok");
       const tfexHM = tfexP.hour + ':' + tfexP.minute;
       document.getElementById('time-TFEX-1M').innerText = tfexHM;
