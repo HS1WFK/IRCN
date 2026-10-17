@@ -258,7 +258,7 @@
     .name-full { display: inline; }
     .name-short { display: none; }
 
-    /* Video Player & Map Containers (PC/iPad Only) */
+    /* Media Display Container (PC/iPad Only) */
     #mediaDisplayWrapper {
       display: none;
       position: relative;
@@ -276,14 +276,6 @@
       object-fit: contain;
       cursor: pointer;
       display: block;
-    }
-
-    #tmdRadarFrame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: none;
-      background: #111;
     }
 
     #rainViewerMap {
@@ -431,9 +423,6 @@
     <!-- BBC Video Stream Player -->
     <video id="videoPlayer" autoplay playsinline muted onclick="toggleVideoMute()"></video>
 
-    <!-- TMD Thai Weather Radar Frame -->
-    <iframe id="tmdRadarFrame" src="https://weather.tmd.go.th/bkmLoop.php" title="TMD Thai Weather Radar"></iframe>
-
     <!-- RainViewer Interactive Leaflet Radar Map -->
     <div id="rainViewerMap"></div>
   </div>
@@ -511,13 +500,13 @@
     let nextAnimTimeout = null;
     let isAnimating = false;
 
-    // Video Stream & Display Media Variables (v2.5.8)
+    // Media Display Control States (v2.5.8)
     let allClosedSeconds = 0;       
     let videoActiveSeconds = 0;    
     let isVideoModeActive = false;
-    let newsStateIndex = 0;  // 0: Standby (Exchange Table), 1: NEWS Video, 2: RainViewer
-    let wxMapStateIndex = 0; // 0: Standby (WX Map), 1: TMD Radar, 2: RainViewer
-    let currentDisplayMode = "NONE"; // "VIDEO", "RAINVIEWER", "TMD", "NONE"
+    let newsStateIndex = 0;  // 0: Standby, 1: NEWS Video, 2: RainViewer
+    let wxMapStateIndex = 0; // 0: Standby, 1: RainViewer, 2: Off (Back to Main Table)
+    let currentDisplayMode = "NONE"; // "VIDEO", "RAINVIEWER", "NONE"
     
     let hlsInstance = null;
     let leafletMap = null;
@@ -870,23 +859,15 @@
     function switchMediaSubView(mode) {
       currentDisplayMode = mode;
       const video = document.getElementById('videoPlayer');
-      const tmd = document.getElementById('tmdRadarFrame');
       const rv = document.getElementById('rainViewerMap');
 
       if (mode === "VIDEO") {
         video.style.display = "block";
-        tmd.style.display = "none";
         rv.style.display = "none";
         startHlsStream();
-      } else if (mode === "TMD") {
-        stopHlsStream();
-        video.style.display = "none";
-        tmd.style.display = "block";
-        rv.style.display = "none";
       } else if (mode === "RAINVIEWER") {
         stopHlsStream();
         video.style.display = "none";
-        tmd.style.display = "none";
         rv.style.display = "block";
         initRainViewerMap();
         setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 200);
@@ -910,18 +891,19 @@
         tableContainer.style.display = 'block';
         isVideoModeActive = false;
         allClosedSeconds = 0;
+        currentDisplayMode = "NONE";
         stopHlsStream();
       }
     }
 
-    // 3-Step NEWS Button Controller (v2.5.8)
+    // 3-Step NEWS Button Controller (NEWS -> RainViewer -> Main Table)
     function handleNewsBtnClick() {
       if (window.innerWidth <= 600) return;
 
       const newsBtn = document.getElementById('newsBtn');
       const wxMapBtn = document.getElementById('wxMapBtn');
 
-      // Reset WX Map Button back to Standby (v2.5.x Low Light)
+      // Reset WX Map Button back to Standby
       wxMapStateIndex = 0;
       wxMapBtn.innerText = "WX Map";
       wxMapBtn.classList.remove('btn-active');
@@ -946,30 +928,31 @@
       }
     }
 
-    // 3-Step WX Map Button Controller
+    // 3-Step WX Map Button Controller (WX Map -> RainViewer -> Main Table)
     function handleWxMapBtnClick() {
       if (window.innerWidth <= 600) return;
 
       const wxMapBtn = document.getElementById('wxMapBtn');
       const newsBtn = document.getElementById('newsBtn');
 
-      // Reset NEWS Button State back to Standby (v2.5.x Low Light)
+      // Reset NEWS Button State back to Standby
       newsStateIndex = 0;
       newsBtn.innerText = "NEWS";
       newsBtn.classList.remove('btn-active');
 
-      if (wxMapStateIndex === 0 || wxMapStateIndex === 2) {
-        // Switch to TMD Radar
-        wxMapStateIndex = 1;
-        wxMapBtn.innerText = "TMD Radar";
-        wxMapBtn.classList.add('btn-active');
-        switchDisplayMode(true, "TMD");
-      } else {
-        // Switch to RainViewer
-        wxMapStateIndex = 2;
+      wxMapStateIndex = (wxMapStateIndex + 1) % 3;
+
+      if (wxMapStateIndex === 1) {
+        // Step 1: Show RainViewer Radar Map
         wxMapBtn.innerText = "RainViewer";
         wxMapBtn.classList.add('btn-active');
         switchDisplayMode(true, "RAINVIEWER");
+      } else {
+        // Step 2 & 0: Back to Standby / Main Table
+        wxMapStateIndex = 0;
+        wxMapBtn.innerText = "WX Map";
+        wxMapBtn.classList.remove('btn-active');
+        switchDisplayMode(false);
       }
     }
 
