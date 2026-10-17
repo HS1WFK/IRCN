@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.3.2</title>
+  <title>Exchange Times v2.5.2</title>
+  <!-- hls.js Library for Streaming HLS Video -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -12,21 +14,97 @@
     a { color: inherit; text-decoration: none; transition: opacity 0.2s; }
     a:hover { opacity: 0.8; text-decoration: underline; }
 
-    /* Top Header Default (iPad / PC) */
-    .header-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 10px 14px; border-radius: 6px; border: 1px solid #333; margin-bottom: 8px; gap: 8px; }
-    .app-title { font-size: 31px; font-weight: bold; color: #00d2ff; cursor: pointer; user-select: none; }
+    /* Top Header Panel Layout (PC / iPad) */
+    .header-panel { 
+      display: flex; 
+      flex-direction: column;
+      align-items: flex-start; 
+      background: linear-gradient(145deg, #1f242d, #161a22); 
+      padding: 8px 14px; 
+      border-radius: 8px; 
+      border: 1px solid #2d3748; 
+      margin-bottom: 8px; 
+      gap: 4px; 
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+      position: relative;
+      z-index: 100;
+    }
+
+    .header-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    /* Left-aligned Title & Drop-shadow */
+    .app-title { 
+      font-size: 31px; 
+      font-weight: bold; 
+      color: #00d2ff; 
+      cursor: pointer; 
+      user-select: none; 
+      text-shadow: 0 2px 8px rgba(0, 210, 255, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     .app-title:active { opacity: 0.7; }
-    .utc-clock { font-size: 28px; font-weight: bold; color: #ffffff; }
-    .utc-clock a { color: #ffffff; }
-    .controls { display: flex; gap: 14px; font-size: 23px; align-items: center; flex-wrap: wrap; }
-    .controls label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
-    
-    .audio-btn { background: #f44336; color: #ffffff; border: none; padding: 8px 18px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 23px; transition: background 0.3s; }
-    .audio-btn.active { background: #4caf50; color: #ffffff; }
+
+    /* Right-aligned UTC Clock on PC/iPad */
+    .pc-utc-container {
+      display: block;
+      margin-left: auto;
+      padding-right: 1ch;
+    }
+
+    .utc-clock { 
+      font-size: 20px; 
+      font-weight: bold; 
+      color: #ffffff; 
+      font-family: monospace; 
+      white-space: nowrap; 
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.3s ease;
+    }
+    .utc-clock.dimmed {
+      color: #2e7d32 !important;
+      text-shadow: none;
+    }
+
+    /* Sub-row containing WX Left-aligned (PC/iPad) */
+    .header-sub-row {
+      display: flex;
+      align-items: center;
+      font-size: 20px;
+      white-space: nowrap;
+      width: 100%;
+      font-family: monospace;
+    }
+
+    /* Styling Gray Labels vs Dynamic Data Values */
+    .wx-label { color: #a0aec0; }
+    .wx-val { font-weight: 600; }
+    .wx-sep { color: #a0aec0; margin: 0 2px; }
+
+    /* White Trend Arrows matching UTC Color */
+    .arrow-trend { color: #ffffff; font-size: 0.85em; margin-left: 1px; font-weight: normal; }
+
+    .mobile-weather-row { display: none; }
 
     /* Table Container Default (iPad / PC) */
-    .table-container { width: 100%; overflow-x: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; max-height: calc(100vh - 85px); }
-    .market-table { width: 100%; border-collapse: collapse; background: #181818; border-radius: 6px; overflow: hidden; }
+    .table-container { 
+      width: 100%; 
+      overflow-x: auto; 
+      overflow-y: auto; 
+      -webkit-overflow-scrolling: touch; 
+      max-height: calc(100vh - 100px); 
+      border-radius: 8px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    }
+    .market-table { width: 100%; border-collapse: collapse; background: #181818; border-radius: 8px; overflow: hidden; }
     
     .market-table th, .market-table td { padding: 5px 10px; text-align: left; border-bottom: 1px solid #2a2a2a; vertical-align: middle; }
     .market-table th { background: #252525; color: #888; font-size: 21px; text-transform: uppercase; position: sticky; top: 0; z-index: 10; padding: 6px 10px; }
@@ -35,7 +113,7 @@
     .zone-header { background: #1f2d3d !important; color: #00d2ff !important; font-weight: bold; font-size: 23px; text-transform: uppercase; padding: 5px 10px !important; }
     .zone-header a { color: #00d2ff !important; }
 
-    .ex-name-container { display: flex; align-items: center; gap: 10px; }
+    .ex-name-container { display: flex; align-items: center; gap: 4px; }
     .ex-name { font-weight: bold; font-size: 25px; }
     .ex-time { font-size: 23px; color: #aaa; font-weight: 500; }
     .blinking-name { animation: blink-red 1s infinite; color: #ff5252 !important; }
@@ -72,33 +150,74 @@
 
     .status-open { color: #4caf50; font-weight: bold; font-size: 25px; }
     .status-close { color: #f44336; font-weight: bold; font-size: 25px; }
-    .status-close-dark { color: #7f1d1d; font-weight: bold; font-size: 25px; }
+    .status-close-dark { color: #7f1d1d; font-weight: bold; font-size: 20px; }
 
     .tomorrow-normal { color: #2e7d32; font-weight: bold; font-size: 20px; }
     .tomorrow-close { color: #f44336; font-weight: bold; font-size: 20px; }
 
-    /* Display Responsive Switching */
     .name-full { display: inline; }
     .name-short { display: none; }
+
+    /* Video Player Container (PC/iPad Only) */
+    #videoContainer {
+      display: none;
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 100px);
+      background-color: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.8);
+    }
+
+    #videoPlayer {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
 
     /* 📱 MOBILE / IPHONE OVERRIDE */
     @media screen and (max-width: 600px) {
       body { padding: 6px; }
-      .header-panel { padding: 8px 10px; margin-bottom: 6px; }
+      .header-panel { 
+        padding: 6px 10px; 
+        margin-bottom: 6px; 
+        gap: 2px; 
+      }
       
-      .app-title { font-size: 20px !important; font-weight: 800 !important; }
-      .utc-clock { font-size: 18px !important; font-weight: 800 !important; }
-      
-      .controls { font-size: 13px; gap: 8px; }
-      .audio-btn { font-size: 13px; padding: 4px 8px; }
+      .header-top-row { 
+        justify-content: space-between; 
+      }
 
-      .table-container { max-height: calc(100vh - 65px); }
+      .app-title { font-size: 19px !important; font-weight: 800 !important; }
+
+      .header-sub-row { display: none; }
+
+      .pc-utc-container {
+        padding-right: 1ch;
+      }
+
+      .utc-clock { font-size: 15px !important; }
+
+      .mobile-weather-row { 
+        display: block; 
+        width: 100%;
+        font-size: 12px; 
+        margin-top: 1px; 
+        padding-left: 1px;
+        font-family: monospace;
+        white-space: nowrap;
+        overflow-x: auto;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      }
+
+      .table-container { max-height: calc(100vh - 95px); }
       .market-table th, .market-table td { padding: 4px 6px; }
       .market-table th { font-size: 13px; padding: 4px 6px; }
       
       .zone-header { font-size: 14px; padding: 3px 6px !important; }
       
-      .ex-name-container { gap: 5px; }
+      .ex-name-container { gap: 2px; }
       .ex-name { font-size: 14px; }
       .ex-time { font-size: 13px; }
 
@@ -108,11 +227,15 @@
       .ib-container { height: 24px; }
       
       .ib-overlay-text { font-size: 16px !important; padding-left: 6px; }
-      .status-open, .status-close, .status-close-dark { font-size: 16px !important; }
+      .status-open, .status-close { font-size: 16px !important; }
+      .status-close-dark { font-size: 14px !important; }
       .tomorrow-normal, .tomorrow-close { font-size: 12px; }
 
       .name-full { display: none; }
       .name-short { display: inline; }
+      
+      /* Disable Video Mode on Mobile */
+      #videoContainer { display: none !important; }
     }
 
     .blinking-text { animation: blink-anim 1s infinite; }
@@ -124,21 +247,32 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title" onclick="runSoundTest()" title="Click to test Morse sound sequence and voice time announcement">
-      Exchange Times <span style="font-size: 14px; color: #888;">v2.3.2</span>
+    <div class="header-top-row">
+      <div class="app-title" onclick="toggleSpeechState()" title="Click to toggle Speech ON -> Speech TEST -> Speech OFF">
+        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.2</span>
+      </div>
+
+      <!-- Right-aligned UTC Clock Position (Interactive Toggle) -->
+      <div class="pc-utc-container">
+        <div class="utc-clock" id="utcClockHeader" onclick="toggleMainDisplayView()" title="Click to toggle Exchange Table / Live Video">UTC --:--:--</div>
+      </div>
     </div>
-    <div class="utc-clock">
-      <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClock">UTC: --:--:--</a>
+
+    <!-- Sub-row: Left-aligned WX Display (PC/iPad) -->
+    <div class="header-sub-row">
+      <span id="weatherPC">
+        <span class="wx-label">⏳ WX: Loading...</span>
+      </span>
     </div>
-    <div class="controls">
-      <button id="btnAudio" class="audio-btn" onclick="enableAudio()">Alert?</button>
-      <label><input type="checkbox" id="muteExchange" checked> Exchange</label>
-      <label><input type="checkbox" id="muteTFEX" checked> TFEX</label>
+
+    <!-- Sub-row Weather Display (Mobile) -->
+    <div class="mobile-weather-row" id="weatherMobile">
+      <span class="wx-label">⏳ WX: Loading...</span>
     </div>
   </div>
 
   <!-- Market Table Wrapper -->
-  <div class="table-container">
+  <div class="table-container" id="exchangeTableContainer">
     <table class="market-table">
       <thead>
         <tr>
@@ -147,7 +281,7 @@
             <a href="https://www.investing.com/indices/major-indices" target="_blank" rel="noopener">EXCHANGE / ASSET</a>
           </th>
           <th style="width: 36%;">
-            <a href="https://www.investing.com/news" target="_blank" rel="noopener">STATUS/NEWS</a>
+            <a href="https://www.investing.com/news" target="_blank" rel="noopener">STATUS</a>
           </th>
           <th style="width: 15%;">
             <a href="https://www.investing.com/economic-calendar" target="_blank" rel="noopener">TOMORROW</a>
@@ -160,6 +294,11 @@
     </table>
   </div>
 
+  <!-- Video Stream Wrapper (PC/iPad View Only) -->
+  <div id="videoContainer">
+    <video id="videoPlayer" autoplay playsinline muted></video>
+  </div>
+
   <script>
     const zoneLinks = {
       "ASIA": "https://www.investing.com/indices/asian-pacific-indices",
@@ -169,44 +308,281 @@
 
     const markets = [
       // THAILAND
-      { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", link: "", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:00", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
-      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX S50/GO/FX", link: "", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "THAILAND", code: "SET", shortName: "SET", name: "Thailand (SET)", city: "Bangkok", link: "", timezone: "Asia/Bangkok", open: "10:00", close: "16:30", hasLunch: true, lunchStart: "12:30", lunchEnd: "14:00", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "THAILAND", code: "TFEX", shortName: "TFEX", name: "TFEX S50/GO/FX", city: "Bangkok", link: "", timezone: "Asia/Bangkok", open: "09:45", close: "16:55", hasLunch: true, lunchStart: "12:30", lunchEnd: "13:45", holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
 
       // ASIA
-      { zone: "ASIA", code: "ASX", shortName: "ASX", name: "Australia ASX", link: "https://www.investing.com/indices/aus-200", timezone: "Australia/Sydney", open: "10:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-26","2026-04-03","2026-04-06","2026-04-25","2026-06-08","2026-12-25","2026-12-26"] },
-      { zone: "ASIA", code: "TSE", shortName: "NIKKEI", name: "NIKKEI (Tokyo)", link: "https://www.investing.com/indices/japan-ni225", timezone: "Asia/Tokyo", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "12:30", holidays: ["2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-07-20","2026-09-21","2026-09-23","2026-10-12","2026-11-03","2026-11-23"] },
-      { zone: "ASIA", code: "KRX", shortName: "KOSPI", name: "KOSPI (Korea)", link: "https://www.investing.com/indices/kospi", timezone: "Asia/Seoul", open: "09:00", close: "15:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-05-05","2026-05-24","2026-06-06","2026-08-15","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-09","2026-12-25","2026-12-31"] },
-      { zone: "ASIA", code: "HKEX", shortName: "HSI", name: "HANG SENG (HKG)", link: "https://www.investing.com/indices/hang-sen-40", timezone: "Asia/Hong_Kong", open: "09:30", close: "16:00", hasLunch: true, lunchStart: "12:00", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-17","2026-02-18","2026-02-19","2026-04-03","2026-04-06","2026-04-30","2026-05-01","2026-05-25","2026-07-01","2026-09-26","2026-10-01","2026-10-19","2026-12-25","2026-12-26"] },
-      { zone: "ASIA", code: "SSE", shortName: "SSE", name: "Shanghai (China)", link: "https://www.investing.com/indices/shanghai-composite", timezone: "Asia/Shanghai", open: "09:30", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-01","2026-10-02","2026-10-05","2026-10-06","2026-10-07"] },
-      { zone: "ASIA", code: "TWSE", shortName: "TWSE", name: "Taiwan Weighted", link: "https://www.investing.com/indices/taiwan-weighted", timezone: "Asia/Taipei", open: "09:00", close: "13:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-28","2026-04-04","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-10"] },
-      { zone: "ASIA", code: "HOSE", shortName: "HOSE", name: "Vietnam", link: "https://www.investing.com/indices/vn", timezone: "Asia/Ho_Chi_Minh", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-26","2026-04-30","2026-05-01","2026-09-02"] },
+      { zone: "ASIA", code: "ASX", shortName: "ASX", name: "Australia ASX", city: "Sydney", link: "https://www.investing.com/indices/aus-200", timezone: "Australia/Sydney", open: "10:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-26","2026-04-03","2026-04-06","2026-04-25","2026-06-08","2026-12-25","2026-12-26"] },
+      { zone: "ASIA", code: "TSE", shortName: "NIKKEI", name: "NIKKEI (Tokyo)", city: "Tokyo", link: "https://www.investing.com/indices/japan-ni225", timezone: "Asia/Tokyo", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "12:30", holidays: ["2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-07-20","2026-09-21","2026-09-23","2026-10-12","2026-11-03","2026-11-23"] },
+      { zone: "ASIA", code: "KRX", shortName: "KOSPI", name: "KOSPI (Korea)", city: "Seoul", link: "https://www.investing.com/indices/kospi", timezone: "Asia/Seoul", open: "09:00", close: "15:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-05-05","2026-05-24","2026-06-06","2026-08-15","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-09","2026-12-25","2026-12-31"] },
+      { zone: "ASIA", code: "HKEX", shortName: "HSI", name: "HANG SENG (HKG)", city: "Hong Kong", link: "https://www.investing.com/indices/hang-sen-40", timezone: "Asia/Hong_Kong", open: "09:30", close: "16:00", hasLunch: true, lunchStart: "12:00", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-17","2026-02-18","2026-02-19","2026-04-03","2026-04-06","2026-04-30","2026-05-01","2026-05-25","2026-07-01","2026-09-26","2026-10-01","2026-10-19","2026-12-25","2026-12-26"] },
+      { zone: "ASIA", code: "SSE", shortName: "SSE", name: "Shanghai (China)", city: "Shanghai", link: "https://www.investing.com/indices/shanghai-composite", timezone: "Asia/Shanghai", open: "09:30", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-01","2026-10-02","2026-10-05","2026-10-06","2026-10-07"] },
+      { zone: "ASIA", code: "TWSE", shortName: "TWSE", name: "Taiwan Weighted", city: "Taipei", link: "https://www.investing.com/indices/taiwan-weighted", timezone: "Asia/Taipei", open: "09:00", close: "13:30", hasLunch: false, holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-28","2026-04-04","2026-04-05","2026-05-01","2026-06-19","2026-09-25","2026-10-10"] },
+      { zone: "ASIA", code: "HOSE", shortName: "HOSE", name: "Vietnam", city: "Ho Chi Minh", link: "https://www.investing.com/indices/vn", timezone: "Asia/Ho_Chi_Minh", open: "09:00", close: "15:00", hasLunch: true, lunchStart: "11:30", lunchEnd: "13:00", holidays: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-04-26","2026-04-30","2026-05-01","2026-09-02"] },
       
       // EUROPE
-      { zone: "EUROPE", code: "LSE", shortName: "FTSE", name: "FTSE (London)", link: "https://www.investing.com/indices/uk-100", timezone: "Europe/London", open: "08:00", close: "16:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-04","2026-05-25","2026-08-31","2026-12-25","2026-12-28"] },
-      { zone: "EUROPE", code: "XETRA", shortName: "DAX", name: "DAX (Frankfurt)", link: "https://www.investing.com/indices/germany-30", timezone: "Europe/Berlin", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-24","2026-12-25","2026-12-26","2026-12-31"] },
-      { zone: "EUROPE", code: "PAR", shortName: "CAC", name: "CAC (Paris)", link: "https://www.investing.com/indices/france-40", timezone: "Europe/Paris", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-25","2026-12-26"] },
+      { zone: "EUROPE", code: "LSE", shortName: "FTSE", name: "FTSE (London)", city: "London", link: "https://www.investing.com/indices/uk-100", timezone: "Europe/London", open: "08:00", close: "16:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-04","2026-05-25","2026-08-31","2026-12-25","2026-12-28"] },
+      { zone: "EUROPE", code: "XETRA", shortName: "DAX", name: "DAX (Frankfurt)", city: "Frankfurt", link: "https://www.investing.com/indices/germany-30", timezone: "Europe/Berlin", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-24","2026-12-25","2026-12-26","2026-12-31"] },
+      { zone: "EUROPE", code: "PAR", shortName: "CAC", name: "CAC (Paris)", city: "Paris", link: "https://www.investing.com/indices/france-40", timezone: "Europe/Paris", open: "09:00", close: "17:30", hasLunch: false, holidays: ["2026-01-01","2026-04-03","2026-04-06","2026-05-01","2026-12-25","2026-12-26"] },
       
       // USA
-      { zone: "USA", code: "NYSE", shortName: "NYSE", name: "NYSE (New York)", link: "https://www.investing.com/indices/us-30", timezone: "America/New_York", open: "09:30", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"] },
+      { zone: "USA", code: "NYSE", shortName: "NYSE", name: "NYSE (New York)", city: "New York", link: "https://www.investing.com/indices/us-30", timezone: "America/New_York", open: "09:30", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"] },
 
       // GLOBAL ASSETS
-      { zone: "GLOBAL ASSETS", code: "TBMA", shortName: "TBMA (BKK)", name: "TBMA - Bonds (BKK)", link: "https://hs1wfk.github.io/IRCN/etmo.html", timezone: "Asia/Bangkok", open: "09:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
-      { zone: "GLOBAL ASSETS", code: "US10Y", shortName: "US10Y (CHI)", name: "US10Y - (CHI)", link: "https://www.investing.com/rates-bonds/u.s.-10-year-bond-yield", timezone: "America/Chicago", open: "17:00", close: "16:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "DXY", shortName: "DXY (NYC)", name: "DXY - (NYC)", link: "https://www.investing.com/currencies/us-dollar-index", timezone: "America/New_York", open: "20:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "BRENT", shortName: "Brent (LON)", name: "Brent - Crude Oil (LON)", link: "https://www.investing.com/commodities/brent-oil", timezone: "Europe/London", open: "01:00", close: "23:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "GOLD", shortName: "Gold (NYC)", name: "Gold - Spot (NYC)", link: "https://www.investing.com/commodities/gold", timezone: "America/New_York", open: "18:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "VIX", shortName: "VIX (CHI)", name: "VIX - (CHI)", link: "https://www.investing.com/indices/volatility-s-p-500", timezone: "America/Chicago", open: "02:15", close: "16:15", hasLunch: false, holidays: ["2026-01-01","2026-12-25"] },
-      { zone: "GLOBAL ASSETS", code: "FOREX", shortName: "FOREX (LON)", name: "FOREX - Global FX (LON)", link: "https://www.investing.com/currencies/streaming-forex-rates-majors", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
-      { zone: "GLOBAL ASSETS", code: "MSCI_FX", shortName: "MSCI FX (LON)", name: "MSCI FX (LON)", link: "https://www.investing.com/indices/msci-intl-em-currency", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
-      { zone: "GLOBAL ASSETS", code: "MSCI_WORLD", shortName: "MSCI World (LON)", name: "MSCI World Index (LON)", link: "https://www.investing.com/indices/msci-world", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] }
+      { zone: "GLOBAL ASSETS", code: "TBMA", shortName: "TBMA (BKK)", name: "TBMA - Bonds (BKK)", city: "Bangkok", link: "https://hs1wfk.github.io/IRCN/etmo.html", timezone: "Asia/Bangkok", open: "09:00", close: "17:00", hasLunch: false, holidays: ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"] },
+      { zone: "GLOBAL ASSETS", code: "US10Y", shortName: "US10Y (CHI)", name: "US 10 Year Bond", city: "Chicago", link: "https://www.investing.com/rates-bonds/u.s.-10-year-bond-yield", timezone: "America/Chicago", open: "17:00", close: "16:00", hasLunch: false, isFutures: true, holidays: ["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "DXY", shortName: "DXY (NYC)", name: "DXY - (NYC)", city: "New York", link: "https://www.investing.com/currencies/us-dollar-index", timezone: "America/New_York", open: "20:00", close: "17:00", hasLunch: false, isFutures: true, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "BRENT", shortName: "Brent (LON)", name: "Brent - Crude Oil (LON)", city: "London", link: "https://www.investing.com/commodities/brent-oil", timezone: "Europe/London", open: "01:00", close: "23:00", hasLunch: false, isFutures: true, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "GOLD", shortName: "Gold (NYC)", name: "Gold - Spot (NYC)", city: "New York", link: "https://www.investing.com/commodities/gold", timezone: "America/New_York", open: "18:00", close: "17:00", hasLunch: false, isFutures: true, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "VIX", shortName: "VIX (CHI)", name: "VIX - (CHI)", city: "Chicago", link: "https://www.investing.com/indices/volatility-s-p-500", timezone: "America/Chicago", open: "02:15", close: "16:15", hasLunch: false, isFutures: true, holidays: ["2026-01-01","2026-12-25"] },
+      { zone: "GLOBAL ASSETS", code: "FOREX", shortName: "FOREX (LON)", name: "FOREX - Global FX (LON)", city: "London", link: "https://www.investing.com/currencies/streaming-forex-rates-majors", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
+      { zone: "GLOBAL ASSETS", code: "MSCI_FX", shortName: "MSCI FX (LON)", name: "MSCI FX (LON)", city: "London", link: "https://www.investing.com/indices/msci-intl-em-currency", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] },
+      { zone: "GLOBAL ASSETS", code: "MSCI_WORLD", shortName: "MSCI World (LON)", name: "MSCI World Index (LON)", city: "London", link: "https://www.investing.com/indices/msci-world", timezone: "UTC", open: "00:00", close: "23:59", hasLunch: false, holidays: [] }
     ];
 
     let audioCtx = null;
+    let speechState = 0; 
+
     const marketStateTracker = {}; 
     const flashingTimers = {};
     let cachedVoices = [];
+    let announcedClosingMarkets = [];
+    let lastTimeAnnouncedKey = "";
 
-    // Pre-load voices for iPadOS / iOS
+    // Prev Weather State for White Arrow Trend Indicators
+    let prevWxState = null;
+    let currentWxState = {
+      temp: null,
+      humidity: null,
+      windSpeed: null,
+      windDir: "--",
+      windCardinal: "N",
+      pressure: null,
+      uv: null,
+      condition: "Clear",
+      icon: "☀️"
+    };
+
+    let weatherLat = 13.78;
+    let weatherLon = 100.36;
+
+    // Video Stream & Timing Control Variables (v2.5.2)
+    let allClosedSeconds = 0;       // Count seconds on Exchange view when all markets are closed
+    let videoActiveSeconds = 0;    // Count seconds on Video view when markets are open
+    let isVideoModeActive = false;
+    let hlsInstance = null;
+    const bbcStreamUrl = "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8";
+
+    const wmoMap = {
+      0: { text: "Clear sky", iconDay: "☀️", iconNight: "🌙" },
+      1: { text: "Mainly clear", iconDay: "🌤", iconNight: "🌙" },
+      2: { text: "Partly cloudy", iconDay: "⛅", iconNight: "☁️" },
+      3: { text: "Overcast", iconDay: "☁️", iconNight: "☁️" },
+      45: { text: "Fog", iconDay: "🌫", iconNight: "🌫" },
+      51: { text: "Drizzle", iconDay: "🌧", iconNight: "🌧" },
+      61: { text: "Slight rain", iconDay: "🌧", iconNight: "🌧" },
+      63: { text: "Moderate rain", iconDay: "🌧", iconNight: "🌧" },
+      65: { text: "Heavy rain", iconDay: "🌧", iconNight: "🌧" },
+      80: { text: "Rain showers", iconDay: "🌦", iconNight: "🌧" },
+      95: { text: "Thunderstorm", iconDay: "⛈", iconNight: "⛈" }
+    };
+
+    function degreesToCardinal(deg) {
+      const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+      return dirs[Math.round(deg / 45) % 8];
+    }
+
+    // Helper: Temperature Color Code (5 Standard Ranges)
+    function getTempColor(temp) {
+      if (temp === null || isNaN(temp)) return "#00d2ff";
+      if (temp <= 1) return "#78909c";      // <= 1°C: Blue-Gray
+      if (temp <= 11) return "#4dd0e1";     // 2-11°C: Cyan-Gray
+      if (temp <= 21) return "#ffeb3b";     // 12-21°C: Yellow
+      if (temp <= 31) return "#ff9800";     // 22-31°C: Orange
+      return "#ff1744";                     // >= 32°C: Red
+    }
+
+    // Helper: UV Hazard Color Code (5 Standard Tiers)
+    function getUvColor(uv) {
+      if (uv === null || isNaN(uv)) return "#00d2ff";
+      if (uv <= 2) return "#00e676";        // 0-2 Low: Green
+      if (uv <= 5) return "#ffeb3b";        // 3-5 Moderate: Yellow
+      if (uv <= 7) return "#ff6b00";        // 6-7 High: Bright Orange
+      if (uv <= 10) return "#ff1744";       // 8-10 Very High: Bright Red
+      return "#e040fb";                     // 11+ Extreme: Bright Purple
+    }
+
+    // Helper: White Arrow Trend HTML Generator
+    function getTrendArrowHtml(curr, prev) {
+      if (curr === null || prev === null || isNaN(curr) || isNaN(prev) || curr === prev) return "";
+      if (curr > prev) return `<span class="arrow-trend">⬆︎</span>`;
+      return `<span class="arrow-trend">⬇︎</span>`;
+    }
+
+    function initWeather() {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            weatherLat = pos.coords.latitude.toFixed(4);
+            weatherLon = pos.coords.longitude.toFixed(4);
+            fetchWeather();
+          },
+          () => fetchWeather(),
+          { timeout: 5000 }
+        );
+      } else {
+        fetchWeather();
+      }
+      setInterval(fetchWeather, 300000);
+    }
+
+    async function fetchWeather() {
+      const pcElem = document.getElementById('weatherPC');
+      const mobileElem = document.getElementById('weatherMobile');
+      if (pcElem) pcElem.innerHTML = `<span class="wx-label">⏳ WX: Refreshing...</span>`;
+      if (mobileElem) mobileElem.innerHTML = `<span>⏳</span> <span class="wx-label">WX: Refreshing...</span>`;
+
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherLat}&longitude=${weatherLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=uv_index&timezone=auto`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        const c = data.current;
+        const wInfo = wmoMap[c.weather_code] || { text: `Code ${c.weather_code}`, iconDay: "🌤", iconNight: "🌙" };
+        const isDay = c.is_day === 1;
+
+        let uvVal = null;
+        if (data.hourly && data.hourly.uv_index) {
+          const h = new Date().getHours();
+          uvVal = data.hourly.uv_index[h] !== undefined ? data.hourly.uv_index[h] : null;
+        }
+
+        if (currentWxState.temp !== null) {
+          prevWxState = { ...currentWxState };
+        }
+
+        currentWxState = {
+          temp: c.temperature_2m,
+          humidity: c.relative_humidity_2m,
+          windSpeed: c.wind_speed_10m,
+          windDir: c.wind_direction_10m,
+          windCardinal: degreesToCardinal(c.wind_direction_10m),
+          pressure: c.surface_pressure,
+          uv: uvVal,
+          condition: wInfo.text,
+          icon: isDay ? wInfo.iconDay : wInfo.iconNight
+        };
+
+        renderWeatherUI();
+      } catch (e) {
+        console.error("Weather fetch failed", e);
+      }
+    }
+
+    function renderWeatherUI() {
+      const pcElem = document.getElementById('weatherPC');
+      const mobileElem = document.getElementById('weatherMobile');
+
+      const tempVal = currentWxState.temp !== null ? currentWxState.temp : "--";
+      const huVal = currentWxState.humidity !== null ? currentWxState.humidity : "--";
+      const wsVal = currentWxState.windSpeed !== null ? currentWxState.windSpeed : "--";
+      const uvVal = currentWxState.uv !== null ? currentWxState.uv : "--";
+      const hpaVal = currentWxState.pressure !== null ? currentWxState.pressure : "--";
+
+      const tempColor = getTempColor(currentWxState.temp);
+      const uvColor = getUvColor(currentWxState.uv);
+
+      const p = prevWxState || {};
+      const tArr = getTrendArrowHtml(currentWxState.temp, p.temp);
+      const hArr = getTrendArrowHtml(currentWxState.humidity, p.humidity);
+      const wArr = getTrendArrowHtml(currentWxState.windSpeed, p.windSpeed);
+      const uArr = getTrendArrowHtml(currentWxState.uv, p.uv);
+      const pArr = getTrendArrowHtml(currentWxState.pressure, p.pressure);
+
+      if (pcElem) {
+        pcElem.innerHTML = `
+          <span>${currentWxState.icon}</span> 
+          <span class="wx-label">WX:</span><span class="wx-val" style="color:#00d2ff;">${currentWxState.condition}</span><span class="wx-sep">|</span>
+          <span class="wx-label">Temp:</span><span class="wx-val" style="color:${tempColor};">${tempVal}°C${tArr}</span><span class="wx-sep">|</span>
+          <span class="wx-label">Hu:</span><span class="wx-val" style="color:#00d2ff;">${huVal}%${hArr}</span><span class="wx-sep">|</span>
+          <span class="wx-label">WS:</span><span class="wx-val" style="color:#00d2ff;">${wsVal} km/h(${currentWxState.windCardinal})${wArr}</span><span class="wx-sep">|</span>
+          <span class="wx-label">UV:</span><span class="wx-val" style="color:${uvColor};">${uvVal}${uArr}</span><span class="wx-sep">|</span>
+          <span class="wx-label">hPa:</span><span class="wx-val" style="color:#00d2ff;">${hpaVal}${pArr}</span>
+        `;
+      }
+
+      if (mobileElem) {
+        mobileElem.innerHTML = `
+          <span>${currentWxState.icon}</span> <span class="wx-label">WX:</span><span class="wx-val" style="color:${tempColor};">${tempVal}°C${tArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${huVal}%${hArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${wsVal}km/h(${currentWxState.windCardinal})${wArr}</span><span class="wx-sep">|</span><span class="wx-label">UV:</span><span class="wx-val" style="color:${uvColor};">${uvVal}${uArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${hpaVal}${pArr}</span>
+        `;
+      }
+    }
+
+    // ==========================================
+    // 🎥 VIDEO STREAM & DISPLAY TOGGLE (v2.5.2)
+    // ==========================================
+    function startHlsStream() {
+      const video = document.getElementById('videoPlayer');
+      if (!video) return;
+
+      if (Hls.isSupported()) {
+        if (hlsInstance) {
+          hlsInstance.destroy();
+        }
+        hlsInstance = new Hls({ enableWorker: true });
+        hlsInstance.loadSource(bbcStreamUrl);
+        hlsInstance.attachMedia(video);
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+          video.play().catch(e => console.log("Autoplay blocked", e));
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = bbcStreamUrl;
+        video.addEventListener('loadedmetadata', function() {
+          video.play().catch(e => console.log("Autoplay blocked", e));
+        });
+      }
+    }
+
+    function stopHlsStream() {
+      const video = document.getElementById('videoPlayer');
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
+      if (video) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      }
+    }
+
+    function switchDisplayMode(showVideo) {
+      if (window.innerWidth <= 600) return; // Only for PC/iPad
+
+      const tableContainer = document.getElementById('exchangeTableContainer');
+      const videoContainer = document.getElementById('videoContainer');
+
+      if (showVideo) {
+        tableContainer.style.display = 'none';
+        videoContainer.style.display = 'block';
+        isVideoModeActive = true;
+        videoActiveSeconds = 0; // Reset video watch timer
+        startHlsStream();
+      } else {
+        videoContainer.style.display = 'none';
+        tableContainer.style.display = 'block';
+        isVideoModeActive = false;
+        allClosedSeconds = 0; // Reset table wait timer
+        stopHlsStream();
+      }
+    }
+
+    function toggleMainDisplayView() {
+      if (window.innerWidth <= 600) return;
+      switchDisplayMode(!isVideoModeActive);
+    }
+
     function loadVoices() {
       if ('speechSynthesis' in window) {
         cachedVoices = window.speechSynthesis.getVoices();
@@ -230,63 +606,139 @@
       }
     }
 
-    // Explicitly target Serena (Enhanced)
-    function getSerenaVoice() {
+    function getPreferredVoice() {
       if (cachedVoices.length === 0 && 'speechSynthesis' in window) {
         cachedVoices = window.speechSynthesis.getVoices();
       }
       
-      // 1. Search explicitly for "Serena" (Enhanced/Premium on iPadOS)
-      let serena = cachedVoices.find(v => v.name.includes('Serena'));
-      if (serena) return serena;
+      let samantha = cachedVoices.find(v => v.name.includes('Samantha'));
+      if (samantha) return samantha;
 
-      // 2. Fallback to any British Voice (en-GB)
-      let ukVoice = cachedVoices.find(v => v.lang === 'en-GB' || v.lang.startsWith('en_GB'));
-      if (ukVoice) return ukVoice;
+      let kanya = cachedVoices.find(v => v.name.includes('Kanya') || v.lang === 'th-TH');
+      if (kanya) return kanya;
 
-      // 3. Fallback to English Voice (en-US)
       let enVoice = cachedVoices.find(v => v.lang.startsWith('en'));
       return enVoice || null;
     }
 
-    function enableAudio() {
+    function toggleSpeechState() {
       initAudioContext();
       if ('speechSynthesis' in window) {
         window.speechSynthesis.resume();
-        // Warm up speech engine
-        const dummyUtterance = new SpeechSynthesisUtterance("");
-        window.speechSynthesis.speak(dummyUtterance);
       }
-      const btn = document.getElementById('btnAudio');
-      btn.innerText = "Alert On";
-      btn.classList.add('active');
+
+      speechState = (speechState + 1) % 3;
+      const v = getPreferredVoice();
+
+      if (speechState === 1) {
+        speakDirect(v && v.lang === 'th-TH' ? "ระบบเปิดเสียงพูดแล้วค่ะ" : "Speech is On");
+      } else if (speechState === 2) {
+        triggerScanReport();
+      } else {
+        speakDirect(v && v.lang === 'th-TH' ? "ระบบปิดเสียงพูดแล้วค่ะ" : "Speech is Off");
+      }
     }
 
-    document.addEventListener('touchstart', function() {
-      enableAudio();
-    }, { once: true });
-
-    function speakText(text) {
+    function speakDirect(text) {
       if (!('speechSynthesis' in window)) return;
-
-      window.speechSynthesis.cancel(); // Clear queue
-
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.9;
       utterance.pitch = 1.0;
-
-      const targetVoice = getSerenaVoice();
-      if (targetVoice) {
-        utterance.voice = targetVoice;
-        utterance.lang = targetVoice.lang;
-      } else {
-        utterance.lang = 'en-GB';
-      }
-
+      const targetVoice = getPreferredVoice();
+      if (targetVoice) utterance.voice = targetVoice;
       window.speechSynthesis.speak(utterance);
     }
 
-    // Morse Code Engine (+50% Dit duration & 1:3 Dash Ratio)
+    function speakText(text, pauseBeforeMs = 0) {
+      if (speechState === 0 || !('speechSynthesis' in window)) return;
+
+      window.speechSynthesis.cancel();
+
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
+
+        const targetVoice = getPreferredVoice();
+        if (targetVoice) {
+          utterance.voice = targetVoice;
+          utterance.lang = targetVoice.lang;
+        } else {
+          utterance.lang = 'en-US';
+        }
+
+        window.speechSynthesis.speak(utterance);
+      }, pauseBeforeMs);
+    }
+
+    function triggerScanReport() {
+      const now = new Date();
+      const optionsDay = { weekday: 'long' };
+      const optionsDate = { month: 'long', day: 'numeric', year: 'numeric' };
+      
+      const dayStr = now.toLocaleDateString('en-US', optionsDay);
+      const dateStr = now.toLocaleDateString('en-US', optionsDate);
+      const timeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+      let openMarkets = [];
+
+      markets.forEach(m => {
+        const p = getZonedParts(now, m.timezone);
+        const localMin = parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10);
+        const dateStrIso = p.year + '-' + p.month + '-' + p.day;
+        
+        const thP = getZonedParts(now, "Asia/Bangkok");
+        const thDay = thP.weekday;
+        const isBkkWeekend = (thDay === 'Sat' || thDay === 'Sun');
+        const isWeekend = m.isFutures ? isBkkWeekend : (p.weekday === 'Sat' || p.weekday === 'Sun');
+        const isHoliday = m.holidays.indexOf(dateStrIso) !== -1;
+
+        if (!isWeekend && !isHoliday) {
+          const openMin = timeToMin(m.open);
+          const closeMin = timeToMin(m.close);
+          let isTrading = false;
+
+          if (closeMin > openMin) {
+            isTrading = (localMin >= openMin && localMin < closeMin);
+          } else {
+            isTrading = (localMin >= openMin || localMin < closeMin);
+          }
+
+          if (m.hasLunch) {
+            const lStart = timeToMin(m.lunchStart);
+            const lEnd = timeToMin(m.lunchEnd);
+            if (localMin >= lStart && localMin < lEnd) isTrading = false;
+          }
+
+          if (isTrading) {
+            openMarkets.push(`${m.name} ${m.city}`);
+          }
+        }
+      });
+
+      let intro = `Today is ${dayStr}, ${dateStr}. The time is now ${timeStr}. `;
+      if (currentWxState.temp !== null) {
+        intro += `Temperature ${currentWxState.temp} degrees Celsius, ${currentWxState.condition}. `;
+      }
+
+      if (openMarkets.length > 0) {
+        intro += `The remaining open exchange `;
+        speakDirect(intro);
+        setTimeout(() => {
+          if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(openMarkets.join(", "));
+            const targetVoice = getPreferredVoice();
+            if (targetVoice) utterance.voice = targetVoice;
+            window.speechSynthesis.speak(utterance);
+          }
+        }, 1000);
+      } else {
+        intro += `All markets closed.`;
+        speakDirect(intro);
+      }
+    }
+
     function playMorsePattern(patternString, callback) {
       initAudioContext();
       if (!audioCtx || audioCtx.state !== 'running') {
@@ -294,10 +746,10 @@
         return;
       }
 
-      const dotDuration = 0.12;              // 1 unit (Dit = 120ms)
-      const dashDuration = dotDuration * 3;  // 3 units (Dash = 360ms)
-      const elementSpace = dotDuration;      // 1 unit between elements
-      const charSpace = dotDuration * 3;     // 3 units between letters
+      const dotDuration = 0.12;
+      const dashDuration = dotDuration * 3;
+      const elementSpace = dotDuration;
+      const charSpace = dotDuration * 3;
 
       let currentTime = audioCtx.currentTime + 0.05;
 
@@ -333,37 +785,6 @@
         osc.start(startTime);
         osc.stop(startTime + duration);
       } catch (e) { console.error(e); }
-    }
-
-    // Sound Test Sequence (Title Click Switch): O -> V -> VV -> E -> T -> Serena Speech
-    function runSoundTest() {
-      enableAudio();
-
-      playMorsePattern('---', () => {
-        setTimeout(() => {
-          playMorsePattern('...-', () => {
-            setTimeout(() => {
-              playMorsePattern('...- ...-', () => {
-                setTimeout(() => {
-                  playMorsePattern('.', () => {
-                    setTimeout(() => {
-                      playMorsePattern('-', () => {
-                        // After T sound finishes, speak current time using Serena voice
-                        setTimeout(() => {
-                          const now = new Date();
-                          const hours = String(now.getHours()).padStart(2, '0');
-                          const minutes = String(now.getMinutes()).padStart(2, '0');
-                          speakText(`The time now is ${hours}:${minutes}`);
-                        }, 500);
-                      });
-                    }, 400);
-                  });
-                }, 400);
-              });
-            }, 400);
-          });
-        }, 400);
-      });
     }
 
     function getZonedParts(date, timeZone) {
@@ -412,7 +833,6 @@
       led.className = `led-dot led-${state}`;
     }
 
-    // Flashing Controller with Timer Reset
     function triggerFlashingAlert(code) {
       const nameElem = document.getElementById('name-' + code);
       if (!nameElem) return;
@@ -426,7 +846,7 @@
       flashingTimers[code] = setTimeout(() => {
         nameElem.classList.remove('blinking-name');
         delete flashingTimers[code];
-      }, 60000); // 1 minute (60,000ms)
+      }, 60000);
     }
 
     function initTable() {
@@ -471,30 +891,30 @@
         if (m.code === 'TFEX') {
           tbody.innerHTML += `
             <tr id="row-TFEX-1M">
-              <td class="ex-time" id="time-TFEX-1M">--:--</td>
+              <td class="ex-time" id="time-TFEX-1M"></td>
               <td class="ex-name">
                 <div class="ex-name-container">
-                  <span class="led-dot led-red" id="led-TFEX-1M"></span>
+                  <span class="led-dot led-red" id="led-TFEX-1M"></span>&nbsp;&nbsp;
                   <span class="name-full">TFEX 1 นาที</span>
                   <span class="name-short">TFEX 1m</span>
                   <span class="candle-counter" id="candle-count-1m">--</span>
                 </div>
               </td>
               <td id="status-TFEX-1M">--</td>
-              <td class="tomorrow-normal">Normal</td>
+              <td class="tomorrow-normal" id="tomorrow-TFEX-1M"></td>
             </tr>
             <tr id="row-TFEX-5M">
-              <td class="ex-time" id="time-TFEX-5M">--:--</td>
+              <td class="ex-time" id="time-TFEX-5M"></td>
               <td class="ex-name">
                 <div class="ex-name-container">
-                  <span class="led-dot led-red" id="led-TFEX-5M"></span>
+                  <span class="led-dot led-red" id="led-TFEX-5M"></span>&nbsp;&nbsp;
                   <span class="name-full">TFEX 5 นาที</span>
                   <span class="name-short">TFEX 5m</span>
                   <span class="candle-counter" id="candle-count-5m">--</span>
                 </div>
               </td>
               <td id="status-TFEX-5M">--</td>
-              <td class="tomorrow-normal">Normal</td>
+              <td class="tomorrow-normal" id="tomorrow-TFEX-5M"></td>
             </tr>
           `;
         }
@@ -503,20 +923,74 @@
 
     let lastTfex1mSec = -1;
 
+    function checkScheduledSpeechAnnouncements(now) {
+      const thP = getZonedParts(now, "Asia/Bangkok");
+      const currentHour = parseInt(thP.hour, 10);
+      const currentMin = parseInt(thP.minute, 10);
+      const currentSec = parseInt(thP.second, 10);
+      const isWeekend = (thP.weekday === 'Sat' || thP.weekday === 'Sun');
+
+      if (currentSec !== 55) return;
+
+      let shouldAnnounce = false;
+      let targetHour = currentHour;
+      let targetMin = currentMin + 1;
+
+      if (targetMin === 60) {
+        targetMin = 0;
+        targetHour = (targetHour + 1) % 24;
+      }
+
+      if (!isWeekend) {
+        if (currentHour >= 9 && currentHour < 17) {
+          if (currentMin === 14 || currentMin === 29 || currentMin === 44 || currentMin === 59) {
+            shouldAnnounce = true;
+          }
+        } else if (currentHour >= 17 && currentHour < 20) {
+          if (currentMin === 59) {
+            shouldAnnounce = true;
+          }
+        }
+      } else {
+        if (currentHour >= 9 && currentHour < 20) {
+          if (currentMin === 59) {
+            shouldAnnounce = true;
+          }
+        }
+      }
+
+      if (shouldAnnounce) {
+        const announceKey = `${targetHour}:${targetMin}`;
+        if (lastTimeAnnouncedKey !== announceKey) {
+          lastTimeAnnouncedKey = announceKey;
+          
+          playMorsePattern('-', () => {
+            const hStr = String(targetHour).padStart(2, '0');
+            const mStr = String(targetMin).padStart(2, '0');
+            let speechMsg = `The time is now ${hStr}:${mStr}.`;
+            if (currentWxState.temp !== null) {
+              speechMsg += ` Temperature ${currentWxState.temp} degrees Celsius, ${currentWxState.condition}.`;
+            }
+            speakText(speechMsg);
+          });
+        }
+      }
+    }
+
     function updateEngine() {
       const now = new Date();
       const isMobile = window.innerWidth <= 600;
 
       const utcHM = now.toISOString().substr(11, 8);
-      document.getElementById('utcClock').innerText = 'UTC: ' + utcHM;
+      const utcText = 'UTC ' + utcHM;
 
-      const muteEx = !document.getElementById('muteExchange').checked;
-      const muteTfex = !document.getElementById('muteTFEX').checked;
+      const utcHeaderElem = document.getElementById('utcClockHeader');
+      utcHeaderElem.innerText = utcText;
 
-      // Direct calculation for TFEX Day & Night Trading Status
+      checkScheduledSpeechAnnouncements(now);
+
       const thP = getZonedParts(now, "Asia/Bangkok");
       const thMin = parseInt(thP.hour, 10) * 60 + parseInt(thP.minute, 10);
-      const thSec = parseInt(thP.second, 10);
       const thDateStr = thP.year + '-' + thP.month + '-' + thP.day;
       const isThWeekend = (thP.weekday === 'Sat' || thP.weekday === 'Sun');
       const tfexHolidays = ["2026-01-01","2026-03-03","2026-04-06","2026-04-13","2026-04-14","2026-04-15","2026-05-01","2026-05-04","2026-06-03","2026-07-28","2026-07-29","2026-08-12","2026-10-13","2026-10-23","2026-12-07","2026-12-10","2026-12-31"];
@@ -584,11 +1058,13 @@
         }
       }
 
+      let closing5mList = [];
+      let anyMarketOpen = false;
+
       markets.forEach(m => {
         const p = getZonedParts(now, m.timezone);
         const localHM = p.hour + ':' + p.minute;
         const localMin = parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10);
-        const localSec = parseInt(p.second, 10);
         const dateStr = p.year + '-' + p.month + '-' + p.day;
 
         document.getElementById('time-' + m.code).innerText = localHM;
@@ -609,8 +1085,9 @@
           tomCell.className = "tomorrow-normal";
         }
 
-        // Today Check
-        const isTodayWeekend = (p.weekday === 'Sat' || p.weekday === 'Sun');
+        // Today Weekend Check
+        const isBkkWeekend = (thP.weekday === 'Sat' || thP.weekday === 'Sun');
+        const isTodayWeekend = m.isFutures ? isBkkWeekend : (p.weekday === 'Sat' || p.weekday === 'Sun');
         const isTodayHoliday = m.holidays.indexOf(dateStr) !== -1;
         const statusCell = document.getElementById('status-' + m.code);
 
@@ -618,8 +1095,16 @@
           marketStateTracker[m.code] = { state: 'UNKNOWN' };
         }
 
-        if (isTodayWeekend || isTodayHoliday) {
-          statusCell.innerHTML = '<span class="status-close-dark">CLOSED (Holiday/Weekend)</span>';
+        const closedWeekendText = isMobile ? 'CLOSED' : 'CLOSED, weekend';
+        const closedHolidayText = isMobile ? 'CLOSED' : 'CLOSED, holiday';
+
+        if (isTodayWeekend) {
+          statusCell.innerHTML = `<span class="status-close-dark">${closedWeekendText}</span>`;
+          setLedState(m.code, 'red');
+          marketStateTracker[m.code].state = 'CLOSED';
+          return;
+        } else if (isTodayHoliday) {
+          statusCell.innerHTML = `<span class="status-close-dark">${closedHolidayText}</span>`;
           setLedState(m.code, 'red');
           marketStateTracker[m.code].state = 'CLOSED';
           return;
@@ -628,23 +1113,14 @@
         // Processing TFEX Row
         if (m.code === 'TFEX') {
           let currentState = 'CLOSED';
-          if (isTfexTrading) currentState = 'OPEN';
-          else if (isTfexBreak) currentState = 'BREAK';
+          if (isTfexTrading) { currentState = 'OPEN'; anyMarketOpen = true; }
+          else if (isTfexBreak) { currentState = 'BREAK'; }
 
-          // STATE CHANGE DETECTOR & FLASHING TRIGGER FOR TFEX
           if (marketStateTracker[m.code].state !== 'UNKNOWN' && marketStateTracker[m.code].state !== currentState) {
-            if (!muteEx) {
-              if (currentState === 'OPEN') {
-                playMorsePattern('---'); // Morse 'O' for Open
-              } else if (currentState === 'BREAK') {
-                playMorsePattern('...-'); // Morse 'V' for Break
-              } else if (currentState === 'CLOSED') {
-                playMorsePattern('...- ...-'); // Morse 'V V' for Close
-              }
-            }
-            if (currentState === 'OPEN' || currentState === 'CLOSED') {
-              triggerFlashingAlert(m.code);
-            }
+            if (currentState === 'OPEN') playMorsePattern('---');
+            else if (currentState === 'BREAK') playMorsePattern('...-');
+            else if (currentState === 'CLOSED') playMorsePattern('...- ...-');
+            if (currentState === 'OPEN' || currentState === 'CLOSED') triggerFlashingAlert(m.code);
           }
           marketStateTracker[m.code].state = currentState;
 
@@ -660,6 +1136,11 @@
               </div>
             `;
             setLedState(m.code, 'green');
+
+            if (remainingTfexMinutes <= 5 && remainingTfexMinutes > 0 && !announcedClosingMarkets.includes("TFEX")) {
+              closing5mList.push("TFEX");
+              announcedClosingMarkets.push("TFEX");
+            }
           } else if (isTfexBreak) {
             let remBreak = dayLunchEnd - localMin;
             statusCell.innerHTML = `
@@ -677,11 +1158,8 @@
               statusCell.innerHTML = '<span class="' + colorClass + '">' + textNight + '</span>';
             } else {
               let diffDay = 0;
-              if (localMin < dayOpen) {
-                diffDay = dayOpen - localMin;
-              } else {
-                diffDay = (1440 - localMin) + dayOpen;
-              }
+              if (localMin < dayOpen) diffDay = dayOpen - localMin;
+              else diffDay = (1440 - localMin) + dayOpen;
               let colorClass = diffDay <= 60 ? 'status-close' : 'status-close-dark';
               let textDay = isMobile ? ('Day Open in ' + formatHM(diffDay)) : ('Closed, Day Open in ' + formatHM(diffDay));
               statusCell.innerHTML = '<span class="' + colorClass + '">' + textDay + '</span>';
@@ -697,53 +1175,37 @@
         const totalSession = closeMin > openMin ? (closeMin - openMin) : (1440 - openMin + closeMin);
 
         let isTradingNow = false;
-        if (closeMin > openMin) {
-          isTradingNow = (localMin >= openMin && localMin < closeMin);
-        } else {
-          isTradingNow = (localMin >= openMin || localMin < closeMin);
-        }
+        if (closeMin > openMin) isTradingNow = (localMin >= openMin && localMin < closeMin);
+        else isTradingNow = (localMin >= openMin || localMin < closeMin);
 
         let isLunch = false;
         if (m.hasLunch) {
           const lStart = timeToMin(m.lunchStart);
           const lEnd = timeToMin(m.lunchEnd);
-          if (localMin >= lStart && localMin < lEnd) {
-            isLunch = true;
-          }
+          if (localMin >= lStart && localMin < lEnd) isLunch = true;
         }
 
         let currentState = 'CLOSED';
-        if (isTradingNow && !isLunch) currentState = 'OPEN';
-        else if (isLunch) currentState = 'BREAK';
+        if (isTradingNow && !isLunch) { currentState = 'OPEN'; anyMarketOpen = true; }
+        else if (isLunch) { currentState = 'BREAK'; }
 
-        // STATE CHANGE DETECTOR & FLASHING TRIGGER FOR STANDARD MARKETS
         if (marketStateTracker[m.code].state !== 'UNKNOWN' && marketStateTracker[m.code].state !== currentState) {
-          if (!muteEx) {
-            if (currentState === 'OPEN') {
-              playMorsePattern('---'); // Morse 'O' for Open
-            } else if (currentState === 'BREAK') {
-              playMorsePattern('...-'); // Morse 'V' for Break
-            } else if (currentState === 'CLOSED') {
-              playMorsePattern('...- ...-'); // Morse 'V V' for Close
-            }
-          }
-          if (currentState === 'OPEN' || currentState === 'CLOSED') {
-            triggerFlashingAlert(m.code);
-          }
+          if (currentState === 'OPEN') playMorsePattern('---');
+          else if (currentState === 'BREAK') playMorsePattern('...-');
+          else if (currentState === 'CLOSED') playMorsePattern('...- ...-');
+          if (currentState === 'OPEN' || currentState === 'CLOSED') triggerFlashingAlert(m.code);
         }
         marketStateTracker[m.code].state = currentState;
 
         if (!isTradingNow) {
           let diff = 0;
-          if (localMin < openMin) {
-            diff = openMin - localMin;
-          } else {
-            diff = (1440 - localMin) + openMin;
-          }
+          if (localMin < openMin) diff = openMin - localMin;
+          else diff = (1440 - localMin) + openMin;
           const colorClass = diff <= 60 ? 'status-close' : 'status-close-dark';
           const openText = isMobile ? ('Open in ' + formatHM(diff)) : ('Closed, Open in ' + formatHM(diff));
           statusCell.innerHTML = '<span class="' + colorClass + '">' + openText + '</span>';
           setLedState(m.code, 'red');
+          announcedClosingMarkets = announcedClosingMarkets.filter(item => item !== m.name);
         } else {
           if (isLunch) {
             const lEnd = timeToMin(m.lunchEnd);
@@ -770,32 +1232,56 @@
               </div>
             `;
             setLedState(m.code, 'green');
+
+            if (remaining <= 5 && remaining > 0 && !announcedClosingMarkets.includes(m.name)) {
+              closing5mList.push(m.name);
+              announcedClosingMarkets.push(m.name);
+            }
           }
         }
       });
 
-      // TFEX SPECIAL CYCLES (1 Min & 5 Min)
-      const tfexP = getZonedParts(now, "Asia/Bangkok");
-      const tfexHM = tfexP.hour + ':' + tfexP.minute;
-      document.getElementById('time-TFEX-1M').innerText = tfexHM;
-      document.getElementById('time-TFEX-5M').innerText = tfexHM;
+      // ==========================================================
+      // ⏱ DYNAMIC MARKET STATUS & AUTOMATIC SWITCH LOGIC (v2.5.2)
+      // ==========================================================
+      if (!anyMarketOpen) {
+        // 🛑 ALL MARKETS CLOSED MODE
+        utcHeaderElem.classList.add('dimmed');
 
+        if (!isVideoModeActive) {
+          // Viewing Exchange Table -> Count up to 3 mins (180s) then switch to Video
+          allClosedSeconds++;
+          if (allClosedSeconds >= 180 && !isMobile) {
+            switchDisplayMode(true);
+          }
+        }
+      } else {
+        // 🟢 MARKET ACTIVE MODE
+        utcHeaderElem.classList.remove('dimmed');
+        allClosedSeconds = 0; // Reset closed timer
+
+        if (isVideoModeActive) {
+          // Viewing Video while Markets are Active -> Count up to 3 mins (180s) then switch back to Exchange Table
+          videoActiveSeconds++;
+          if (videoActiveSeconds >= 180 && !isMobile) {
+            switchDisplayMode(false);
+          }
+        }
+      }
+
+      // TFEX SPECIAL CYCLES
+      const tfexP = getZonedParts(now, "Asia/Bangkok");
       const currentSec = now.getSeconds();
       const currentMin = now.getMinutes();
 
       const tfex1Cell = document.getElementById('status-TFEX-1M');
       const tfex5Cell = document.getElementById('status-TFEX-5M');
 
-      if (isTfexBreak) {
-        tfex1Cell.innerHTML = '<span class="status-close blinking-text">Break</span>';
-        tfex5Cell.innerHTML = '<span class="status-close blinking-text">Break</span>';
-        setLedState('TFEX-1M', 'orange');
-        setLedState('TFEX-5M', 'orange');
-      } else if (!isTfexTrading) {
-        tfex1Cell.innerHTML = '<span class="status-close-dark">Closed</span>';
-        tfex5Cell.innerHTML = '<span class="status-close-dark">Closed</span>';
-        setLedState('TFEX-1M', 'red');
-        setLedState('TFEX-5M', 'red');
+      if (isTfexBreak || !isTfexTrading) {
+        tfex1Cell.innerHTML = '';
+        tfex5Cell.innerHTML = '';
+        setLedState('TFEX-1M', isTfexBreak ? 'orange' : 'red');
+        setLedState('TFEX-5M', isTfexBreak ? 'orange' : 'red');
       } else {
         const remSec1M = 60 - currentSec;
         const pct1M = (remSec1M / 60) * 100;
@@ -820,19 +1306,28 @@
         setLedState('TFEX-5M', 'green');
 
         if (currentSec === 0 && lastTfex1mSec !== 0) {
-          if (!muteTfex) {
-            if (currentMin % 5 === 0) {
-              playMorsePattern('-'); // Morse 'T' (5m Alert)
-            } else {
-              playMorsePattern('.'); // Morse 'E' (1m Alert)
-            }
-          }
+          if (currentMin % 5 === 0) playMorsePattern('-');
+          else playMorsePattern('.');
         }
       }
       lastTfex1mSec = currentSec;
+
+      // Announce 5-minute closing warnings
+      if (closing5mList.length === 1) {
+        speakText(`Attention please, attention`);
+        setTimeout(() => {
+          speakText(`${closing5mList[0]} is closing in 5 minutes`);
+        }, 1000);
+      } else if (closing5mList.length > 1) {
+        speakText(`Attention please, attention`);
+        setTimeout(() => {
+          speakText(`The ${closing5mList.join(", ")} will be closed within 5 minutes from now`);
+        }, 1000);
+      }
     }
 
     initTable();
+    initWeather();
     updateEngine();
     setInterval(updateEngine, 1000);
   </script>
