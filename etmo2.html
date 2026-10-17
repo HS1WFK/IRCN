@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.5.4</title>
+  <title>Exchange Times v2.5.5</title>
   <!-- hls.js Library for Streaming HLS Video -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -170,7 +170,7 @@
     .name-full { display: inline; }
     .name-short { display: none; }
 
-    /* Video Player Container & Overlay Badge (PC/iPad Only) */
+    /* Video Player Container (PC/iPad Only) */
     #videoContainer {
       display: none;
       position: relative;
@@ -187,24 +187,6 @@
       height: 100%;
       object-fit: contain;
       cursor: pointer;
-    }
-
-    /* Left Top Overlay Audio Badge */
-    .video-audio-badge {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      background: rgba(0, 0, 0, 0.65);
-      color: #00d2ff;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      pointer-events: none;
-      z-index: 10;
-      border: 1px solid rgba(0, 210, 255, 0.3);
-      backdrop-filter: blur(4px);
-      user-select: none;
     }
 
     /* 📱 MOBILE / IPHONE OVERRIDE */
@@ -282,7 +264,7 @@
   <div class="header-panel">
     <div class="header-top-row">
       <div class="app-title" onclick="toggleSpeechState()" title="Click to toggle Speech ON -> Speech TEST -> Speech OFF">
-        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.4</span>
+        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.5</span>
       </div>
 
       <!-- Top Row WX Condition Display (PC/iPad) -->
@@ -334,7 +316,6 @@
 
   <!-- Video Stream Wrapper (PC/iPad View Only) -->
   <div id="videoContainer">
-    <div class="video-audio-badge" id="videoAudioBadge">🔇 Muted (Click video to unmute)</div>
     <video id="videoPlayer" autoplay playsinline muted onclick="toggleVideoMute()"></video>
   </div>
 
@@ -405,7 +386,7 @@
     let weatherLat = 13.78;
     let weatherLon = 100.36;
 
-    // Video Stream & Timing Control Variables (v2.5.4)
+    // Video Stream & Timing Control Variables (v2.5.5)
     let allClosedSeconds = 0;       // Count seconds on Exchange view when all markets are closed
     let videoActiveSeconds = 0;    // Count seconds on Video view when markets are open
     let isVideoModeActive = false;
@@ -590,7 +571,7 @@
     }
 
     // ==========================================
-    // 🎥 VIDEO STREAM & DISPLAY TOGGLE (v2.5.4)
+    // 🎥 VIDEO STREAM & DISPLAY TOGGLE (v2.5.5)
     // ==========================================
     function startHlsStream() {
       const video = document.getElementById('videoPlayer');
@@ -629,19 +610,8 @@
 
     function toggleVideoMute() {
       const video = document.getElementById('videoPlayer');
-      const badge = document.getElementById('videoAudioBadge');
       if (!video) return;
-
       video.muted = !video.muted;
-      if (badge) {
-        if (video.muted) {
-          badge.innerText = "🔇 Muted (Click video to unmute)";
-          badge.style.color = "#00d2ff";
-        } else {
-          badge.innerText = "🔊 Audio ON";
-          badge.style.color = "#4caf50";
-        }
-      }
     }
 
     function switchDisplayMode(showVideo) {
@@ -1329,7 +1299,7 @@
       });
 
       // ==========================================================
-      // ⏱ DYNAMIC MARKET STATUS & AUTOMATIC SWITCH LOGIC (v2.5.4)
+      // ⏱ DYNAMIC MARKET STATUS & AUTOMATIC SWITCH LOGIC (v2.5.5)
       // ==========================================================
       if (!anyMarketOpen) {
         // 🛑 ALL MARKETS CLOSED MODE
