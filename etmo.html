@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.5.2</title>
+  <title>Exchange Times v2.5.3</title>
   <!-- hls.js Library for Streaming HLS Video -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
@@ -37,7 +37,7 @@
       width: 100%;
     }
 
-    /* Left-aligned Title & Drop-shadow */
+    /* Left-aligned Title & WX Text in Top Row */
     .app-title { 
       font-size: 31px; 
       font-weight: bold; 
@@ -48,8 +48,20 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      white-space: nowrap;
     }
     .app-title:active { opacity: 0.7; }
+
+    /* Weather condition in Top Row (PC/iPad) */
+    .top-wx-container {
+      display: flex;
+      align-items: center;
+      font-size: 20px;
+      font-weight: 600;
+      color: #00d2ff;
+      margin-left: 12px;
+      white-space: nowrap;
+    }
 
     /* Right-aligned UTC Clock on PC/iPad */
     .pc-utc-container {
@@ -74,7 +86,7 @@
       text-shadow: none;
     }
 
-    /* Sub-row containing WX Left-aligned (PC/iPad) */
+    /* Sub-row containing WX Metrics Starting Left-aligned with Temp (PC/iPad) */
     .header-sub-row {
       display: flex;
       align-items: center;
@@ -191,6 +203,8 @@
 
       .app-title { font-size: 19px !important; font-weight: 800 !important; }
 
+      .top-wx-container { display: none; } /* Hidden on mobile, uses mobile-weather-row instead */
+
       .header-sub-row { display: none; }
 
       .pc-utc-container {
@@ -249,7 +263,12 @@
   <div class="header-panel">
     <div class="header-top-row">
       <div class="app-title" onclick="toggleSpeechState()" title="Click to toggle Speech ON -> Speech TEST -> Speech OFF">
-        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.2</span>
+        Exchange Times <span style="font-size: 12px; color: #888;">v2.5.3</span>
+      </div>
+
+      <!-- Top Row WX Condition Display (PC/iPad) -->
+      <div class="top-wx-container" id="topWxContainerPC">
+        <span class="wx-label">⏳ WX: Loading...</span>
       </div>
 
       <!-- Right-aligned UTC Clock Position (Interactive Toggle) -->
@@ -258,10 +277,10 @@
       </div>
     </div>
 
-    <!-- Sub-row: Left-aligned WX Display (PC/iPad) -->
+    <!-- Sub-row: Metrics starting with Temp Left-aligned (PC/iPad) -->
     <div class="header-sub-row">
-      <span id="weatherPC">
-        <span class="wx-label">⏳ WX: Loading...</span>
+      <span id="weatherMetricsPC">
+        <span class="wx-label">⏳ Loading Metrics...</span>
       </span>
     </div>
 
@@ -366,25 +385,43 @@
     let weatherLat = 13.78;
     let weatherLon = 100.36;
 
-    // Video Stream & Timing Control Variables (v2.5.2)
+    // Video Stream & Timing Control Variables (v2.5.3)
     let allClosedSeconds = 0;       // Count seconds on Exchange view when all markets are closed
     let videoActiveSeconds = 0;    // Count seconds on Video view when markets are open
     let isVideoModeActive = false;
     let hlsInstance = null;
     const bbcStreamUrl = "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8";
 
+    // Complete WMO Weather Codes (0–99) Mapping
     const wmoMap = {
       0: { text: "Clear sky", iconDay: "☀️", iconNight: "🌙" },
       1: { text: "Mainly clear", iconDay: "🌤", iconNight: "🌙" },
       2: { text: "Partly cloudy", iconDay: "⛅", iconNight: "☁️" },
       3: { text: "Overcast", iconDay: "☁️", iconNight: "☁️" },
       45: { text: "Fog", iconDay: "🌫", iconNight: "🌫" },
-      51: { text: "Drizzle", iconDay: "🌧", iconNight: "🌧" },
+      48: { text: "Depositing rime fog", iconDay: "🌫", iconNight: "🌫" },
+      51: { text: "Light drizzle", iconDay: "🌧", iconNight: "🌧" },
+      53: { text: "Moderate drizzle", iconDay: "🌧", iconNight: "🌧" },
+      55: { text: "Dense drizzle", iconDay: "🌧", iconNight: "🌧" },
+      56: { text: "Light freezing drizzle", iconDay: "🌧", iconNight: "🌧" },
+      57: { text: "Dense freezing drizzle", iconDay: "🌧", iconNight: "🌧" },
       61: { text: "Slight rain", iconDay: "🌧", iconNight: "🌧" },
       63: { text: "Moderate rain", iconDay: "🌧", iconNight: "🌧" },
       65: { text: "Heavy rain", iconDay: "🌧", iconNight: "🌧" },
-      80: { text: "Rain showers", iconDay: "🌦", iconNight: "🌧" },
-      95: { text: "Thunderstorm", iconDay: "⛈", iconNight: "⛈" }
+      66: { text: "Light freezing rain", iconDay: "🌧", iconNight: "🌧" },
+      67: { text: "Heavy freezing rain", iconDay: "🌧", iconNight: "🌧" },
+      71: { text: "Slight snow fall", iconDay: "🌨", iconNight: "🌨" },
+      73: { text: "Moderate snow fall", iconDay: "🌨", iconNight: "🌨" },
+      75: { text: "Heavy snow fall", iconDay: "🌨", iconNight: "🌨" },
+      77: { text: "Snow grains", iconDay: "🌨", iconNight: "🌨" },
+      80: { text: "Slight rain showers", iconDay: "🌦", iconNight: "🌧" },
+      81: { text: "Moderate rain showers", iconDay: "🌦", iconNight: "🌧" },
+      82: { text: "Violent rain showers", iconDay: "🌦", iconNight: "🌧" },
+      85: { text: "Slight snow showers", iconDay: "🌨", iconNight: "🌨" },
+      86: { text: "Heavy snow showers", iconDay: "🌨", iconNight: "🌨" },
+      95: { text: "Thunderstorm", iconDay: "⛈", iconNight: "⛈" },
+      96: { text: "Thunderstorm with slight hail", iconDay: "⛈", iconNight: "⛈" },
+      99: { text: "Thunderstorm with heavy hail", iconDay: "⛈", iconNight: "⛈" }
     };
 
     function degreesToCardinal(deg) {
@@ -437,9 +474,12 @@
     }
 
     async function fetchWeather() {
-      const pcElem = document.getElementById('weatherPC');
+      const topWxPC = document.getElementById('topWxContainerPC');
+      const metricsPC = document.getElementById('weatherMetricsPC');
       const mobileElem = document.getElementById('weatherMobile');
-      if (pcElem) pcElem.innerHTML = `<span class="wx-label">⏳ WX: Refreshing...</span>`;
+
+      if (topWxPC) topWxPC.innerHTML = `<span class="wx-label">⏳ WX: Refreshing...</span>`;
+      if (metricsPC) metricsPC.innerHTML = `<span class="wx-label">⏳ Loading Metrics...</span>`;
       if (mobileElem) mobileElem.innerHTML = `<span>⏳</span> <span class="wx-label">WX: Refreshing...</span>`;
 
       try {
@@ -481,7 +521,8 @@
     }
 
     function renderWeatherUI() {
-      const pcElem = document.getElementById('weatherPC');
+      const topWxPC = document.getElementById('topWxContainerPC');
+      const metricsPC = document.getElementById('weatherMetricsPC');
       const mobileElem = document.getElementById('weatherMobile');
 
       const tempVal = currentWxState.temp !== null ? currentWxState.temp : "--";
@@ -500,10 +541,18 @@
       const uArr = getTrendArrowHtml(currentWxState.uv, p.uv);
       const pArr = getTrendArrowHtml(currentWxState.pressure, p.pressure);
 
-      if (pcElem) {
-        pcElem.innerHTML = `
+      // PC/iPad: Top Row (Icon WX: Condition)
+      if (topWxPC) {
+        topWxPC.innerHTML = `
           <span>${currentWxState.icon}</span> 
-          <span class="wx-label">WX:</span><span class="wx-val" style="color:#00d2ff;">${currentWxState.condition}</span><span class="wx-sep">|</span>
+          <span class="wx-label" style="margin-left: 4px;">WX:</span>
+          <span class="wx-val" style="color:#00d2ff; margin-left: 4px;">${currentWxState.condition}</span>
+        `;
+      }
+
+      // PC/iPad: Sub-row (Left-aligned starting with Temp)
+      if (metricsPC) {
+        metricsPC.innerHTML = `
           <span class="wx-label">Temp:</span><span class="wx-val" style="color:${tempColor};">${tempVal}°C${tArr}</span><span class="wx-sep">|</span>
           <span class="wx-label">Hu:</span><span class="wx-val" style="color:#00d2ff;">${huVal}%${hArr}</span><span class="wx-sep">|</span>
           <span class="wx-label">WS:</span><span class="wx-val" style="color:#00d2ff;">${wsVal} km/h(${currentWxState.windCardinal})${wArr}</span><span class="wx-sep">|</span>
@@ -512,6 +561,7 @@
         `;
       }
 
+      // iPhone/Mobile: Unchanged
       if (mobileElem) {
         mobileElem.innerHTML = `
           <span>${currentWxState.icon}</span> <span class="wx-label">WX:</span><span class="wx-val" style="color:${tempColor};">${tempVal}°C${tArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${huVal}%${hArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${wsVal}km/h(${currentWxState.windCardinal})${wArr}</span><span class="wx-sep">|</span><span class="wx-label">UV:</span><span class="wx-val" style="color:${uvColor};">${uvVal}${uArr}</span><span class="wx-sep">|</span><span class="wx-val" style="color:#00d2ff;">${hpaVal}${pArr}</span>
@@ -520,7 +570,7 @@
     }
 
     // ==========================================
-    // 🎥 VIDEO STREAM & DISPLAY TOGGLE (v2.5.2)
+    // 🎥 VIDEO STREAM & DISPLAY TOGGLE (v2.5.3)
     // ==========================================
     function startHlsStream() {
       const video = document.getElementById('videoPlayer');
@@ -806,7 +856,7 @@
       } catch(e) {
         return {
           hour: String(date.getHours()).padStart(2, '0'),
-          minute: String(date.getMinutes()).padStart(2, '0'),
+          minute: String(date.getSeconds()).padStart(2, '0'),
           second: String(date.getSeconds()).padStart(2, '0'),
           year: date.getFullYear(),
           month: String(date.getMonth() + 1).padStart(2, '0'),
@@ -1242,7 +1292,7 @@
       });
 
       // ==========================================================
-      // ⏱ DYNAMIC MARKET STATUS & AUTOMATIC SWITCH LOGIC (v2.5.2)
+      // ⏱ DYNAMIC MARKET STATUS & AUTOMATIC SWITCH LOGIC (v2.5.3)
       // ==========================================================
       if (!anyMarketOpen) {
         // 🛑 ALL MARKETS CLOSED MODE
