@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.3.5</title>
+  <title>Exchange Times v2.3.6</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px 12px; }
@@ -12,17 +12,72 @@
     a { color: inherit; text-decoration: none; transition: opacity 0.2s; }
     a:hover { opacity: 0.8; text-decoration: underline; }
 
-    /* Top Header Default (iPad / PC) */
-    .header-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 10px 14px; border-radius: 6px; border: 1px solid #333; margin-bottom: 8px; gap: 8px; }
-    .app-title { font-size: 31px; font-weight: bold; color: #00d2ff; cursor: pointer; user-select: none; }
+    /* Top Header Panel Layout (PC / iPad) */
+    .header-panel { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      background: #1e1e1e; 
+      padding: 10px 14px; 
+      border-radius: 6px; 
+      border: 1px solid #333; 
+      margin-bottom: 8px; 
+      gap: 12px; 
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-left: 1ch; /* Space 1 character from left border */
+    }
+
+    .app-title { font-size: 26px; font-weight: bold; color: #00d2ff; cursor: pointer; user-select: none; }
     .app-title:active { opacity: 0.7; }
-    .utc-clock { font-size: 28px; font-weight: bold; color: #ffffff; }
-    .utc-clock a { color: #ffffff; }
-    .controls { display: flex; gap: 14px; font-size: 23px; align-items: center; flex-wrap: wrap; }
-    .controls label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
     
-    .audio-btn { background: #f44336; color: #ffffff; border: none; padding: 8px 18px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 23px; transition: background 0.3s; }
+    .utc-clock { 
+      font-size: 24px; 
+      font-weight: bold; 
+      color: #ffffff; 
+      font-family: monospace; 
+      white-space: nowrap; 
+      display: inline-block;
+      min-width: 175px; /* Lock width to prevent layout jitter */
+    }
+    .utc-clock a { color: #ffffff; }
+
+    /* PC Weather Info Display (Center) */
+    .weather-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      color: #00d2ff;
+      background: #141414;
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid #2a2a2a;
+      white-space: nowrap;
+    }
+
+    .controls { display: flex; align-items: center; gap: 8px; }
+    
+    /* Reduced Speech Button size by 50% on PC */
+    .audio-btn { 
+      background: #f44336; 
+      color: #ffffff; 
+      border: none; 
+      padding: 4px 9px; 
+      font-weight: bold; 
+      border-radius: 4px; 
+      cursor: pointer; 
+      font-size: 11.5px; 
+      transition: background 0.3s; 
+    }
     .audio-btn.active { background: #4caf50; color: #ffffff; }
+
+    /* Mobile Only Weather Display Element */
+    .mobile-weather-row { display: none; }
 
     /* Table Container Default (iPad / PC) */
     .table-container { width: 100%; overflow-x: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; max-height: calc(100vh - 85px); }
@@ -77,22 +132,51 @@
     .tomorrow-normal { color: #2e7d32; font-weight: bold; font-size: 20px; }
     .tomorrow-close { color: #f44336; font-weight: bold; font-size: 20px; }
 
-    /* Display Responsive Switching */
     .name-full { display: inline; }
     .name-short { display: none; }
 
     /* 📱 MOBILE / IPHONE OVERRIDE */
     @media screen and (max-width: 600px) {
       body { padding: 6px; }
-      .header-panel { padding: 8px 10px; margin-bottom: 6px; }
+      .header-panel { 
+        flex-direction: column; 
+        align-items: flex-start; 
+        padding: 8px 10px; 
+        margin-bottom: 6px; 
+        gap: 6px; 
+      }
       
-      .app-title { font-size: 20px !important; font-weight: 800 !important; }
-      .utc-clock { font-size: 18px !important; font-weight: 800 !important; }
-      
-      .controls { font-size: 13px; gap: 8px; }
-      .audio-btn { font-size: 13px; padding: 4px 8px; }
+      .header-left { 
+        width: 100%; 
+        justify-content: space-between; 
+        padding-left: 1ch; 
+      }
 
-      .table-container { max-height: calc(100vh - 65px); }
+      .utc-clock { font-size: 17px !important; min-width: 135px; }
+      .app-title { font-size: 19px !important; font-weight: 800 !important; }
+
+      .weather-center { display: none; } /* Hide PC Center Bar on Mobile */
+
+      .mobile-weather-row { 
+        display: block; 
+        font-size: 12px; 
+        color: #00d2ff; 
+        margin-top: 2px; 
+        padding-left: 1ch;
+        font-family: monospace;
+      }
+
+      .controls { 
+        width: 100%; 
+        display: flex; 
+        justify-content: flex-start; 
+        margin-top: 2px; 
+        padding-left: 1ch;
+      }
+
+      .audio-btn { font-size: 11px; padding: 4px 8px; }
+
+      .table-container { max-height: calc(100vh - 105px); }
       .market-table th, .market-table td { padding: 4px 6px; }
       .market-table th { font-size: 13px; padding: 4px 6px; }
       
@@ -124,16 +208,27 @@
 
   <!-- Top Navigation Panel -->
   <div class="header-panel">
-    <div class="app-title" onclick="triggerScanReport()" title="Click to trigger market scan speech report">
-      Exchange Times <span style="font-size: 14px; color: #888;">v2.3.5</span>
+    <div class="header-left">
+      <div class="utc-clock">
+        <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClock">UTC: --:--:--</a>
+      </div>
+      <div class="app-title" onclick="triggerScanReport()" title="Click to trigger market scan speech report">
+        Exchange Times <span style="font-size: 12px; color: #888;">v2.3.6</span>
+      </div>
     </div>
-    <div class="utc-clock">
-      <a href="https://time.ms/utc-time/" target="_blank" rel="noopener" id="utcClock">UTC: --:--:--</a>
+
+    <!-- Center Weather Display (PC/iPad) -->
+    <div class="weather-center" id="weatherPC">
+      <span>🌤 WX: Loading...</span>
     </div>
+
     <div class="controls">
       <button id="btnAudio" class="audio-btn" onclick="toggleAudio()">Speech OFF</button>
-      <label><input type="checkbox" id="muteExchange" checked> Exchange</label>
-      <label><input type="checkbox" id="muteTFEX" checked> TFEX</label>
+    </div>
+
+    <!-- Sub-row Weather Display (Mobile) -->
+    <div class="mobile-weather-row" id="weatherMobile">
+      🌤 WX: Loading weather...
     </div>
   </div>
 
@@ -202,12 +297,115 @@
     ];
 
     let audioCtx = null;
-    let audioActive = false; // Speech starts OFF as default
+    let audioActive = false;
     const marketStateTracker = {}; 
     const flashingTimers = {};
     let cachedVoices = [];
-    let announcedClosingMarkets = []; // Track 5-min closing alerts
-    let lastTimeAnnouncedKey = ""; // Prevent double time announcements
+    let announcedClosingMarkets = [];
+    let lastTimeAnnouncedKey = "";
+
+    // Global Weather State Container
+    let currentWxState = {
+      temp: "--",
+      humidity: "--",
+      windSpeed: "--",
+      windDir: "--",
+      windCardinal: "N",
+      pressure: "--",
+      uv: "--",
+      condition: "Clear",
+      icon: "☀️"
+    };
+
+    // Open-Meteo Weather Service
+    let weatherLat = 13.78;
+    let weatherLon = 100.36;
+
+    const wmoMap = {
+      0: { text: "Clear sky", iconDay: "☀️", iconNight: "🌙" },
+      1: { text: "Mainly clear", iconDay: "🌤", iconNight: "🌙" },
+      2: { text: "Partly cloudy", iconDay: "⛅", iconNight: "☁️" },
+      3: { text: "Overcast", iconDay: "☁️", iconNight: "☁️" },
+      45: { text: "Fog", iconDay: "🌫", iconNight: "🌫" },
+      51: { text: "Drizzle", iconDay: "🌧", iconNight: "🌧" },
+      61: { text: "Slight rain", iconDay: "🌧", iconNight: "🌧" },
+      63: { text: "Moderate rain", iconDay: "🌧", iconNight: "🌧" },
+      65: { text: "Heavy rain", iconDay: "🌧", iconNight: "🌧" },
+      80: { text: "Rain showers", iconDay: "🌦", iconNight: "🌧" },
+      95: { text: "Thunderstorm", iconDay: "⛈", iconNight: "⛈" }
+    };
+
+    function degreesToCardinal(deg) {
+      const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+      return dirs[Math.round(deg / 45) % 8];
+    }
+
+    function initWeather() {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            weatherLat = pos.coords.latitude.toFixed(4);
+            weatherLon = pos.coords.longitude.toFixed(4);
+            fetchWeather();
+          },
+          () => fetchWeather(),
+          { timeout: 5000 }
+        );
+      } else {
+        fetchWeather();
+      }
+      setInterval(fetchWeather, 300000); // Poll every 5 mins
+    }
+
+    async function fetchWeather() {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherLat}&longitude=${weatherLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=uv_index&timezone=auto`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        const c = data.current;
+        const wInfo = wmoMap[c.weather_code] || { text: `Code ${c.weather_code}`, iconDay: "🌤", iconNight: "🌙" };
+        const isDay = c.is_day === 1;
+
+        let uvVal = "--";
+        if (data.hourly && data.hourly.uv_index) {
+          const h = new Date().getHours();
+          uvVal = data.hourly.uv_index[h] !== undefined ? data.hourly.uv_index[h] : "--";
+        }
+
+        currentWxState = {
+          temp: c.temperature_2m,
+          humidity: c.relative_humidity_2m,
+          windSpeed: c.wind_speed_10m,
+          windDir: c.wind_direction_10m,
+          windCardinal: degreesToCardinal(c.wind_direction_10m),
+          pressure: c.surface_pressure,
+          uv: uvVal,
+          condition: wInfo.text,
+          icon: isDay ? wInfo.iconDay : wInfo.iconNight
+        };
+
+        renderWeatherUI();
+      } catch (e) {
+        console.error("Weather fetch failed", e);
+      }
+    }
+
+    function renderWeatherUI() {
+      const pcElem = document.getElementById('weatherPC');
+      const mobileElem = document.getElementById('weatherMobile');
+
+      // PC Display Format
+      if (pcElem) {
+        pcElem.innerHTML = `<span>${currentWxState.icon} WX: ${currentWxState.condition} | Temp: ${currentWxState.temp}°C | Hu: ${currentWxState.humidity}% | WS: ${currentWxState.windSpeed} km/h | UV: ${currentWxState.uv} | hPa: ${currentWxState.pressure}</span>`;
+      }
+
+      // Mobile Display Format with Icon
+      if (mobileElem) {
+        mobileElem.innerHTML = `${currentWxState.icon} WX: ${currentWxState.temp}°C | ${currentWxState.humidity}% | ${currentWxState.windSpeed}km/h (${currentWxState.windCardinal})`;
+      }
+    }
 
     function loadVoices() {
       if ('speechSynthesis' in window) {
@@ -349,6 +547,9 @@
       });
 
       let intro = `Today is ${dayStr}, ${dateStr}. The time is now ${timeStr}. `;
+      if (currentWxState.temp !== "--") {
+        intro += `Temperature ${currentWxState.temp} degrees Celsius, ${currentWxState.condition}. `;
+      }
 
       if (openMarkets.length > 0) {
         intro += `The remaining open exchange `;
@@ -551,7 +752,6 @@
 
     let lastTfex1mSec = -1;
 
-    // Check Scheduled Time Announcements (v2.3.5)
     function checkScheduledSpeechAnnouncements(now) {
       const thP = getZonedParts(now, "Asia/Bangkok");
       const currentHour = parseInt(thP.hour, 10);
@@ -559,12 +759,11 @@
       const currentSec = parseInt(thP.second, 10);
       const isWeekend = (thP.weekday === 'Sat' || thP.weekday === 'Sun');
 
-      // Trigger strictly at second 55
       if (currentSec !== 55) return;
 
       let shouldAnnounce = false;
       let targetHour = currentHour;
-      let targetMin = currentMin + 1; // Time to speak is the next minute boundary
+      let targetMin = currentMin + 1;
 
       if (targetMin === 60) {
         targetMin = 0;
@@ -572,22 +771,17 @@
       }
 
       if (!isWeekend) {
-        // Weekday Logic
         if (currentHour >= 9 && currentHour < 17) {
-          // 09:00 - 17:00: Every 15 mins (14:55, 29:55, 44:55, 59:55)
           if (currentMin === 14 || currentMin === 29 || currentMin === 44 || currentMin === 59) {
             shouldAnnounce = true;
           }
         } else if (currentHour >= 17 && currentHour < 20) {
-          // 17:00 - 20:00: Every hour at hh:59:55 (stops after 20:00)
           if (currentMin === 59) {
             shouldAnnounce = true;
           }
         }
       } else {
-        // Weekend Logic
         if (currentHour >= 9 && currentHour < 20) {
-          // 09:00 - 20:00: Every hour at hh:59:55 (stops after 20:00)
           if (currentMin === 59) {
             shouldAnnounce = true;
           }
@@ -599,11 +793,14 @@
         if (lastTimeAnnouncedKey !== announceKey) {
           lastTimeAnnouncedKey = announceKey;
           
-          // Play Tone 'T' (-) first, then announce time
           playMorsePattern('-', () => {
             const hStr = String(targetHour).padStart(2, '0');
             const mStr = String(targetMin).padStart(2, '0');
-            speakText(`The time is now ${hStr}:${mStr}`);
+            let speechMsg = `The time is now ${hStr}:${mStr}.`;
+            if (currentWxState.temp !== "--") {
+              speechMsg += ` Temperature ${currentWxState.temp} degrees Celsius, ${currentWxState.condition}.`;
+            }
+            speakText(speechMsg);
           });
         }
       }
@@ -616,10 +813,6 @@
       const utcHM = now.toISOString().substr(11, 8);
       document.getElementById('utcClock').innerText = 'UTC: ' + utcHM;
 
-      const muteEx = !document.getElementById('muteExchange').checked;
-      const muteTfex = !document.getElementById('muteTFEX').checked;
-
-      // Check Periodic Time Speech Alerts
       checkScheduledSpeechAnnouncements(now);
 
       const thP = getZonedParts(now, "Asia/Bangkok");
@@ -749,11 +942,9 @@
           else if (isTfexBreak) currentState = 'BREAK';
 
           if (marketStateTracker[m.code].state !== 'UNKNOWN' && marketStateTracker[m.code].state !== currentState) {
-            if (!muteEx) {
-              if (currentState === 'OPEN') playMorsePattern('---');
-              else if (currentState === 'BREAK') playMorsePattern('...-');
-              else if (currentState === 'CLOSED') playMorsePattern('...- ...-');
-            }
+            if (currentState === 'OPEN') playMorsePattern('---');
+            else if (currentState === 'BREAK') playMorsePattern('...-');
+            else if (currentState === 'CLOSED') playMorsePattern('...- ...-');
             if (currentState === 'OPEN' || currentState === 'CLOSED') triggerFlashingAlert(m.code);
           }
           marketStateTracker[m.code].state = currentState;
@@ -824,11 +1015,9 @@
         else if (isLunch) currentState = 'BREAK';
 
         if (marketStateTracker[m.code].state !== 'UNKNOWN' && marketStateTracker[m.code].state !== currentState) {
-          if (!muteEx) {
-            if (currentState === 'OPEN') playMorsePattern('---');
-            else if (currentState === 'BREAK') playMorsePattern('...-');
-            else if (currentState === 'CLOSED') playMorsePattern('...- ...-');
-          }
+          if (currentState === 'OPEN') playMorsePattern('---');
+          else if (currentState === 'BREAK') playMorsePattern('...-');
+          else if (currentState === 'CLOSED') playMorsePattern('...- ...-');
           if (currentState === 'OPEN' || currentState === 'CLOSED') triggerFlashingAlert(m.code);
         }
         marketStateTracker[m.code].state = currentState;
@@ -918,10 +1107,8 @@
         setLedState('TFEX-5M', 'green');
 
         if (currentSec === 0 && lastTfex1mSec !== 0) {
-          if (!muteTfex) {
-            if (currentMin % 5 === 0) playMorsePattern('-');
-            else playMorsePattern('.');
-          }
+          if (currentMin % 5 === 0) playMorsePattern('-');
+          else playMorsePattern('.');
         }
       }
       lastTfex1mSec = currentSec;
@@ -941,6 +1128,7 @@
     }
 
     initTable();
+    initWeather();
     updateEngine();
     setInterval(updateEngine, 1000);
   </script>
