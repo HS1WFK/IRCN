@@ -209,7 +209,7 @@
     <!-- Header Row (Title Only - Speech Toggle Active) -->
     <div class="top-header-row">
         <div class="header-title" id="gloAstTitle" onclick="toggleLocalSpeech()" title="Click to Toggle Local Speech Alert ON/OFF">
-            Global Assets <span id="gloAstVersion">v1.0.6</span>
+            Global Assets <span id="gloAstVersion">v1.0.7</span>
         </div>
     </div>
 
@@ -395,7 +395,7 @@
     }
 
     // ------------------------------------------------------------------
-    // Voice Handler
+    // Voice Handler with Anti-Collision Cancel Queue
     // ------------------------------------------------------------------
     function getPreferredVoice() {
         if (!('speechSynthesis' in window)) return null;
@@ -408,15 +408,19 @@
 
     function speakLocalText(text) {
         if (!isLocalSpeechEnabled || !('speechSynthesis' in window)) return;
+        
+        // Cancel existing queue before speaking to prevent stuttering & collisions
         window.speechSynthesis.cancel();
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9;
-        utterance.pitch = 1.0;
-        const targetVoice = getPreferredVoice();
-        if (targetVoice) utterance.voice = targetVoice;
-        
-        window.speechSynthesis.speak(utterance);
+        setTimeout(() => {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            const targetVoice = getPreferredVoice();
+            if (targetVoice) utterance.voice = targetVoice;
+            
+            window.speechSynthesis.speak(utterance);
+        }, 50);
     }
 
     // ------------------------------------------------------------------
