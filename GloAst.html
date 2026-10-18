@@ -22,7 +22,7 @@
             overflow-x: hidden; 
         }
 
-        /* Top Title Layout (Moved to Top-Left, Same style as Main Title) */
+        /* Top Title Layout (Main Title Style) */
         .top-header-row {
             display: flex;
             align-items: center;
@@ -48,15 +48,6 @@
             color: #888888; 
             font-weight: normal;
             text-shadow: none;
-        }
-        
-        /* Secret Toggle Indicator when Speech Off */
-        .title-speech-off {
-            animation: title-blink-off 1.2s infinite ease-in-out;
-        }
-        @keyframes title-blink-off {
-            0%, 100% { color: #00d2ff; opacity: 1; }
-            50% { color: #888888; opacity: 0.4; }
         }
 
         /* Dashboard Grid Layout */
@@ -92,7 +83,7 @@
         }
         .asset-card:hover { transform: scale(1.02); border-color: #00d2ff; }
 
-        /* Symbol Name Font: Same as Exchange Times WX:Overcast (~20px Font-weight 600) */
+        /* Symbol Name Font (~20px Font-weight 600) */
         .asset-symbol { 
             font-size: 20px; 
             font-weight: 600; 
@@ -100,20 +91,20 @@
             line-height: 1.1;
         }
 
-        /* Price & Change Numbers Font: Same as Ctrl Buttons (~14px Font-weight 600) */
+        /* Price & Change Numbers Font: Monospace (WX Style) & Smaller than hPa:1010.9 by 2 levels (~15px) */
         .asset-price { 
-            font-size: 14px; 
+            font-size: 15px; 
             font-weight: 600; 
             margin-top: 2px;
             font-family: monospace;
         }
         .asset-change { 
-            font-size: 14px; 
+            font-size: 15px; 
             font-weight: 600; 
             font-family: monospace;
         }
 
-        /* Up / Down Colors */
+        /* Price & % Color Logic: Up (+) = Green, Down (-) = Red */
         .price-up { color: #22c55e !important; }
         .price-down { color: #ef4444 !important; }
 
@@ -137,12 +128,8 @@
             animation: flash-critical-reverse 0.6s infinite alternate;
         }
         @keyframes flash-critical-reverse {
-            0% { 
-                background-color: #dc2626; 
-            }
-            100% { 
-                background-color: #ffffff; 
-            }
+            0% { background-color: #dc2626; }
+            100% { background-color: #ffffff; }
         }
         .bg-critical .asset-symbol,
         .bg-critical .asset-price,
@@ -227,11 +214,10 @@
 </head>
 <body>
 
-    <!-- Header Row (Title Only - Buttons Removed) -->
+    <!-- Header Row (Title Only) -->
     <div class="top-header-row">
-        <!-- Secret Toggle Speech Button via clicking Title -->
         <div class="header-title" id="gloAstTitle" onclick="toggleLocalSpeech()" title="Click to Toggle Local Speech Alert ON/OFF">
-            Global Assets <span id="gloAstVersion">v1.0.4</span>
+            Global Assets <span id="gloAstVersion">v1.0.5</span>
         </div>
     </div>
 
@@ -277,7 +263,7 @@
 
 <script>
     // ------------------------------------------------------------------
-    // Asset Definitions & Initial Values
+    // Asset Definitions
     // ------------------------------------------------------------------
     const Q1_ASSETS = [
         { id: "DXY", name: "DXY", val: 104.25, pct: 0.45, type: "LEVEL", warn: 102, high: 104, crit: 106 },
@@ -323,25 +309,62 @@
     let isLocalSpeechEnabled = true;
     let spokenAlertsSet = new Set();
     let chartInstance = null;
+    let scheduledAlertTimer = null;
 
     // ------------------------------------------------------------------
-    // Secret Toggle Function for Local Speech Alert
+    // Speech Toggle & 25-Min Scheduled Reset Engine
     // ------------------------------------------------------------------
     function toggleLocalSpeech() {
         isLocalSpeechEnabled = !isLocalSpeechEnabled;
-        const titleEl = document.getElementById('gloAstTitle');
         
         if (isLocalSpeechEnabled) {
-            titleEl.classList.remove('title-speech-off');
-            speakLocalAlert("Global Assets speech alert enabled");
+            // Immediately run report without greeting text
+            triggerImmediateReport();
+            // Reset & Restart 25-minute interval timer
+            resetAndStart25MinTimer();
         } else {
-            titleEl.classList.add('title-speech-off');
+            if (scheduledAlertTimer) clearInterval(scheduledAlertTimer);
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         }
     }
 
+    function resetAndStart25MinTimer() {
+        if (scheduledAlertTimer) clearInterval(scheduledAlertTimer);
+        
+        // 25 minutes = 25 * 60 * 1000 ms
+        scheduledAlertTimer = setInterval(() => {
+            const now = new Date();
+            const day = now.getDay(); // 0 = Sun, 6 = Sat
+            const hour = now.getHours();
+            
+            // Weekdays (Mon-Fri) & 09:00 to 17:00
+            if (day >= 1 && day <= 5 && hour >= 9 && hour < 17) {
+                triggerImmediateReport();
+            }
+        }, 25 * 60 * 1000);
+    }
+
+    function triggerImmediateReport() {
+        if (!isLocalSpeechEnabled) return;
+        
+        const activeWarnings = [];
+        Q1_ASSETS.concat(Q4_ASSETS).forEach(a => {
+            if (a.type === "LEVEL" && a.val >= a.warn) {
+                activeWarnings.push(`${a.name} ${a.val}`);
+            } else if (a.type === "DROP" && a.pct <= a.warn) {
+                activeWarnings.push(`${a.name} down ${Math.abs(a.pct)} percent`);
+            }
+        });
+
+        if (activeWarnings.length > 0) {
+            speakLocalText(`Global Assets warning update: ${activeWarnings.join(", ")}`);
+        } else {
+            speakLocalText(`Global Assets market parameters are normal.`);
+        }
+    }
+
     // ------------------------------------------------------------------
-    // Render Card UI
+    // Render Card UI with Directional Price Color
     // ------------------------------------------------------------------
     function createCard(a) {
         const div = document.createElement('div');
@@ -350,11 +373,13 @@
         div.onclick = () => selectAsset(a.id);
 
         let html = `<div class="asset-symbol">${a.name}</div>`;
-        html += `<div class="asset-price" id="price-${a.id}">${a.val}</div>`;
         
+        // Dynamic Directional Color Logic: +% = Green, -% = Red
+        const dirClass = a.pct >= 0 ? 'price-up' : 'price-down';
         const sign = a.pct >= 0 ? '+' : '';
-        const colorClass = a.pct >= 0 ? 'price-up' : 'price-down';
-        html += `<div class="asset-change ${colorClass}" id="change-${a.id}">${sign}${a.pct.toFixed(2)}%</div>`;
+
+        html += `<div class="asset-price ${dirClass}" id="price-${a.id}">${a.val}</div>`;
+        html += `<div class="asset-change ${dirClass}" id="change-${a.id}">${sign}${a.pct.toFixed(2)}%</div>`;
 
         if (a.reason) {
             html += `<div class="fx-tooltip">${a.reason}</div>`;
@@ -374,10 +399,11 @@
         Q4_ASSETS.forEach(a => q4.appendChild(createCard(a)));
 
         initChart();
+        resetAndStart25MinTimer();
     }
 
     // ------------------------------------------------------------------
-    // Speech Voice Selector (Default / Samantha)
+    // Voice Handler
     // ------------------------------------------------------------------
     function getPreferredVoice() {
         if (!('speechSynthesis' in window)) return null;
@@ -388,10 +414,9 @@
         return enVoice || null;
     }
 
-    function speakLocalAlert(text) {
+    function speakLocalText(text) {
         if (!isLocalSpeechEnabled || !('speechSynthesis' in window)) return;
-        if (spokenAlertsSet.has(text)) return;
-        spokenAlertsSet.add(text);
+        window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 0.9;
@@ -403,7 +428,7 @@
     }
 
     // ------------------------------------------------------------------
-    // Warning Threshold & Color Evaluation
+    // Threshold & Alert Evaluation
     // ------------------------------------------------------------------
     function evaluateAndAlert(a) {
         const card = document.getElementById(`card-${a.id}`);
@@ -424,13 +449,13 @@
 
         if (status === "CRITICAL") {
             card.classList.add('bg-critical');
-            speakLocalAlert(`Attention: Critical Shock warning ${a.name} now is ${a.val}`);
+            speakLocalText(`Attention: Critical Shock warning ${a.name} now is ${a.val}`);
         } else if (status === "HIGH") {
             card.classList.add('bg-orange');
-            speakLocalAlert(`Attention: High Risk warning ${a.name} now is ${a.val}`);
+            speakLocalText(`Attention: High Risk warning ${a.name} now is ${a.val}`);
         } else if (status === "WARN") {
             card.classList.add('bg-yellow');
-            speakLocalAlert(`Warning: ${a.name} is ${Math.abs(a.pct)} percent down in a day.`);
+            speakLocalText(`Warning: ${a.name} is ${Math.abs(a.pct)} percent down in a day.`);
         }
     }
 
@@ -444,7 +469,16 @@
                 a.val = parseFloat((a.val + delta).toFixed(2));
                 
                 const elPrice = document.getElementById(`price-${a.id}`);
-                if (elPrice) elPrice.innerText = a.val;
+                const elChange = document.getElementById(`change-${a.id}`);
+                
+                if (elPrice) {
+                    elPrice.innerText = a.val;
+                    // Keep price color synced with % change sign
+                    elPrice.className = `asset-price ${a.pct >= 0 ? 'price-up' : 'price-down'}`;
+                }
+                if (elChange) {
+                    elChange.className = `asset-change ${a.pct >= 0 ? 'price-up' : 'price-down'}`;
+                }
 
                 evaluateAndAlert(a);
             }
@@ -452,7 +486,7 @@
     }, 1000);
 
     // ------------------------------------------------------------------
-    // Chart & Controls
+    // Chart & Overlay Controls
     // ------------------------------------------------------------------
     function initChart() {
         const ctx = document.getElementById('assetChart').getContext('2d');
