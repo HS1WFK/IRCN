@@ -91,37 +91,29 @@
             line-height: 1.1;
         }
 
-        /* Price & Change Numbers Font: Monospace (WX Style) & Smaller than hPa:1010.9 by 2 levels (~15px) */
-        .asset-price { 
-            font-size: 15px; 
-            font-weight: 600; 
-            margin-top: 2px;
-            font-family: monospace;
+        /* Price & Change Numbers Font: Strictly Monospace (WX Style) & 13px (2 levels smaller than hPa:1010.9) */
+        .asset-price, .asset-change { 
+            font-family: monospace, 'Courier New', Courier !important;
+            font-size: 13px !important; 
+            font-weight: 700 !important;
+            line-height: 1.2;
         }
-        .asset-change { 
-            font-size: 15px; 
-            font-weight: 600; 
-            font-family: monospace;
-        }
+        .asset-price { margin-top: 2px; }
 
-        /* Price & % Color Logic: Up (+) = Green, Down (-) = Red */
+        /* Strict Directional Colors: +% = Green, -% = Red */
         .price-up { color: #22c55e !important; }
         .price-down { color: #ef4444 !important; }
 
-        /* Warning Backgrounds */
+        /* Warning Backgrounds (Preserves Monospace & Up/Down Colors) */
         .bg-yellow { 
             background-color: #eab308 !important; 
         }
-        .bg-yellow .asset-symbol, 
-        .bg-yellow .asset-price, 
-        .bg-yellow .asset-change { color: #000000 !important; }
+        .bg-yellow .asset-symbol { color: #000000 !important; }
 
         .bg-orange { 
             background-color: #f97316 !important; 
         }
-        .bg-orange .asset-symbol, 
-        .bg-orange .asset-price, 
-        .bg-orange .asset-change { color: #000000 !important; }
+        .bg-orange .asset-symbol { color: #000000 !important; }
 
         /* Critical Alert Flash - Reverse Text & Numbers to Black on Red */
         .bg-critical {
@@ -207,17 +199,17 @@
         @media screen and (max-width: 600px) {
             .header-title { font-size: 19px !important; }
             .asset-symbol { font-size: 14px !important; }
-            .asset-price, .asset-change { font-size: 11px !important; }
+            .asset-price, .asset-change { font-size: 10px !important; }
             .ctrl-btn { font-size: 11px !important; padding: 1px 4px !important; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header Row (Title Only) -->
+    <!-- Header Row (Title Only - Speech Toggle Active) -->
     <div class="top-header-row">
         <div class="header-title" id="gloAstTitle" onclick="toggleLocalSpeech()" title="Click to Toggle Local Speech Alert ON/OFF">
-            Global Assets <span id="gloAstVersion">v1.0.5</span>
+            Global Assets <span id="gloAstVersion">v1.0.6</span>
         </div>
     </div>
 
@@ -263,7 +255,7 @@
 
 <script>
     // ------------------------------------------------------------------
-    // Asset Definitions
+    // Asset Definitions & Matrix
     // ------------------------------------------------------------------
     const Q1_ASSETS = [
         { id: "DXY", name: "DXY", val: 104.25, pct: 0.45, type: "LEVEL", warn: 102, high: 104, crit: 106 },
@@ -307,22 +299,22 @@
     ];
 
     let isLocalSpeechEnabled = true;
-    let spokenAlertsSet = new Set();
     let chartInstance = null;
     let scheduledAlertTimer = null;
 
     // ------------------------------------------------------------------
-    // Speech Toggle & 25-Min Scheduled Reset Engine
+    // Speech Toggle & Reset Engine
     // ------------------------------------------------------------------
     function toggleLocalSpeech() {
         isLocalSpeechEnabled = !isLocalSpeechEnabled;
         
         if (isLocalSpeechEnabled) {
-            // Immediately run report without greeting text
+            // Immediately run report (no greeting text)
             triggerImmediateReport();
-            // Reset & Restart 25-minute interval timer
+            // Reset and Restart 25-minute timer
             resetAndStart25MinTimer();
         } else {
+            // Stop and reset timer
             if (scheduledAlertTimer) clearInterval(scheduledAlertTimer);
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         }
@@ -331,7 +323,7 @@
     function resetAndStart25MinTimer() {
         if (scheduledAlertTimer) clearInterval(scheduledAlertTimer);
         
-        // 25 minutes = 25 * 60 * 1000 ms
+        // 25 min interval = 25 * 60 * 1000 ms
         scheduledAlertTimer = setInterval(() => {
             const now = new Date();
             const day = now.getDay(); // 0 = Sun, 6 = Sat
@@ -364,7 +356,7 @@
     }
 
     // ------------------------------------------------------------------
-    // Render Card UI with Directional Price Color
+    // Render Card UI (Strict Monospace + Directional Colors)
     // ------------------------------------------------------------------
     function createCard(a) {
         const div = document.createElement('div');
@@ -374,7 +366,7 @@
 
         let html = `<div class="asset-symbol">${a.name}</div>`;
         
-        // Dynamic Directional Color Logic: +% = Green, -% = Red
+        // Directional Color Logic: +% = Green, -% = Red
         const dirClass = a.pct >= 0 ? 'price-up' : 'price-down';
         const sign = a.pct >= 0 ? '+' : '';
 
@@ -473,7 +465,6 @@
                 
                 if (elPrice) {
                     elPrice.innerText = a.val;
-                    // Keep price color synced with % change sign
                     elPrice.className = `asset-price ${a.pct >= 0 ? 'price-up' : 'price-down'}`;
                 }
                 if (elChange) {
