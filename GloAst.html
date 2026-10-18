@@ -98,7 +98,7 @@
             line-height: 1.1;
         }
 
-        /* Price & Change Numbers Font: Expanded 2 Levels to 16px (Arial Bold) */
+        /* Price & Change Numbers Font: Arial Bold & 16px */
         .asset-price, .asset-change { 
             font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
             font-size: 16px !important; 
@@ -238,7 +238,7 @@
     <!-- Header Row (Title Only - Speech Toggle Active) -->
     <div class="top-header-row">
         <div class="header-title" id="gloAstTitle" onclick="toggleLocalSpeech()" title="Click to Toggle Local Speech Alert ON/OFF">
-            Global Assets <span id="gloAstVersion">v1.0.9</span>
+            Global Assets <span id="gloAstVersion">v1.1.0</span>
         </div>
     </div>
 
@@ -277,7 +277,7 @@
         <!-- Quadrant 3: Bottom-Left (Currencies FX - Exactly 12 Assets) -->
         <div class="quadrant" id="q3"></div>
 
-        <!-- Quadrant 4: Bottom-Right (Global Indices & Crypto) -->
+        <!-- Quadrant 4: Bottom-Right (Global Indices & Crypto - Exactly 12 Assets) -->
         <div class="quadrant" id="q4"></div>
 
     </div>
@@ -331,8 +331,6 @@
     ];
 
     const Q4_ASSETS = [
-        { id: "SILVER", name: "Silver", val: 28.50, pct: 3.20, mode: "ABS_PCT", warn: 3.0, high: 5.0, crit: 8.0 },
-        { id: "COPPER", name: "Copper", val: 4.25, pct: -2.30, mode: "DROP", warn: -2.0, high: -3.0, crit: -5.0 },
         { id: "ASX200", name: "ASX200", val: 7650.2, pct: -0.45 },
         { id: "NIKKEI", name: "NIKKEI", val: 38200, pct: -1.10 },
         { id: "HSI", name: "HSI", val: 16250, pct: -1.50 },
@@ -341,6 +339,8 @@
         { id: "FTSE", name: "FTSE", val: 7890.1, pct: -0.20 },
         { id: "DAX", name: "DAX", val: 17800, pct: -0.60 },
         { id: "CAC", name: "CAC", val: 7920.5, pct: -0.55 },
+        { id: "DJI", name: "DJI", val: 37980, pct: -1.15 },
+        { id: "NASDAQ", name: "NASDAQ", val: 15820, pct: -1.80 },
         { id: "SP500", name: "S&P500", val: 5010.2, pct: -1.25 },
         { id: "BITCOIN", name: "Bitcoin", val: 62450, pct: -5.40, mode: "DROP", warn: -5.0, high: -8.0, crit: -12.0 }
     ];
