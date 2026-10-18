@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Exchange Times v2.6.0</title>
+  <title>Exchange Times v2.6.1</title>
   <!-- Leaflet CSS & JS for RainViewer Radar Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -388,7 +388,7 @@
     <div class="header-top-row">
       <!-- Title with Initial Blink Warning for iOS Sound Activation -->
       <div class="app-title title-blink" id="appTitleHeader" onclick="toggleSpeechState()" title="Click to toggle Speech ON -> Speech TEST -> Speech OFF">
-        Exchange Times <span style="font-size: 12px; color: #888;">v2.6.0</span>
+        Exchange Times <span style="font-size: 12px; color: #888;">v2.6.1</span>
       </div>
 
       <!-- Top Row WX Condition Display (PC/iPad) -->
@@ -452,9 +452,9 @@
     <div id="rainViewerMap"></div>
   </div>
 
-  <!-- Global Assets (GloAst.html) Wrapper -->
+  <!-- Global Assets Lazy Load Wrapper (src starts empty to prevent speech collisions) -->
   <div id="globalAssetsFrameWrapper">
-    <iframe id="globalAssetsIframe" src="GloAst.html"></iframe>
+    <iframe id="globalAssetsIframe" src=""></iframe>
   </div>
 
   <script>
@@ -524,25 +524,24 @@
     let weatherLat = 13.78;
     let weatherLon = 100.36;
 
-    // Animation & Timing Schedule Variables (v2.6.0)
+    // Animation & Timing Schedule Variables
     let animationSchedule = [2, 1, 2];
     let scheduleIndex = 0;
     let nextAnimTimeout = null;
     let isAnimating = false;
 
-    // Media & Assets Display Control States (v2.6.0)
+    // Media & Assets Display Control States
     let allClosedSeconds = 0;       
     let videoActiveSeconds = 0;    
     let isVideoModeActive = false;
-    let currentActiveButton = "NONE"; // "ASSETS", "NEWS", "RAIN_MAP", "NONE"
-    let currentDisplayMode = "NONE";  // "ASSETS", "VIDEO", "RAINVIEWER", "NONE"
+    let currentActiveButton = "NONE"; 
+    let currentDisplayMode = "NONE";  
     
     let hlsInstance = null;
     let leafletMap = null;
     let rainViewerRadarLayer = null;
     const bbcStreamUrl = "https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8";
 
-    // Complete WMO Weather Codes (0–99) Mapping
     const wmoMap = {
       0: { text: "Clear sky", iconDay: "☀️", iconNight: "🌙" },
       1: { text: "Mainly clear", iconDay: "🌤", iconNight: "🌙" },
@@ -727,7 +726,6 @@
       `;
     }
 
-    // WX Animation Engine (PC/iPad View)
     function runWxAnimation(callback) {
       if (isAnimating) return;
       isAnimating = true;
@@ -815,7 +813,7 @@
     }
 
     // ==========================================
-    // 🎥 MEDIA DISPLAY, MAPS & TOGGLES (v2.6.0)
+    // 🎥 MEDIA DISPLAY, MAPS & TOGGLES (v2.6.1)
     // ==========================================
     function startHlsStream() {
       const video = document.getElementById('videoPlayer');
@@ -885,11 +883,25 @@
         .catch(err => console.error("RainViewer API Error", err));
     }
 
+    function cancelIframeSpeechQueue() {
+      // Clear any speech queue originating from the iframe
+      try {
+        const iframe = document.getElementById('globalAssetsIframe');
+        if (iframe && iframe.contentWindow && iframe.contentWindow.speechSynthesis) {
+          iframe.contentWindow.speechSynthesis.cancel();
+        }
+      } catch (e) {}
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
     function switchMediaSubView(mode) {
       currentDisplayMode = mode;
       const tableContainer = document.getElementById('exchangeTableContainer');
       const mediaWrapper = document.getElementById('mediaDisplayWrapper');
       const assetsWrapper = document.getElementById('globalAssetsFrameWrapper');
+      const iframe = document.getElementById('globalAssetsIframe');
       const video = document.getElementById('videoPlayer');
       const rv = document.getElementById('rainViewerMap');
 
@@ -900,9 +912,12 @@
 
       if (mode === "ASSETS") {
         stopHlsStream();
+        // Lazy Load + Force Reload with Anti-Cache Timestamp
+        iframe.src = "GloAst.html?t=" + Date.now();
         assetsWrapper.style.display = "block";
         isVideoModeActive = false;
       } else if (mode === "VIDEO") {
+        cancelIframeSpeechQueue();
         mediaWrapper.style.display = "block";
         video.style.display = "block";
         rv.style.display = "none";
@@ -910,6 +925,7 @@
         isVideoModeActive = true;
         videoActiveSeconds = 0;
       } else if (mode === "RAINVIEWER") {
+        cancelIframeSpeechQueue();
         stopHlsStream();
         mediaWrapper.style.display = "block";
         video.style.display = "none";
@@ -919,6 +935,7 @@
         isVideoModeActive = false;
       } else {
         // Mode NONE (Show Table)
+        cancelIframeSpeechQueue();
         stopHlsStream();
         tableContainer.style.display = "block";
         isVideoModeActive = false;
