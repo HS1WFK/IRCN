@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Global Assets</title>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,12 +17,12 @@
         body { 
             background-color: #000000; 
             color: #ffffff; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; 
             padding: 8px 12px; 
             overflow-x: hidden; 
         }
 
-        /* Top Title Layout (Main Title Style) */
+        /* Top Title Layout */
         .top-header-row {
             display: flex;
             align-items: center;
@@ -83,25 +83,31 @@
         }
         .asset-card:hover { transform: scale(1.02); border-color: #00d2ff; }
 
-        /* Symbol Name Font (~20px Font-weight 600) */
+        /* Q1 Specific Single Spacing Layout */
+        #q1 .asset-card {
+            justify-content: flex-start;
+            gap: 1px;
+            padding: 4px 6px;
+        }
+
+        /* Symbol Name Font (~20px Font-weight bold) */
         .asset-symbol { 
             font-size: 20px; 
-            font-weight: 600; 
+            font-weight: bold; 
             color: #ffffff; 
             line-height: 1.1;
         }
 
-        /* Price & Change Numbers Font: Strictly Arial Bold (WX Style) & 13px */
-        #q1 .asset-price, #q1 .asset-change,
-        #q3 .asset-price, #q3 .asset-change,
-        #q4 .asset-price, #q4 .asset-change,
+        /* Price & Change Numbers Font: Expanded 2 Levels to 16px (Arial Bold) */
         .asset-price, .asset-change { 
             font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
-            font-size: 13px !important; 
+            font-size: 16px !important; 
             font-weight: bold !important;
-            line-height: 1.2;
+            line-height: 1.05 !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
-        .asset-price { margin-top: 2px; }
+        .asset-price { margin-top: 2px !important; }
 
         /* Strict Directional Colors: +% = Green, -% = Red */
         .price-up { color: #22c55e !important; }
@@ -157,7 +163,7 @@
             border: 1px solid #2d3748; 
             padding: 2px 8px; 
             font-size: 14px; 
-            font-weight: 600; 
+            font-weight: bold; 
             cursor: pointer; 
             border-radius: 4px; 
             transition: all 0.2s ease;
@@ -179,7 +185,7 @@
             display: none; 
         }
 
-        /* Tooltip Popup for FX Macro Reasons */
+        /* Tooltip Popup for FX Dynamic Reasons */
         .fx-tooltip {
             position: absolute;
             bottom: 105%;
@@ -199,11 +205,31 @@
         }
         .asset-card:hover .fx-tooltip { display: block; }
 
-        @media screen and (max-width: 600px) {
-            .header-title { font-size: 19px !important; }
-            .asset-symbol { font-size: 14px !important; }
-            .asset-price, .asset-change { font-size: 10px !important; }
-            .ctrl-btn { font-size: 11px !important; padding: 1px 4px !important; }
+        /* 📱 MOBILE / IPHONE OVERRIDE (Responsive Layout Fix) */
+        @media screen and (max-width: 768px) {
+            body { padding: 4px; }
+            .header-title { font-size: 20px !important; }
+            
+            .dashboard-grid { 
+                grid-template-columns: 1fr !important; 
+                gap: 6px !important; 
+            }
+
+            .quadrant { 
+                grid-template-columns: repeat(2, 1fr) !important; 
+                gap: 4px !important; 
+                padding: 4px !important; 
+            }
+
+            .asset-card {
+                min-height: 56px !important;
+                padding: 4px 6px !important;
+            }
+
+            .asset-symbol { font-size: 15px !important; }
+            .asset-price, .asset-change { font-size: 13px !important; }
+            .ctrl-btn { font-size: 11px !important; padding: 2px 4px !important; }
+            .chart-news-panel { min-height: 220px !important; }
         }
     </style>
 </head>
@@ -212,7 +238,7 @@
     <!-- Header Row (Title Only - Speech Toggle Active) -->
     <div class="top-header-row">
         <div class="header-title" id="gloAstTitle" onclick="toggleLocalSpeech()" title="Click to Toggle Local Speech Alert ON/OFF">
-            Global Assets <span id="gloAstVersion">v1.0.8</span>
+            Global Assets <span id="gloAstVersion">v1.0.9</span>
         </div>
     </div>
 
@@ -248,7 +274,7 @@
             </div>
         </div>
 
-        <!-- Quadrant 3: Bottom-Left (Currencies FX) -->
+        <!-- Quadrant 3: Bottom-Left (Currencies FX - Exactly 12 Assets) -->
         <div class="quadrant" id="q3"></div>
 
         <!-- Quadrant 4: Bottom-Right (Global Indices & Crypto) -->
@@ -258,35 +284,55 @@
 
 <script>
     // ------------------------------------------------------------------
+    // Dynamic FX Reason Map (12 Currency Pairs)
+    // ------------------------------------------------------------------
+    const FX_REASON_MAP = {
+        "MSCIEM": { up: "🟢 เงินไหลเข้า EM / Risk-On", down: "🔴 เงินไหลออก EM / Risk-Off" },
+        "USDCHF": { up: "🟢 CHF แข็งเทียบ USD; อาจมี Safe Haven Demand", down: "🔴 USD แข็ง, CHF อ่อน; USD Demand" },
+        "EURUSD": { up: "🟢 EUR แข็ง; USD อ่อน", down: "🔴 USD แข็ง; อาจกดดันสินทรัพย์เสี่ยง" },
+        "USDNOK": { up: "🟢 NOK แข็ง; อาจหนุนจากน้ำมันหรือ Risk-On", down: "🔴 NOK อ่อน; อาจสะท้อนน้ำมันอ่อนหรือ USD แข็ง" },
+        "AUDUSD": { up: "🟢 AUD แข็ง; จีน/สินค้าโภคภัณฑ์ดีขึ้น หรือ Risk-On", down: "🔴 AUD อ่อน; จีนชะลอหรือ Risk-Off" },
+        "USDCNY": { up: "🟢 หยวนแข็ง; เสถียรภาพจีนดีขึ้น", down: "🔴 หยวนอ่อน; เสี่ยงเงินทุนไหลออกจีน" },
+        "USDKRW": { up: "🟢 วอนแข็ง; เงินทุนไหลเข้า หรือส่งออกดี", down: "🔴 วอนอ่อน; เสี่ยง Foreign Outflow / Tech Cycle อ่อน" },
+        "USDTWD": { up: "🟢 ดอลลาร์ไต้หวันแข็ง; อาจสะท้อนเงินทุนเข้า/ส่งออกแข็งแกร่ง", down: "🔴 ดอลลาร์ไต้หวันอ่อน; เสี่ยงเงินทุนไหลออก" },
+        "USDINR": { up: "🟢 รูปีแข็ง; แรงกดดันต้นทุนนำเข้าลด", down: "🔴 รูปีอ่อน; ต้นทุนน้ำมันนำเข้าเพิ่ม" },
+        "USDIDR": { up: "🟢 รูเปียห์แข็ง; เงินทุน/พันธบัตรสนับสนุน", down: "🔴 รูเปียห์อ่อน; เสี่ยงเงินทุนไหลออก" },
+        "USDBRL": { up: "🟢 เรียลแข็ง; สินค้าโภคภัณฑ์หรือ Carry อาจหนุน", down: "🔴 เรียลอ่อน; เงินทุนไหลออกหรือความเสี่ยงในประเทศ" },
+        "USDZAR": { up: "🟢 แรนด์แข็ง; โลหะหรือเงินทุน EM อาจหนุน", down: "🔴 แรนด์อ่อน; EM Risk-Off / เงินทุนไหลออก" }
+    };
+
+    // ------------------------------------------------------------------
     // Asset Definitions & Matrix
     // ------------------------------------------------------------------
     const Q1_ASSETS = [
-        { id: "DXY", name: "DXY", val: 104.25, pct: 0.45, type: "LEVEL", warn: 102, high: 104, crit: 106 },
-        { id: "US10Y", name: "US10Y(%)", val: 4.76, pct: 1.20, type: "LEVEL", warn: 4.5, high: 4.75, crit: 5.0 },
-        { id: "BRENT", name: "Brent(USD)", val: 91.50, pct: -0.30, type: "LEVEL", warn: 90, high: 100, crit: 110 },
-        { id: "GOLD", name: "Gold(USD)", val: 2380.50, pct: -2.10, type: "DROP", warn: -2, high: -3, crit: -5 },
-        { id: "VIX", name: "S&P VIX", val: 26.40, pct: 5.80, type: "LEVEL", warn: 20, high: 25, crit: 35 },
-        { id: "US30FUT", name: "US30 Fut.", val: 38450, pct: -1.25, type: "DROP", warn: -1, high: -2, crit: -3 },
-        { id: "USDJPY", name: "USD/JPY", val: 156.20, pct: 0.85, type: "LEVEL", warn: 155, high: 158, crit: 160 },
-        { id: "USDTHB", name: "USD/THB", val: 36.85, pct: 0.65, type: "ABS", warn: 0.5, high: 1.0, crit: 1.5, reason: "เงินบาทอ่อน; อาจสะท้อนแรงกดดันเงินทุนต่างชาติ" }
+        { id: "DXY", name: "DXY", val: 104.25, pct: 0.45, mode: "VAL", warn: 102, high: 104, crit: 106 },
+        { id: "US10Y", name: "US10Y(%)", val: 4.76, pct: 1.20, mode: "VAL", warn: 4.50, high: 4.75, crit: 5.00 },
+        { id: "BRENT", name: "Brent(USD)", val: 91.50, pct: -0.30, mode: "VAL", warn: 90, high: 100, crit: 110 },
+        { id: "GOLD", name: "Gold(USD)", val: 2380.50, pct: -2.10, mode: "DROP", warn: -2, high: -3, crit: -5 },
+        { id: "VIX", name: "S&P VIX", val: 26.40, pct: 5.80, mode: "VAL", warn: 20, high: 25, crit: 35 },
+        { id: "US30FUT", name: "US30 Fut.", val: 38450, pct: -1.25, mode: "DROP", warn: -1, high: -2, crit: -3 },
+        { id: "USDJPY", name: "USD/JPY", val: 156.20, pct: 0.85, mode: "FX_JPY", warnVal: 155, warnPct: 1.0, highVal: 158, highPct: 1.5, critPct: 2.0 },
+        { id: "USDTHB", name: "USD/THB", val: 36.85, pct: 0.65, mode: "ABS_PCT", warn: 0.5, high: 1.0, crit: 1.5, reason: "เงินบาทอ่อน; อาจสะท้อนแรงกดดันเงินทุนต่างชาติ" }
     ];
 
     const Q3_ASSETS = [
-        { id: "MSCIEM", name: "MSCI Em", val: 1020.40, pct: -0.80, reason: "🔴 เงินไหลออก EM / Risk-Off" },
-        { id: "EURUSD", name: "EUR/USD", val: 1.0720, pct: -0.42, reason: "🔴 USD แข็ง; อาจกดดันสินทรัพย์เสี่ยง" },
-        { id: "USDNOK", name: "USD/NOK", val: 10.85, pct: 0.35, reason: "🔴 NOK อ่อน; สะท้อนน้ำมันอ่อนหรือ USD แข็ง" },
-        { id: "USDCHF", name: "USD/CHF", val: 0.9120, pct: 0.50, reason: "🔴 USD แข็ง; USD Demand" },
-        { id: "AUDUSD", name: "AUD/USD", val: 0.6540, pct: -0.65, reason: "🔴 AUD อ่อน; จีนชะลอหรือ Risk-Off" },
-        { id: "USDCNY", name: "USD/CNY", val: 7.2450, pct: 0.25, reason: "🔴 หยวนอ่อน; เสี่ยงเงินทุนไหลออกจีน" },
-        { id: "USDKRW", name: "USD/KRW", val: 1385.2, pct: 0.85, reason: "🔴 วอนอ่อน; เสี่ยง Foreign Outflow / Tech Cycle อ่อน" },
-        { id: "USDTWD", name: "USD/TWD", val: 32.45, pct: 0.55, reason: "🔴 ดอลลาร์ไต้หวันอ่อน; เสี่ยงเงินทุนไหลออก" },
-        { id: "USDINR", name: "USD/INR", val: 83.55, pct: 0.15, reason: "🔴 รูปีอ่อน; ต้นทุนน้ำมันนำเข้าเพิ่ม" },
-        { id: "USDIDR", name: "USD/IDR", val: 16250, pct: 0.75, reason: "🔴 รูเปียห์อ่อน; เสี่ยงเงินทุนไหลออก" },
-        { id: "USDBRL", name: "USD/BRL", val: 5.18, pct: 0.40, reason: "🔴 เรียลอ่อน; เงินทุนไหลออกหรือความเสี่ยงในประเทศ" },
-        { id: "USDZAR", name: "USD/ZAR", val: 18.65, pct: 0.90, reason: "🔴 แรนด์อ่อน; EM Risk-Off / เงินทุนไหลออก" }
+        { id: "MSCIEM", name: "MSCI Em", val: 1020.40, pct: -0.80 },
+        { id: "USDCHF", name: "USD/CHF", val: 0.9120, pct: 0.50 },
+        { id: "EURUSD", name: "EUR/USD", val: 1.0720, pct: -0.42 },
+        { id: "USDNOK", name: "USD/NOK", val: 10.85, pct: 0.35 },
+        { id: "AUDUSD", name: "AUD/USD", val: 0.6540, pct: -0.65 },
+        { id: "USDCNY", name: "USD/CNY", val: 7.2450, pct: 0.25 },
+        { id: "USDKRW", name: "USD/KRW", val: 1385.2, pct: 0.85 },
+        { id: "USDTWD", name: "USD/TWD", val: 32.45, pct: 0.55 },
+        { id: "USDINR", name: "USD/INR", val: 83.55, pct: 0.15 },
+        { id: "USDIDR", name: "USD/IDR", val: 16250, pct: 0.75 },
+        { id: "USDBRL", name: "USD/BRL", val: 5.18, pct: 0.40 },
+        { id: "USDZAR", name: "USD/ZAR", val: 18.65, pct: 0.90 }
     ];
 
     const Q4_ASSETS = [
+        { id: "SILVER", name: "Silver", val: 28.50, pct: 3.20, mode: "ABS_PCT", warn: 3.0, high: 5.0, crit: 8.0 },
+        { id: "COPPER", name: "Copper", val: 4.25, pct: -2.30, mode: "DROP", warn: -2.0, high: -3.0, crit: -5.0 },
         { id: "ASX200", name: "ASX200", val: 7650.2, pct: -0.45 },
         { id: "NIKKEI", name: "NIKKEI", val: 38200, pct: -1.10 },
         { id: "HSI", name: "HSI", val: 16250, pct: -1.50 },
@@ -295,10 +341,8 @@
         { id: "FTSE", name: "FTSE", val: 7890.1, pct: -0.20 },
         { id: "DAX", name: "DAX", val: 17800, pct: -0.60 },
         { id: "CAC", name: "CAC", val: 7920.5, pct: -0.55 },
-        { id: "DJI", name: "DJI", val: 37980, pct: -1.15 },
-        { id: "NASDAQ", name: "NASDAQ", val: 15820, pct: -1.80 },
         { id: "SP500", name: "S&P500", val: 5010.2, pct: -1.25 },
-        { id: "BITCOIN", name: "Bitcoin", val: 62450, pct: -5.40, type: "DROP", warn: -5, high: -8, crit: -12 }
+        { id: "BITCOIN", name: "Bitcoin", val: 62450, pct: -5.40, mode: "DROP", warn: -5.0, high: -8.0, crit: -12.0 }
     ];
 
     let isLocalSpeechEnabled = true;
@@ -350,20 +394,15 @@
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     }
 
-    // ------------------------------------------------------------------
-    // Speech Toggle & Reset Engine
-    // ------------------------------------------------------------------
     function toggleLocalSpeech() {
         isLocalSpeechEnabled = !isLocalSpeechEnabled;
         
         if (isLocalSpeechEnabled) {
-            // Immediate Reset & Report
             stopAndResetSpeechSystem();
-            isLocalSpeechEnabled = true; // Restore state
+            isLocalSpeechEnabled = true;
             triggerImmediateReport();
             resetAndStart25MinTimer();
         } else {
-            // Stop immediately & Reset Timer
             stopAndResetSpeechSystem();
         }
     }
@@ -371,13 +410,11 @@
     function resetAndStart25MinTimer() {
         if (scheduledAlertTimer) clearInterval(scheduledAlertTimer);
         
-        // 25 min interval = 25 * 60 * 1000 ms
         scheduledAlertTimer = setInterval(() => {
             const now = new Date();
-            const day = now.getDay(); // 0 = Sun, 6 = Sat
+            const day = now.getDay();
             const hour = now.getHours();
             
-            // Weekdays (Mon-Fri) & 09:00 to 17:00
             if (day >= 1 && day <= 5 && hour >= 9 && hour < 17) {
                 triggerImmediateReport();
             }
@@ -389,10 +426,8 @@
         
         const activeWarnings = [];
         Q1_ASSETS.concat(Q4_ASSETS).forEach(a => {
-            if (a.type === "LEVEL" && a.val >= a.warn) {
+            if (a.mode && evaluateStatus(a) !== "NORMAL") {
                 activeWarnings.push(`${a.name} ${a.val}`);
-            } else if (a.type === "DROP" && a.pct <= a.warn) {
-                activeWarnings.push(`${a.name} down ${Math.abs(a.pct)} percent`);
             }
         });
 
@@ -404,7 +439,17 @@
     }
 
     // ------------------------------------------------------------------
-    // Render Card UI (Strict Arial Bold + Directional Colors)
+    // Dynamic FX Reason Helper
+    // ------------------------------------------------------------------
+    function getFxReason(id, pct) {
+        if (FX_REASON_MAP[id]) {
+            return pct >= 0 ? FX_REASON_MAP[id].up : FX_REASON_MAP[id].down;
+        }
+        return "";
+    }
+
+    // ------------------------------------------------------------------
+    // Render Card UI (Arial Bold + Single Spacing Q1 + Dynamic FX Tooltip)
     // ------------------------------------------------------------------
     function createCard(a) {
         const div = document.createElement('div');
@@ -414,15 +459,15 @@
 
         let html = `<div class="asset-symbol">${a.name}</div>`;
         
-        // Directional Color Logic: +% = Green, -% = Red
         const dirClass = a.pct >= 0 ? 'price-up' : 'price-down';
         const sign = a.pct >= 0 ? '+' : '';
 
         html += `<div class="asset-price ${dirClass}" id="price-${a.id}">${a.val}</div>`;
         html += `<div class="asset-change ${dirClass}" id="change-${a.id}">${sign}${a.pct.toFixed(2)}%</div>`;
 
-        if (a.reason) {
-            html += `<div class="fx-tooltip">${a.reason}</div>`;
+        const reasonText = a.reason || getFxReason(a.id, a.pct);
+        if (reasonText) {
+            html += `<div class="fx-tooltip" id="tooltip-${a.id}">${reasonText}</div>`;
         }
 
         div.innerHTML = html;
@@ -434,9 +479,19 @@
         const q3 = document.getElementById('q3');
         const q4 = document.getElementById('q4');
 
-        Q1_ASSETS.forEach(a => q1.appendChild(createCard(a)));
+        Q1_ASSETS.forEach(a => {
+            const card = createCard(a);
+            q1.appendChild(card);
+            evaluateAndAlert(a);
+        });
+
         Q3_ASSETS.forEach(a => q3.appendChild(createCard(a)));
-        Q4_ASSETS.forEach(a => q4.appendChild(createCard(a)));
+
+        Q4_ASSETS.forEach(a => {
+            const card = createCard(a);
+            q4.appendChild(card);
+            evaluateAndAlert(a);
+        });
 
         initChart();
         resetAndStart25MinTimer();
@@ -455,24 +510,43 @@
     }
 
     // ------------------------------------------------------------------
-    // Threshold & Alert Evaluation
+    // Strict Multi-Rule Dynamic Threshold Evaluation
     // ------------------------------------------------------------------
+    function evaluateStatus(a) {
+        if (!a.mode) return "NORMAL";
+
+        const absPct = Math.abs(a.pct);
+
+        if (a.mode === "VAL") {
+            if (a.val >= a.crit) return "CRITICAL";
+            if (a.val >= a.high) return "HIGH";
+            if (a.val >= a.warn) return "WARN";
+        } 
+        else if (a.mode === "DROP") {
+            if (a.pct <= a.crit) return "CRITICAL";
+            if (a.pct <= a.high) return "HIGH";
+            if (a.pct <= a.warn) return "WARN";
+        } 
+        else if (a.mode === "ABS_PCT") {
+            if (absPct >= a.crit) return "CRITICAL";
+            if (absPct >= a.high) return "HIGH";
+            if (absPct >= a.warn) return "WARN";
+        } 
+        else if (a.mode === "FX_JPY") {
+            if (absPct >= a.critPct) return "CRITICAL";
+            if (a.val >= a.highVal || absPct >= a.highPct) return "HIGH";
+            if (a.val >= a.warnVal || absPct >= a.warnPct) return "WARN";
+        }
+
+        return "NORMAL";
+    }
+
     function evaluateAndAlert(a) {
         const card = document.getElementById(`card-${a.id}`);
         if (!card) return;
 
         card.classList.remove('bg-yellow', 'bg-orange', 'bg-critical');
-        let status = "NORMAL";
-
-        if (a.type === "LEVEL") {
-            if (a.val >= a.crit) status = "CRITICAL";
-            else if (a.val >= a.high) status = "HIGH";
-            else if (a.val >= a.warn) status = "WARN";
-        } else if (a.type === "DROP") {
-            if (a.pct <= a.crit) status = "CRITICAL";
-            else if (a.pct <= a.high) status = "HIGH";
-            else if (a.pct <= a.warn) status = "WARN";
-        }
+        const status = evaluateStatus(a);
 
         if (status === "CRITICAL") {
             card.classList.add('bg-critical');
@@ -490,13 +564,14 @@
     // Real-Time Push Simulation (Every 1 Second)
     // ------------------------------------------------------------------
     setInterval(() => {
-        Q1_ASSETS.concat(Q4_ASSETS).forEach(a => {
+        Q1_ASSETS.concat(Q3_ASSETS).concat(Q4_ASSETS).forEach(a => {
             if (Math.random() > 0.65) {
                 const delta = (Math.random() - 0.48) * 0.2;
                 a.val = parseFloat((a.val + delta).toFixed(2));
                 
                 const elPrice = document.getElementById(`price-${a.id}`);
                 const elChange = document.getElementById(`change-${a.id}`);
+                const elTooltip = document.getElementById(`tooltip-${a.id}`);
                 
                 if (elPrice) {
                     elPrice.innerText = a.val;
@@ -504,6 +579,11 @@
                 }
                 if (elChange) {
                     elChange.className = `asset-change ${a.pct >= 0 ? 'price-up' : 'price-down'}`;
+                }
+
+                // Dynamic Tooltip update for Q3 FX
+                if (elTooltip && FX_REASON_MAP[a.id]) {
+                    elTooltip.innerText = getFxReason(a.id, a.pct);
                 }
 
                 evaluateAndAlert(a);
@@ -570,7 +650,6 @@
         }
     }
 
-    // Unload Handler to ensure speech queue stops when iframe changes
     window.onbeforeunload = function() {
         stopAndResetSpeechSystem();
     };
