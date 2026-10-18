@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Assets Dashboard</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-black: #000000;
+            --card-bg: #09090b;
+            --border-color: #27272a;
+            --text-white: #ffffff;
+            --text-muted: #a1a1aa;
+            --up-green: #22c55e;
+            --down-red: #ef4444;
+            --warn-yellow: #eab308;
+            --high-orange: #f97316;
+            --critical-red: #dc2626;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', monospace, sans-serif; }
+        body { background-color: var(--bg-black); color: var(--text-white); overflow-x: hidden; padding: 10px; }
+
+        /* Top Navigation */
+        .nav-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .nav-btn { background: #18181b; color: var(--text-white); border: 1px solid var(--border-color); padding: 6px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+        .nav-btn.active-assets { background: #15803d; color: #fff; border-color: #22c55e; }
+        
+        /* Layout Grid */
+        .page-container { display: flex; flex-direction: column; gap: 10px; }
+        .header-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 8px; }
+        .header-title span { font-size: 0.8rem; color: var(--text-muted); }
+
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .quadrant { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #000; border: 1px solid var(--border-color); padding: 6px; border-radius: 4px; }
+        
+        /* Asset Card Styling */
+        .asset-card {
+            background: var(--card-bg);
+            border: 1px solid #1f1f23;
+            border-radius: 4px;
+            padding: 8px;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.1s;
+        }
+        .asset-card:hover { transform: scale(1.02); border-color: #52525b; }
+        .asset-symbol { font-size: 0.85rem; font-weight: bold; color: var(--text-white); }
+        .asset-price { font-size: 1.05rem; font-weight: bold; margin: 4px 0; }
+        .asset-change { font-size: 0.8rem; font-weight: bold; }
+
+        .price-up { color: var(--up-green); }
+        .price-down { color: var(--down-red); }
+
+        /* Warning Backgrounds */
+        .bg-yellow { background-color: var(--warn-yellow) !important; color: #000 !important; }
+        .bg-yellow .asset-symbol, .bg-yellow .asset-price, .bg-yellow .asset-change { color: #000 !important; }
+
+        .bg-orange { background-color: var(--high-orange) !important; color: #000 !important; }
+        .bg-orange .asset-symbol, .bg-orange .asset-price, .bg-orange .asset-change { color: #000 !important; }
+
+        /* Flashing Reverse Critical Alert */
+        .bg-critical {
+            background-color: var(--critical-red) !important;
+            animation: flash-reverse 0.6s infinite alternate;
+        }
+        @keyframes flash-reverse {
+            0% { background-color: var(--critical-red); color: #ffffff; }
+            100% { background-color: #ffffff; color: var(--critical-red); }
+        }
+        .bg-critical * { color: inherit !important; }
+
+        /* Top Right Chart/News Panel */
+        .chart-news-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; display: flex; flex-direction: column; }
+        .panel-controls { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 8px; }
+        .control-half { display: flex; gap: 4px; width: 48%; }
+        .ctrl-btn { flex: 1; background: #18181b; color: var(--text-white); border: 1px solid var(--border-color); padding: 4px; font-size: 0.75rem; cursor: pointer; border-radius: 2px; }
+        .ctrl-btn.active { background: #2563eb; border-color: #3b82f6; }
+
+        .panel-content { flex: 1; min-height: 180px; position: relative; }
+        .news-feed { font-size: 0.85rem; line-height: 1.4; color: #e4e4e7; height: 100%; overflow-y: auto; display: none; }
+        
+        /* Tooltip Popup for FX Macro Reasons */
+        .fx-tooltip {
+            position: absolute;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #27272a;
+            color: #fff;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            display: none;
+            pointer-events: none;
+        }
+        .asset-card:hover .fx-tooltip { display: block; }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <div class="nav-bar">
+        <button class="nav-btn active-assets" id="btn-assets" onclick="togglePage('assets')">Assets</button>
+        <button class="nav-btn" id="btn-news" onclick="togglePage('news')">NEWS</button>
+        <span style="margin-left: auto; font-size: 0.8rem; color: #71717a;">LenAgent Live Feed: <span id="sync-status" style="color:#22c55e;">CONNECTED (1s)</span></span>
+    </div>
+
+    <!-- MAIN PAGE: GLOBAL ASSETS -->
+    <div id="page-global-assets" class="page-container">
+        <div class="header-title">Global Assets <span>v1.0.4</span></div>
+
+        <div class="dashboard-grid">
+            
+            <!-- Quadrant 1: Top-Left (Main Macro) -->
+            <div class="quadrant" id="q1"></div>
+
+            <!-- Quadrant 2: Top-Right (Chart / Breaking News Panel) -->
+            <div class="chart-news-panel">
+                <div class="panel-controls">
+                    <!-- Left 50%: Timeframe Toggle -->
+                    <div class="control-half">
+                        <button class="ctrl-btn active" onclick="setTimeframe('1D', this)">1D</button>
+                        <button class="ctrl-btn" onclick="setTimeframe('30D', this)">30D</button>
+                        <button class="ctrl-btn" onclick="setTimeframe('60D', this)">60D</button>
+                    </div>
+                    <!-- Right 50%: Chart vs News Overlay Toggle -->
+                    <div class="control-half">
+                        <button class="ctrl-btn active" onclick="setOverlay('chart', this)">Chart</button>
+                        <button class="ctrl-btn" onclick="setOverlay('news', this)">Breaking News</button>
+                    </div>
+                </div>
+
+                <div class="panel-content">
+                    <canvas id="assetChart"></canvas>
+                    <div id="newsFeed" class="news-feed">
+                        <p><strong>11:24</strong> [BREAKING] US 10Y Yield hits 4.76% following hawkish Fed statements.</p>
+                        <p style="margin-top:8px;"><strong>11:15</strong> [FX ALERT] USD/THB surges past 36.85 as foreign fund outflows accelerate in regional markets.</p>
+                        <p style="margin-top:8px;"><strong>10:45</strong> [COMMODITIES] Crude Oil steady above $90/bbl amidst Middle East supply tightness.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quadrant 3: Bottom-Left (Currencies FX) -->
+            <div class="quadrant" id="q3" style="grid-template-columns: repeat(4, 1fr);"></div>
+
+            <!-- Quadrant 4: Bottom-Right (Global Indices & Crypto) -->
+            <div class="quadrant" id="q4" style="grid-template-columns: repeat(4, 1fr);"></div>
+
+        </div>
+    </div>
+
+    <!-- Exchange Times Placeholder Page -->
+    <div id="page-exchange-times" class="page-container" style="display:none; text-align: center; padding: 50px;">
+        <h2>Exchange Times Core System (Parallel Speech/Alert Active)</h2>
+    </div>
+
+<script>
+    // ------------------------------------------------------------------
+    // Asset Configuration & FX Macro Reason Definitions
+    // ------------------------------------------------------------------
+    const Q1_ASSETS = [
+        { id: "DXY", name: "DXY", val: 104.25, pct: 0.45, type: "LEVEL", warn: 102, high: 104, crit: 106 },
+        { id: "US10Y", name: "US10Y(%)", val: 4.76, pct: 1.20, type: "LEVEL", warn: 4.5, high: 4.75, crit: 5.0 },
+        { id: "BRENT", name: "Brent(USD)", val: 91.50, pct: -0.30, type: "LEVEL", warn: 90, high: 100, crit: 110 },
+        { id: "GOLD", name: "Gold(USD)", val: 2380.50, pct: -2.10, type: "DROP", warn: -2, high: -3, crit: -5 },
+        { id: "VIX", name: "S&P VIX", val: 26.40, pct: 5.80, type: "LEVEL", warn: 20, high: 25, crit: 35 },
+        { id: "US30FUT", name: "US30 Fut.", val: 38450, pct: -1.25, type: "DROP", warn: -1, high: -2, crit: -3 },
+        { id: "USDJPY", name: "USD/JPY", val: 156.20, pct: 0.85, type: "LEVEL", warn: 155, high: 158, crit: 160 },
+        { id: "USDTHB", name: "USD/THB", val: 36.85, pct: 0.65, type: "ABS", warn: 0.5, high: 1.0, crit: 1.5, reason: "เงินบาทอ่อน; อาจสะท้อนแรงกดดันเงินทุนต่างชาติ" }
+    ];
+
+    const Q3_ASSETS = [
+        { id: "MSCIEM", name: "MSCI Em", val: 1020.40, pct: -0.80, reason: "🔴 เงินไหลออก EM / Risk-Off" },
+        { id: "EURUSD", name: "EUR/USD", val: 1.0720, pct: -0.42, reason: "🔴 USD แข็ง; อาจกดดันสินทรัพย์เสี่ยง" },
+        { id: "USDNOK", name: "USD/NOK", val: 10.85, pct: 0.35, reason: "🔴 NOK อ่อน; สะท้อนน้ำมันอ่อนหรือ USD แข็ง" },
+        { id: "USDCHF", name: "USD/CHF", val: 0.9120, pct: 0.50, reason: "🔴 USD แข็ง; USD Demand" },
+        { id: "AUDUSD", name: "AUD/USD", val: 0.6540, pct: -0.65, reason: "🔴 AUD อ่อน; จีนชะลอหรือ Risk-Off" },
+        { id: "USDCNY", name: "USD/CNY", val: 7.2450, pct: 0.25, reason: "🔴 หยวนอ่อน; เสี่ยงเงินทุนไหลออกจีน" },
+        { id: "USDKRW", name: "USD/KRW", val: 1385.2, pct: 0.85, reason: "🔴 วอนอ่อน; เสี่ยง Foreign Outflow / Tech Cycle อ่อน" },
+        { id: "USDTWD", name: "USD/TWD", val: 32.45, pct: 0.55, reason: "🔴 ดอลลาร์ไต้หวันอ่อน; เสี่ยงเงินทุนไหลออก" },
+        { id: "USDINR", name: "USD/INR", val: 83.55, pct: 0.15, reason: "🔴 รูปีอ่อน; ต้นทุนน้ำมันนำเข้าเพิ่ม" },
+        { id: "USDIDR", name: "USD/IDR", val: 16250, pct: 0.75, reason: "🔴 รูเปียห์อ่อน; เสี่ยงเงินทุนไหลออก" },
+        { id: "USDBRL", name: "USD/BRL", val: 5.18, pct: 0.40, reason: "🔴 เรียลอ่อน; เงินทุนไหลออกหรือความเสี่ยงในประเทศ" },
+        { id: "USDZAR", name: "USD/ZAR", val: 18.65, pct: 0.90, reason: "🔴 แรนด์อ่อน; EM Risk-Off / เงินทุนไหลออก" }
+    ];
+
+    const Q4_ASSETS = [
+        { id: "ASX200", name: "ASX200", val: 7650.2, pct: -0.45 },
+        { id: "NIKKEI", name: "NIKKEI", val: 38200, pct: -1.10 },
+        { id: "HSI", name: "HSI", val: 16250, pct: -1.50 },
+        { id: "CHINA50", name: "China A50", val: 12100, pct: -0.85 },
+        { id: "KOSPI", name: "KOSPI", val: 2580.4, pct: -1.35 },
+        { id: "FTSE", name: "FTSE", val: 7890.1, pct: -0.20 },
+        { id: "DAX", name: "DAX", val: 17800, pct: -0.60 },
+        { id: "CAC", name: "CAC", val: 7920.5, pct: -0.55 },
+        { id: "DJI", name: "DJI", val: 37980, pct: -1.15 },
+        { id: "NASDAQ", name: "NASDAQ", val: 15820, pct: -1.80 },
+        { id: "SP500", name: "S&P500", val: 5010.2, pct: -1.25 },
+        { id: "BITCOIN", name: "Bitcoin", val: 62450, pct: -5.40, type: "DROP", warn: -5, high: -8, crit: -12 }
+    ];
+
+    let currentSelectedAsset = "DXY";
+    let chartInstance = null;
+    let spokenAlerts = new Set(); // Prevent duplicate speech spam
+
+    // ------------------------------------------------------------------
+    // Render Functions
+    // ------------------------------------------------------------------
+    function createCard(a) {
+        const div = document.createElement('div');
+        div.className = 'asset-card';
+        div.id = `card-${a.id}`;
+        div.onclick = () => selectAsset(a.id);
+
+        let html = `<div class="asset-symbol">${a.name}</div>`;
+        html += `<div class="asset-price" id="price-${a.id}">${a.val}</div>`;
+        
+        const sign = a.pct >= 0 ? '+' : '';
+        const colorClass = a.pct >= 0 ? 'price-up' : 'price-down';
+        html += `<div class="asset-change ${colorClass}" id="change-${a.id}">${sign}${a.pct.toFixed(2)}%</div>`;
+
+        if (a.reason) {
+            html += `<div class="fx-tooltip">${a.reason}</div>`;
+        }
+
+        div.innerHTML = html;
+        return div;
+    }
+
+    function initDashboard() {
+        const q1 = document.getElementById('q1');
+        const q3 = document.getElementById('q3');
+        const q4 = document.getElementById('q4');
+
+        Q1_ASSETS.forEach(a => q1.appendChild(createCard(a)));
+        Q3_ASSETS.forEach(a => q3.appendChild(createCard(a)));
+        Q4_ASSETS.forEach(a => q4.appendChild(createCard(a)));
+
+        initChart();
+    }
+
+    // ------------------------------------------------------------------
+    // Speech & Warning Evaluation Engine (LenAgent Push Simulation)
+    // ------------------------------------------------------------------
+    function evaluateAndAlert(a) {
+        const card = document.getElementById(`card-${a.id}`);
+        if (!card) return;
+
+        card.classList.remove('bg-yellow', 'bg-orange', 'bg-critical');
+        let status = "NORMAL";
+
+        // Level / Pct Check
+        if (a.type === "LEVEL") {
+            if (a.val >= a.crit) status = "CRITICAL";
+            else if (a.val >= a.high) status = "HIGH";
+            else if (a.val >= a.warn) status = "WARN";
+        } else if (a.type === "DROP") {
+            if (a.pct <= a.crit) status = "CRITICAL";
+            else if (a.pct <= a.high) status = "HIGH";
+            else if (a.pct <= a.warn) status = "WARN";
+        }
+
+        // Apply Alert Styles & Speech Trigger
+        if (status === "CRITICAL") {
+            card.classList.add('bg-critical');
+            speakAlert(`Attention: Critical Shock warning ${a.name} now is ${a.val}`);
+        } else if (status === "HIGH") {
+            card.classList.add('bg-orange');
+            speakAlert(`Attention: High Risk warning ${a.name} now is ${a.val}`);
+        } else if (status === "WARN") {
+            card.classList.add('bg-yellow');
+            speakAlert(`Warning: ${a.name} is ${Math.abs(a.pct)} percent down in a day.`);
+        }
+    }
+
+    function speakAlert(text) {
+        if (spokenAlerts.has(text)) return;
+        spokenAlerts.add(text);
+        
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Real-Time Push Simulation (Every 1 Second)
+    // ------------------------------------------------------------------
+    setInterval(() => {
+        // Simulate live price ticks for DXY, US10Y, VIX, Bitcoin
+        Q1_ASSETS.concat(Q4_ASSETS).forEach(a => {
+            if (Math.random() > 0.6) {
+                const delta = (Math.random() - 0.48) * 0.2;
+                a.val = parseFloat((a.val + delta).toFixed(2));
+                
+                const elPrice = document.getElementById(`price-${a.id}`);
+                if (elPrice) elPrice.innerText = a.val;
+
+                evaluateAndAlert(a);
+            }
+        });
+    }, 1000);
+
+    // ------------------------------------------------------------------
+    // Chart.js & Panel Controls
+    // ------------------------------------------------------------------
+    function initChart() {
+        const ctx = document.getElementById('assetChart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['09:00', '09:30', '10:00', '10:30', '11:00', '11:25'],
+                datasets: [{
+                    label: `DXY Trend`,
+                    data: [103.8, 103.9, 104.1, 104.0, 104.2, 104.25],
+                    borderColor: '#38bdf8',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#71717a' }, grid: { color: '#18181b' } },
+                    y: { ticks: { color: '#71717a' }, grid: { color: '#18181b' } }
+                }
+            }
+        });
+    }
+
+    function selectAsset(id) {
+        currentSelectedAsset = id;
+        if (chartInstance) {
+            chartInstance.data.datasets[0].label = `${id} Trend`;
+            // Generate dummy chart points
+            chartInstance.data.datasets[0].data = Array.from({length: 6}, () => Math.random() * 10 + 100);
+            chartInstance.update();
+        }
+    }
+
+    function setTimeframe(tf, btn) {
+        document.querySelectorAll('.control-half')[0].querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function setOverlay(mode, btn) {
+        document.querySelectorAll('.control-half')[1].querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const chartEl = document.getElementById('assetChart');
+        const newsEl = document.getElementById('newsFeed');
+
+        if (mode === 'chart') {
+            chartEl.style.display = 'block';
+            newsEl.style.display = 'none';
+        } else {
+            chartEl.style.display = 'none';
+            newsEl.style.display = 'block';
+        }
+    }
+
+    function togglePage(page) {
+        const assetsPage = document.getElementById('page-global-assets');
+        const exchangePage = document.getElementById('page-exchange-times');
+        const btnAssets = document.getElementById('btn-assets');
+        const btnNews = document.getElementById('btn-news');
+
+        if (page === 'assets') {
+            assetsPage.style.display = 'flex';
+            exchangePage.style.display = 'none';
+            btnAssets.classList.add('active-assets');
+            btnNews.classList.remove('active-assets');
+        } else {
+            assetsPage.style.display = 'none';
+            exchangePage.style.display = 'block';
+            btnAssets.classList.remove('active-assets');
+            btnNews.classList.add('active-assets');
+        }
+    }
+
+    // Initialize Dashboard on Load
+    window.onload = initDashboard;
+</script>
+</body>
+</html>
