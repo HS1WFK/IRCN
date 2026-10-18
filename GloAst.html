@@ -3,167 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Assets Dashboard</title>
+    <title>Global Assets</title>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg-black: #000000;
-            --card-bg: #09090b;
-            --border-color: #27272a;
-            --text-white: #ffffff;
-            --text-muted: #a1a1aa;
-            --up-green: #22c55e;
-            --down-red: #ef4444;
-            --warn-yellow: #eab308;
-            --high-orange: #f97316;
-            --critical-red: #dc2626;
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', monospace, sans-serif; }
-        body { background-color: var(--bg-black); color: var(--text-white); overflow-x: hidden; padding: 10px; }
+        body { 
+            background-color: #000000; 
+            color: #ffffff; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            padding: 8px 12px; 
+            overflow-x: hidden; 
+        }
 
-        /* Top Navigation */
-        .nav-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
-        .nav-btn { background: #18181b; color: var(--text-white); border: 1px solid var(--border-color); padding: 6px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
-        .nav-btn.active-assets { background: #15803d; color: #fff; border-color: #22c55e; }
+        /* Top Title Layout (Moved to Top-Left, Same style as Main Title) */
+        .top-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .header-title { 
+            font-size: 31px; 
+            font-weight: bold; 
+            color: #00d2ff; 
+            cursor: pointer; 
+            user-select: none; 
+            text-shadow: 0 2px 8px rgba(0, 210, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .header-title:active { opacity: 0.7; }
+        .header-title span { 
+            font-size: 12px; 
+            color: #888888; 
+            font-weight: normal;
+            text-shadow: none;
+        }
         
-        /* Layout Grid */
-        .page-container { display: flex; flex-direction: column; gap: 10px; }
-        .header-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 8px; }
-        .header-title span { font-size: 0.8rem; color: var(--text-muted); }
+        /* Secret Toggle Indicator when Speech Off */
+        .title-speech-off {
+            animation: title-blink-off 1.2s infinite ease-in-out;
+        }
+        @keyframes title-blink-off {
+            0%, 100% { color: #00d2ff; opacity: 1; }
+            50% { color: #888888; opacity: 0.4; }
+        }
 
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        /* Dashboard Grid Layout */
+        .dashboard-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+        }
 
-        .quadrant { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #000; border: 1px solid var(--border-color); padding: 6px; border-radius: 4px; }
-        
-        /* Asset Card Styling */
+        .quadrant { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 6px; 
+            background: #000000; 
+            border: 1px solid #2d3748; 
+            padding: 6px; 
+            border-radius: 6px; 
+        }
+
+        /* Asset Card Base Styling */
         .asset-card {
-            background: var(--card-bg);
+            background: #09090b;
             border: 1px solid #1f1f23;
             border-radius: 4px;
-            padding: 8px;
+            padding: 6px 8px;
             cursor: pointer;
             position: relative;
             transition: transform 0.1s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 72px;
         }
-        .asset-card:hover { transform: scale(1.02); border-color: #52525b; }
-        .asset-symbol { font-size: 0.85rem; font-weight: bold; color: var(--text-white); }
-        .asset-price { font-size: 1.05rem; font-weight: bold; margin: 4px 0; }
-        .asset-change { font-size: 0.8rem; font-weight: bold; }
+        .asset-card:hover { transform: scale(1.02); border-color: #00d2ff; }
 
-        .price-up { color: var(--up-green); }
-        .price-down { color: var(--down-red); }
+        /* Symbol Name Font: Same as Exchange Times WX:Overcast (~20px Font-weight 600) */
+        .asset-symbol { 
+            font-size: 20px; 
+            font-weight: 600; 
+            color: #ffffff; 
+            line-height: 1.1;
+        }
+
+        /* Price & Change Numbers Font: Same as Ctrl Buttons (~14px Font-weight 600) */
+        .asset-price { 
+            font-size: 14px; 
+            font-weight: 600; 
+            margin-top: 2px;
+            font-family: monospace;
+        }
+        .asset-change { 
+            font-size: 14px; 
+            font-weight: 600; 
+            font-family: monospace;
+        }
+
+        /* Up / Down Colors */
+        .price-up { color: #22c55e !important; }
+        .price-down { color: #ef4444 !important; }
 
         /* Warning Backgrounds */
-        .bg-yellow { background-color: var(--warn-yellow) !important; color: #000 !important; }
-        .bg-yellow .asset-symbol, .bg-yellow .asset-price, .bg-yellow .asset-change { color: #000 !important; }
+        .bg-yellow { 
+            background-color: #eab308 !important; 
+        }
+        .bg-yellow .asset-symbol, 
+        .bg-yellow .asset-price, 
+        .bg-yellow .asset-change { color: #000000 !important; }
 
-        .bg-orange { background-color: var(--high-orange) !important; color: #000 !important; }
-        .bg-orange .asset-symbol, .bg-orange .asset-price, .bg-orange .asset-change { color: #000 !important; }
+        .bg-orange { 
+            background-color: #f97316 !important; 
+        }
+        .bg-orange .asset-symbol, 
+        .bg-orange .asset-price, 
+        .bg-orange .asset-change { color: #000000 !important; }
 
-        /* Flashing Reverse Critical Alert */
+        /* Critical Alert Flash - Reverse Text & Numbers to Black on Red */
         .bg-critical {
-            background-color: var(--critical-red) !important;
-            animation: flash-reverse 0.6s infinite alternate;
+            animation: flash-critical-reverse 0.6s infinite alternate;
         }
-        @keyframes flash-reverse {
-            0% { background-color: var(--critical-red); color: #ffffff; }
-            100% { background-color: #ffffff; color: var(--critical-red); }
+        @keyframes flash-critical-reverse {
+            0% { 
+                background-color: #dc2626; 
+            }
+            100% { 
+                background-color: #ffffff; 
+            }
         }
-        .bg-critical * { color: inherit !important; }
+        .bg-critical .asset-symbol,
+        .bg-critical .asset-price,
+        .bg-critical .asset-change {
+            color: #000000 !important;
+        }
 
-        /* Top Right Chart/News Panel */
-        .chart-news-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; display: flex; flex-direction: column; }
-        .panel-controls { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 8px; }
+        /* Top Right Chart & Breaking News Panel */
+        .chart-news-panel { 
+            background: #09090b; 
+            border: 1px solid #2d3748; 
+            border-radius: 6px; 
+            padding: 8px; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .panel-controls { 
+            display: flex; 
+            justify-content: space-between; 
+            border-bottom: 1px solid #2d3748; 
+            padding-bottom: 6px; 
+            margin-bottom: 6px; 
+        }
         .control-half { display: flex; gap: 4px; width: 48%; }
-        .ctrl-btn { flex: 1; background: #18181b; color: var(--text-white); border: 1px solid var(--border-color); padding: 4px; font-size: 0.75rem; cursor: pointer; border-radius: 2px; }
-        .ctrl-btn.active { background: #2563eb; border-color: #3b82f6; }
-
-        .panel-content { flex: 1; min-height: 180px; position: relative; }
-        .news-feed { font-size: 0.85rem; line-height: 1.4; color: #e4e4e7; height: 100%; overflow-y: auto; display: none; }
         
+        .ctrl-btn { 
+            flex: 1; 
+            background: #1a202c; 
+            color: #a0aec0; 
+            border: 1px solid #2d3748; 
+            padding: 2px 8px; 
+            font-size: 14px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            transition: all 0.2s ease;
+        }
+        .ctrl-btn.active { 
+            background: #2e7d32; 
+            color: #ffffff; 
+            border-color: #4caf50; 
+            box-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
+        }
+
+        .panel-content { flex: 1; min-height: 160px; position: relative; }
+        .news-feed { 
+            font-size: 14px; 
+            line-height: 1.4; 
+            color: #e0e0e0; 
+            height: 100%; 
+            overflow-y: auto; 
+            display: none; 
+        }
+
         /* Tooltip Popup for FX Macro Reasons */
         .fx-tooltip {
             position: absolute;
-            bottom: 110%;
+            bottom: 105%;
             left: 50%;
             transform: translateX(-50%);
-            background: #27272a;
-            color: #fff;
+            background: #1f2d3d;
+            color: #00d2ff;
+            border: 1px solid #2d3748;
             padding: 6px 10px;
-            font-size: 0.75rem;
+            font-size: 12px;
             border-radius: 4px;
             white-space: nowrap;
             z-index: 100;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
             display: none;
             pointer-events: none;
         }
         .asset-card:hover .fx-tooltip { display: block; }
+
+        @media screen and (max-width: 600px) {
+            .header-title { font-size: 19px !important; }
+            .asset-symbol { font-size: 14px !important; }
+            .asset-price, .asset-change { font-size: 11px !important; }
+            .ctrl-btn { font-size: 11px !important; padding: 1px 4px !important; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Top Navigation Bar -->
-    <div class="nav-bar">
-        <button class="nav-btn active-assets" id="btn-assets" onclick="togglePage('assets')">Assets</button>
-        <button class="nav-btn" id="btn-news" onclick="togglePage('news')">NEWS</button>
-        <span style="margin-left: auto; font-size: 0.8rem; color: #71717a;">LenAgent Live Feed: <span id="sync-status" style="color:#22c55e;">CONNECTED (1s)</span></span>
-    </div>
-
-    <!-- MAIN PAGE: GLOBAL ASSETS -->
-    <div id="page-global-assets" class="page-container">
-        <div class="header-title">Global Assets <span>v1.0.4</span></div>
-
-        <div class="dashboard-grid">
-            
-            <!-- Quadrant 1: Top-Left (Main Macro) -->
-            <div class="quadrant" id="q1"></div>
-
-            <!-- Quadrant 2: Top-Right (Chart / Breaking News Panel) -->
-            <div class="chart-news-panel">
-                <div class="panel-controls">
-                    <!-- Left 50%: Timeframe Toggle -->
-                    <div class="control-half">
-                        <button class="ctrl-btn active" onclick="setTimeframe('1D', this)">1D</button>
-                        <button class="ctrl-btn" onclick="setTimeframe('30D', this)">30D</button>
-                        <button class="ctrl-btn" onclick="setTimeframe('60D', this)">60D</button>
-                    </div>
-                    <!-- Right 50%: Chart vs News Overlay Toggle -->
-                    <div class="control-half">
-                        <button class="ctrl-btn active" onclick="setOverlay('chart', this)">Chart</button>
-                        <button class="ctrl-btn" onclick="setOverlay('news', this)">Breaking News</button>
-                    </div>
-                </div>
-
-                <div class="panel-content">
-                    <canvas id="assetChart"></canvas>
-                    <div id="newsFeed" class="news-feed">
-                        <p><strong>11:24</strong> [BREAKING] US 10Y Yield hits 4.76% following hawkish Fed statements.</p>
-                        <p style="margin-top:8px;"><strong>11:15</strong> [FX ALERT] USD/THB surges past 36.85 as foreign fund outflows accelerate in regional markets.</p>
-                        <p style="margin-top:8px;"><strong>10:45</strong> [COMMODITIES] Crude Oil steady above $90/bbl amidst Middle East supply tightness.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quadrant 3: Bottom-Left (Currencies FX) -->
-            <div class="quadrant" id="q3" style="grid-template-columns: repeat(4, 1fr);"></div>
-
-            <!-- Quadrant 4: Bottom-Right (Global Indices & Crypto) -->
-            <div class="quadrant" id="q4" style="grid-template-columns: repeat(4, 1fr);"></div>
-
+    <!-- Header Row (Title Only - Buttons Removed) -->
+    <div class="top-header-row">
+        <!-- Secret Toggle Speech Button via clicking Title -->
+        <div class="header-title" id="gloAstTitle" onclick="toggleLocalSpeech()" title="Click to Toggle Local Speech Alert ON/OFF">
+            Global Assets <span id="gloAstVersion">v1.0.4</span>
         </div>
     </div>
 
-    <!-- Exchange Times Placeholder Page -->
-    <div id="page-exchange-times" class="page-container" style="display:none; text-align: center; padding: 50px;">
-        <h2>Exchange Times Core System (Parallel Speech/Alert Active)</h2>
+    <!-- MAIN DASHBOARD GRID -->
+    <div class="dashboard-grid">
+        
+        <!-- Quadrant 1: Top-Left (Main Macro) -->
+        <div class="quadrant" id="q1"></div>
+
+        <!-- Quadrant 2: Top-Right (Chart / Breaking News Panel) -->
+        <div class="chart-news-panel">
+            <div class="panel-controls">
+                <!-- Left 50%: Timeframe Toggle -->
+                <div class="control-half">
+                    <button class="ctrl-btn active" onclick="setTimeframe('1D', this)">1D</button>
+                    <button class="ctrl-btn" onclick="setTimeframe('30D', this)">30D</button>
+                    <button class="ctrl-btn" onclick="setTimeframe('60D', this)">60D</button>
+                </div>
+                <!-- Right 50%: Chart vs News Overlay Toggle -->
+                <div class="control-half">
+                    <button class="ctrl-btn active" onclick="setOverlay('chart', this)">Chart</button>
+                    <button class="ctrl-btn" onclick="setOverlay('news', this)">Breaking News</button>
+                </div>
+            </div>
+
+            <div class="panel-content">
+                <canvas id="assetChart"></canvas>
+                <div id="newsFeed" class="news-feed">
+                    <p><strong>11:24</strong> [BREAKING] US 10Y Yield hits 4.76% following hawkish Fed statements.</p>
+                    <p style="margin-top:8px;"><strong>11:15</strong> [FX ALERT] USD/THB surges past 36.85 as foreign fund outflows accelerate.</p>
+                    <p style="margin-top:8px;"><strong>10:45</strong> [COMMODITIES] Crude Oil steady above $90/bbl amidst Middle East tightness.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quadrant 3: Bottom-Left (Currencies FX) -->
+        <div class="quadrant" id="q3"></div>
+
+        <!-- Quadrant 4: Bottom-Right (Global Indices & Crypto) -->
+        <div class="quadrant" id="q4"></div>
+
     </div>
 
 <script>
     // ------------------------------------------------------------------
-    // Asset Configuration & FX Macro Reason Definitions
+    // Asset Definitions & Initial Values
     // ------------------------------------------------------------------
     const Q1_ASSETS = [
         { id: "DXY", name: "DXY", val: 104.25, pct: 0.45, type: "LEVEL", warn: 102, high: 104, crit: 106 },
@@ -206,12 +320,28 @@
         { id: "BITCOIN", name: "Bitcoin", val: 62450, pct: -5.40, type: "DROP", warn: -5, high: -8, crit: -12 }
     ];
 
-    let currentSelectedAsset = "DXY";
+    let isLocalSpeechEnabled = true;
+    let spokenAlertsSet = new Set();
     let chartInstance = null;
-    let spokenAlerts = new Set(); // Prevent duplicate speech spam
 
     // ------------------------------------------------------------------
-    // Render Functions
+    // Secret Toggle Function for Local Speech Alert
+    // ------------------------------------------------------------------
+    function toggleLocalSpeech() {
+        isLocalSpeechEnabled = !isLocalSpeechEnabled;
+        const titleEl = document.getElementById('gloAstTitle');
+        
+        if (isLocalSpeechEnabled) {
+            titleEl.classList.remove('title-speech-off');
+            speakLocalAlert("Global Assets speech alert enabled");
+        } else {
+            titleEl.classList.add('title-speech-off');
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Render Card UI
     // ------------------------------------------------------------------
     function createCard(a) {
         const div = document.createElement('div');
@@ -247,7 +377,33 @@
     }
 
     // ------------------------------------------------------------------
-    // Speech & Warning Evaluation Engine (LenAgent Push Simulation)
+    // Speech Voice Selector (Default / Samantha)
+    // ------------------------------------------------------------------
+    function getPreferredVoice() {
+        if (!('speechSynthesis' in window)) return null;
+        const voices = window.speechSynthesis.getVoices();
+        let samantha = voices.find(v => v.name.includes('Samantha'));
+        if (samantha) return samantha;
+        let enVoice = voices.find(v => v.lang.startsWith('en'));
+        return enVoice || null;
+    }
+
+    function speakLocalAlert(text) {
+        if (!isLocalSpeechEnabled || !('speechSynthesis' in window)) return;
+        if (spokenAlertsSet.has(text)) return;
+        spokenAlertsSet.add(text);
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
+        const targetVoice = getPreferredVoice();
+        if (targetVoice) utterance.voice = targetVoice;
+        
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // ------------------------------------------------------------------
+    // Warning Threshold & Color Evaluation
     // ------------------------------------------------------------------
     function evaluateAndAlert(a) {
         const card = document.getElementById(`card-${a.id}`);
@@ -256,7 +412,6 @@
         card.classList.remove('bg-yellow', 'bg-orange', 'bg-critical');
         let status = "NORMAL";
 
-        // Level / Pct Check
         if (a.type === "LEVEL") {
             if (a.val >= a.crit) status = "CRITICAL";
             else if (a.val >= a.high) status = "HIGH";
@@ -267,28 +422,15 @@
             else if (a.pct <= a.warn) status = "WARN";
         }
 
-        // Apply Alert Styles & Speech Trigger
         if (status === "CRITICAL") {
             card.classList.add('bg-critical');
-            speakAlert(`Attention: Critical Shock warning ${a.name} now is ${a.val}`);
+            speakLocalAlert(`Attention: Critical Shock warning ${a.name} now is ${a.val}`);
         } else if (status === "HIGH") {
             card.classList.add('bg-orange');
-            speakAlert(`Attention: High Risk warning ${a.name} now is ${a.val}`);
+            speakLocalAlert(`Attention: High Risk warning ${a.name} now is ${a.val}`);
         } else if (status === "WARN") {
             card.classList.add('bg-yellow');
-            speakAlert(`Warning: ${a.name} is ${Math.abs(a.pct)} percent down in a day.`);
-        }
-    }
-
-    function speakAlert(text) {
-        if (spokenAlerts.has(text)) return;
-        spokenAlerts.add(text);
-        
-        if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
-            utterance.rate = 1.0;
-            window.speechSynthesis.speak(utterance);
+            speakLocalAlert(`Warning: ${a.name} is ${Math.abs(a.pct)} percent down in a day.`);
         }
     }
 
@@ -296,9 +438,8 @@
     // Real-Time Push Simulation (Every 1 Second)
     // ------------------------------------------------------------------
     setInterval(() => {
-        // Simulate live price ticks for DXY, US10Y, VIX, Bitcoin
         Q1_ASSETS.concat(Q4_ASSETS).forEach(a => {
-            if (Math.random() > 0.6) {
+            if (Math.random() > 0.65) {
                 const delta = (Math.random() - 0.48) * 0.2;
                 a.val = parseFloat((a.val + delta).toFixed(2));
                 
@@ -311,7 +452,7 @@
     }, 1000);
 
     // ------------------------------------------------------------------
-    // Chart.js & Panel Controls
+    // Chart & Controls
     // ------------------------------------------------------------------
     function initChart() {
         const ctx = document.getElementById('assetChart').getContext('2d');
@@ -322,7 +463,7 @@
                 datasets: [{
                     label: `DXY Trend`,
                     data: [103.8, 103.9, 104.1, 104.0, 104.2, 104.25],
-                    borderColor: '#38bdf8',
+                    borderColor: '#00d2ff',
                     borderWidth: 2,
                     tension: 0.3,
                     pointRadius: 0
@@ -333,18 +474,16 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { color: '#71717a' }, grid: { color: '#18181b' } },
-                    y: { ticks: { color: '#71717a' }, grid: { color: '#18181b' } }
+                    x: { ticks: { color: '#888888' }, grid: { color: '#1a202c' } },
+                    y: { ticks: { color: '#888888' }, grid: { color: '#1a202c' } }
                 }
             }
         });
     }
 
     function selectAsset(id) {
-        currentSelectedAsset = id;
         if (chartInstance) {
             chartInstance.data.datasets[0].label = `${id} Trend`;
-            // Generate dummy chart points
             chartInstance.data.datasets[0].data = Array.from({length: 6}, () => Math.random() * 10 + 100);
             chartInstance.update();
         }
@@ -371,26 +510,6 @@
         }
     }
 
-    function togglePage(page) {
-        const assetsPage = document.getElementById('page-global-assets');
-        const exchangePage = document.getElementById('page-exchange-times');
-        const btnAssets = document.getElementById('btn-assets');
-        const btnNews = document.getElementById('btn-news');
-
-        if (page === 'assets') {
-            assetsPage.style.display = 'flex';
-            exchangePage.style.display = 'none';
-            btnAssets.classList.add('active-assets');
-            btnNews.classList.remove('active-assets');
-        } else {
-            assetsPage.style.display = 'none';
-            exchangePage.style.display = 'block';
-            btnAssets.classList.remove('active-assets');
-            btnNews.classList.add('active-assets');
-        }
-    }
-
-    // Initialize Dashboard on Load
     window.onload = initDashboard;
 </script>
 </body>
