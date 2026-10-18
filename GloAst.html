@@ -91,11 +91,14 @@
             line-height: 1.1;
         }
 
-        /* Price & Change Numbers Font: Strictly Monospace (WX Style) & 13px (2 levels smaller than hPa:1010.9) */
+        /* Price & Change Numbers Font: Strictly Arial Bold (WX Style) & 13px */
+        #q1 .asset-price, #q1 .asset-change,
+        #q3 .asset-price, #q3 .asset-change,
+        #q4 .asset-price, #q4 .asset-change,
         .asset-price, .asset-change { 
-            font-family: monospace, 'Courier New', Courier !important;
+            font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
             font-size: 13px !important; 
-            font-weight: 700 !important;
+            font-weight: bold !important;
             line-height: 1.2;
         }
         .asset-price { margin-top: 2px; }
@@ -104,7 +107,7 @@
         .price-up { color: #22c55e !important; }
         .price-down { color: #ef4444 !important; }
 
-        /* Warning Backgrounds (Preserves Monospace & Up/Down Colors) */
+        /* Warning Backgrounds */
         .bg-yellow { 
             background-color: #eab308 !important; 
         }
@@ -209,7 +212,7 @@
     <!-- Header Row (Title Only - Speech Toggle Active) -->
     <div class="top-header-row">
         <div class="header-title" id="gloAstTitle" onclick="toggleLocalSpeech()" title="Click to Toggle Local Speech Alert ON/OFF">
-            Global Assets <span id="gloAstVersion">v1.0.7</span>
+            Global Assets <span id="gloAstVersion">v1.0.8</span>
         </div>
     </div>
 
@@ -303,20 +306,65 @@
     let scheduledAlertTimer = null;
 
     // ------------------------------------------------------------------
+    // Queue-based Speech Engine (FIFO)
+    // ------------------------------------------------------------------
+    let speechQueue = [];
+    let isSpeaking = false;
+
+    function enqueueSpeech(text) {
+        if (!isLocalSpeechEnabled) return;
+        speechQueue.push(text);
+        processSpeechQueue();
+    }
+
+    function processSpeechQueue() {
+        if (isSpeaking || speechQueue.length === 0 || !isLocalSpeechEnabled) return;
+        if (!('speechSynthesis' in window)) return;
+
+        isSpeaking = true;
+        const textToSpeak = speechQueue.shift();
+
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
+        const targetVoice = getPreferredVoice();
+        if (targetVoice) utterance.voice = targetVoice;
+
+        utterance.onend = () => {
+            isSpeaking = false;
+            setTimeout(processSpeechQueue, 200);
+        };
+
+        utterance.onerror = () => {
+            isSpeaking = false;
+            setTimeout(processSpeechQueue, 200);
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function stopAndResetSpeechSystem() {
+        speechQueue = [];
+        isSpeaking = false;
+        if (scheduledAlertTimer) clearInterval(scheduledAlertTimer);
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    }
+
+    // ------------------------------------------------------------------
     // Speech Toggle & Reset Engine
     // ------------------------------------------------------------------
     function toggleLocalSpeech() {
         isLocalSpeechEnabled = !isLocalSpeechEnabled;
         
         if (isLocalSpeechEnabled) {
-            // Immediately run report (no greeting text)
+            // Immediate Reset & Report
+            stopAndResetSpeechSystem();
+            isLocalSpeechEnabled = true; // Restore state
             triggerImmediateReport();
-            // Reset and Restart 25-minute timer
             resetAndStart25MinTimer();
         } else {
-            // Stop and reset timer
-            if (scheduledAlertTimer) clearInterval(scheduledAlertTimer);
-            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            // Stop immediately & Reset Timer
+            stopAndResetSpeechSystem();
         }
     }
 
@@ -349,14 +397,14 @@
         });
 
         if (activeWarnings.length > 0) {
-            speakLocalText(`Global Assets warning update: ${activeWarnings.join(", ")}`);
+            enqueueSpeech(`Global Assets warning update: ${activeWarnings.join(", ")}`);
         } else {
-            speakLocalText(`Global Assets market parameters are normal.`);
+            enqueueSpeech(`Global Assets market parameters are normal.`);
         }
     }
 
     // ------------------------------------------------------------------
-    // Render Card UI (Strict Monospace + Directional Colors)
+    // Render Card UI (Strict Arial Bold + Directional Colors)
     // ------------------------------------------------------------------
     function createCard(a) {
         const div = document.createElement('div');
@@ -395,7 +443,7 @@
     }
 
     // ------------------------------------------------------------------
-    // Voice Handler with Anti-Collision Cancel Queue
+    // Voice Handler
     // ------------------------------------------------------------------
     function getPreferredVoice() {
         if (!('speechSynthesis' in window)) return null;
@@ -404,23 +452,6 @@
         if (samantha) return samantha;
         let enVoice = voices.find(v => v.lang.startsWith('en'));
         return enVoice || null;
-    }
-
-    function speakLocalText(text) {
-        if (!isLocalSpeechEnabled || !('speechSynthesis' in window)) return;
-        
-        // Cancel existing queue before speaking to prevent stuttering & collisions
-        window.speechSynthesis.cancel();
-
-        setTimeout(() => {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.9;
-            utterance.pitch = 1.0;
-            const targetVoice = getPreferredVoice();
-            if (targetVoice) utterance.voice = targetVoice;
-            
-            window.speechSynthesis.speak(utterance);
-        }, 50);
     }
 
     // ------------------------------------------------------------------
@@ -445,13 +476,13 @@
 
         if (status === "CRITICAL") {
             card.classList.add('bg-critical');
-            speakLocalText(`Attention: Critical Shock warning ${a.name} now is ${a.val}`);
+            enqueueSpeech(`Attention: Critical Shock warning ${a.name} now is ${a.val}`);
         } else if (status === "HIGH") {
             card.classList.add('bg-orange');
-            speakLocalText(`Attention: High Risk warning ${a.name} now is ${a.val}`);
+            enqueueSpeech(`Attention: High Risk warning ${a.name} now is ${a.val}`);
         } else if (status === "WARN") {
             card.classList.add('bg-yellow');
-            speakLocalText(`Warning: ${a.name} is ${Math.abs(a.pct)} percent down in a day.`);
+            enqueueSpeech(`Warning: ${a.name} is ${Math.abs(a.pct)} percent down in a day.`);
         }
     }
 
@@ -538,6 +569,11 @@
             newsEl.style.display = 'block';
         }
     }
+
+    // Unload Handler to ensure speech queue stops when iframe changes
+    window.onbeforeunload = function() {
+        stopAndResetSpeechSystem();
+    };
 
     window.onload = initDashboard;
 </script>
